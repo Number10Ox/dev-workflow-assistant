@@ -3,49 +3,67 @@ const path = require('node:path');
 const { getInstallDir, getSkillsDir } = require('../utils/paths');
 
 /**
- * Copy skills from source directory to ~/.claude/skills/
- * @param {string} sourceDir - Source skills directory (defaults to project skills/)
- * @returns {Promise<string[]>} Array of copied skill directory names
+ * Copy skills from source to ~/.claude/skills/dwa-*
+ * @param {string} sourceDir - Source directory (defaults to package skills/)
+ * @param {object} options - Options object
+ * @param {boolean} options.overwrite - Whether to overwrite existing files (default: false)
+ * @returns {Promise<void>}
  */
-async function copySkills(sourceDir = path.join(__dirname, '../../skills')) {
-  const entries = await fs.readdir(sourceDir, { withFileTypes: true });
-  const copied = [];
+async function copySkills(sourceDir, options = {}) {
+  sourceDir = sourceDir || path.join(__dirname, '../../skills');
+  const targetDir = getSkillsDir();
 
-  for (const entry of entries) {
-    if (entry.isDirectory()) {
-      const sourcePath = path.join(sourceDir, entry.name);
-      const targetPath = path.join(getSkillsDir(), entry.name);
+  await fs.ensureDir(targetDir);
 
-      await fs.copy(sourcePath, targetPath, {
-        overwrite: false,
-        errorOnExist: false
-      });
+  // Copy each skill directory from skills/ to ~/.claude/skills/
+  const skillDirs = await fs.readdir(sourceDir);
+  for (const dir of skillDirs) {
+    const sourcePath = path.join(sourceDir, dir);
+    const targetPath = path.join(targetDir, dir);
 
-      copied.push(entry.name);
-    }
+    // Only process directories
+    const stat = await fs.stat(sourcePath);
+    if (!stat.isDirectory()) continue;
+
+    await fs.copy(sourcePath, targetPath, {
+      overwrite: options.overwrite || false,
+      errorOnExist: !options.overwrite
+    });
   }
-
-  return copied;
 }
 
 /**
- * Copy templates from source directory to ~/.claude/dwa/templates/
- * @param {string} sourceDir - Source templates directory (defaults to project templates/)
+ * Copy templates from source to ~/.claude/dwa/templates/
+ * @param {string} sourceDir - Source directory (defaults to package templates/)
+ * @param {object} options - Options object
+ * @param {boolean} options.overwrite - Whether to overwrite existing files (default: false)
  * @returns {Promise<void>}
  */
-async function copyTemplates(sourceDir = path.join(__dirname, '../../templates')) {
-  const targetPath = path.join(getInstallDir(), 'templates');
-  await fs.copy(sourceDir, targetPath, { overwrite: false });
+async function copyTemplates(sourceDir, options = {}) {
+  sourceDir = sourceDir || path.join(__dirname, '../../templates');
+  const targetDir = path.join(getInstallDir(), 'templates');
+
+  await fs.copy(sourceDir, targetDir, {
+    overwrite: options.overwrite || false,
+    errorOnExist: !options.overwrite
+  });
 }
 
 /**
- * Copy references from source directory to ~/.claude/dwa/references/
- * @param {string} sourceDir - Source references directory (defaults to project references/)
+ * Copy references from source to ~/.claude/dwa/references/
+ * @param {string} sourceDir - Source directory (defaults to package references/)
+ * @param {object} options - Options object
+ * @param {boolean} options.overwrite - Whether to overwrite existing files (default: false)
  * @returns {Promise<void>}
  */
-async function copyReferences(sourceDir = path.join(__dirname, '../../references')) {
-  const targetPath = path.join(getInstallDir(), 'references');
-  await fs.copy(sourceDir, targetPath, { overwrite: false });
+async function copyReferences(sourceDir, options = {}) {
+  sourceDir = sourceDir || path.join(__dirname, '../../references');
+  const targetDir = path.join(getInstallDir(), 'references');
+
+  await fs.copy(sourceDir, targetDir, {
+    overwrite: options.overwrite || false,
+    errorOnExist: !options.overwrite
+  });
 }
 
 module.exports = {
