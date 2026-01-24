@@ -9,7 +9,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [
     "claude-code",
@@ -34,5 +34,8 @@
     "ora": "^5.4.1",
     "semver": "^7.0.0",
     "write-file-atomic": "^7.0.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
   }
 }
