@@ -31,9 +31,10 @@
     "chalk": "^4.1.2",
     "commander": "^12.0.0",
     "fs-extra": "^11.0.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
     "ora": "^5.4.1",
     "semver": "^7.0.0",
     "write-file-atomic": "^7.0.0"
-  },
-  "devDependencies": {}
+  }
 }
