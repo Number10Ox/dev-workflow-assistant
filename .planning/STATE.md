@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 1 of 8 (Bootstrap and Installer)
-Plan: 1 of 3 in current phase
+Plan: 3 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 01-01-PLAN.md
+Last activity: 2026-01-24 - Completed 01-03-PLAN.md (Upgrade and Uninstall)
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 4m 7s
-- Total execution time: 0.07 hours
+- Total plans completed: 2
+- Average duration: 5m 12s
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 - Bootstrap | 1 | 4m 7s | 4m 7s |
+| 01 - Bootstrap | 2 | 10m 25s | 5m 12s |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4m 7s)
-- Trend: Initial baseline
+- Last 5 plans: 01-01 (4m 7s), 01-03 (6m 18s)
+- Trend: Consistent execution velocity
 
 *Updated after each plan completion*
 
@@ -48,6 +48,10 @@ Recent decisions affecting current work:
 - [01-01]: Use Commander.js options (--install) instead of subcommands for simpler API.
 - [01-01]: Use CommonJS module system for compatibility with commander and fs-extra.
 - [01-01]: Enforce schemaVersion in all JSON files via writeJsonWithSchema helper (supports REQ-011).
+- [01-03]: Use semver library for version comparison to properly handle semantic versioning.
+- [01-03]: Create timestamped backups before upgrade with preserved file timestamps.
+- [01-03]: Only remove dwa-* prefixed skill directories for uninstall safety.
+- [01-03]: Use Jest for testing framework.
 
 ### Pending Todos
 
@@ -61,6 +65,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24T18:22:03Z
-Stopped at: Completed 01-01-PLAN.md (CLI Foundation)
+Last session: 2026-01-24T18:32:33Z
+Stopped at: Completed 01-03-PLAN.md (Upgrade and Uninstall)
 Resume file: None
