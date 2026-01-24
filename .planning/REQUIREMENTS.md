@@ -1,0 +1,82 @@
+# DWMF Requirements
+
+## v1 Requirements
+
+### REQ-001: Package Installation via npx
+**Priority:** Critical
+**Phase:** 1
+Install DWMF skills globally via `npx dwmf --install`. Copies skills, templates, and references to `~/.claude/dwmf/`. Registers `/dwmf:*` commands in Claude Code settings. Supports `--upgrade` and `--uninstall`.
+
+### REQ-002: Feature Spec Scaffolding
+**Priority:** Critical
+**Phase:** 2
+`/dwmf:init` scaffolds a feature spec from Template v2.0 (YAML front matter + Deliverables Table) or imports from Google Docs via MCP. Creates `.dwa/feature.json` with feature metadata.
+
+### REQ-003: Deliverables Table Parsing
+**Priority:** Critical
+**Phase:** 3
+`/dwmf:parse` extracts the Deliverables Table from a feature spec into `.dwa/deliverables/DEL-###.json` registry files. Uses AST-based parsing (remark-gfm), not regex. Validates against schema. Handles malformed input with actionable error messages.
+
+### REQ-004: Idempotent Registry Updates
+**Priority:** Critical
+**Phase:** 4
+Re-parsing a spec updates spec-sourced fields (title, user story, AC, QA notes) without destroying runtime fields (linear_issue_id, status, pr_url, completed_at). Atomic file writes prevent partial state.
+
+### REQ-005: Linear Issue Sync
+**Priority:** High
+**Phase:** 5
+`/dwmf:sync` creates or updates Linear issues per deliverable with full context (user story, AC, QA notes, spec link). Uses MCP bridge via dev-workflow-assistant extension. Handles rate limits with exponential backoff. Uses externalId for deduplication.
+
+### REQ-006: Bounded GSD Execution Packets
+**Priority:** High
+**Phase:** 6
+`/dwmf:start DEL-###` generates a bounded execution packet at `.dwa/packets/DEL-###.md` containing only the relevant deliverable context, acceptance criteria, dependencies, success criteria, and stop conditions. Formatted for GSD consumption.
+
+### REQ-007: Drift Detection
+**Priority:** Medium
+**Phase:** 7
+`/dwmf:check-drift` compares spec vs registry vs Linear state and produces an actionable `.dwa/drift-report.md`. Ignores whitespace/formatting; focuses on semantic changes. Reports: missing deliverables, field mismatches, orphaned registry entries.
+
+### REQ-008: PR Description Generation
+**Priority:** Medium
+**Phase:** 8
+Generate PR description drafts from deliverable metadata (user story, ACs, QA notes, deliverable ID). Template-based with variable substitution.
+
+### REQ-009: Google Docs Import
+**Priority:** Medium
+**Phase:** 8
+Import feature specs from Google Docs via MCP (read-only). Convert to local markdown preserving table structure. Warn on lossy conversion.
+
+### REQ-010: Template Compliance Validation
+**Priority:** Medium
+**Phase:** 3
+Validate spec format before parsing: YAML front matter schema, required Deliverables Table columns, row completeness. Fail fast with line numbers and fix suggestions.
+
+### REQ-011: Schema Versioning
+**Priority:** High
+**Phase:** 1
+Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwmf-version` in registry. Enable future read-time migrations without breaking existing registries.
+
+## Out of Scope (v1)
+
+- Google Docs write-back (read-only import only)
+- Multi-user collaboration (single-engineer workflow)
+- Custom issue tracker adapters (Linear-only; adapter pattern for future)
+- Visual spec editor (markdown in VS Code)
+- Automated code generation (packets guide, don't replace)
+- CI/CD integration (expose metadata, let pipelines consume)
+- Deliverable dependency graphs (keep flat)
+- Time tracking per deliverable (use Linear's)
+- Mobile/web UI (CLI/skills only)
+- Advanced drift auto-resolution (detect only; user fixes manually)
+
+## Success Criteria
+
+1. `npx dwmf --install` installs successfully and skills are invocable
+2. `/dwmf:init` produces a valid feature spec from template
+3. `/dwmf:parse` extracts deliverables into `.dwa/deliverables/` with schema validation
+4. Re-running `/dwmf:parse` preserves runtime fields (idempotent)
+5. `/dwmf:sync` creates Linear issues with correct fields
+6. `/dwmf:start DEL-001` generates a bounded GSD execution packet
+7. `/dwmf:check-drift` produces actionable drift report
+8. All `.dwa/` state is git-trackable and human-inspectable
