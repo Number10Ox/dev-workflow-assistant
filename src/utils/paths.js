@@ -33,8 +33,27 @@ function getVersionFilePath() {
   return path.join(getInstallDir(), '.dwa-version');
 }
 
+/**
+ * Get the templates directory (installed location).
+ * @returns {string} Path to ~/.claude/dwa/templates
+ */
+function getTemplatesDir() {
+  return path.join(getInstallDir(), 'templates');
+}
+
+/**
+ * Get the package templates directory (source location).
+ * Used during scaffolding from the package source before install copies them.
+ * @returns {string} Path to package templates/ directory
+ */
+function getPackageTemplatesDir() {
+  return path.join(__dirname, '..', '..', 'templates');
+}
+
 module.exports = {
   getInstallDir,
   getSkillsDir,
-  getVersionFilePath
+  getVersionFilePath,
+  getTemplatesDir,
+  getPackageTemplatesDir
 };
