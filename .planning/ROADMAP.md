@@ -49,10 +49,11 @@ Plans:
   2. `/dwa:init` creates `.dwa/feature.json` with feature metadata (name, created date, spec path)
   3. `/dwa:init` with Google Docs source imports a spec via MCP and converts it to local markdown preserving table structure
   4. Running `/dwa:init` in a directory with an existing spec warns before overwriting
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md -- Handlebars template, scaffold utilities, and dependency setup
+- [ ] 02-02-PLAN.md -- /dwa:init skill file and scaffold utility tests
 
 ### Phase 3: Core Parsing
 **Goal**: Users can extract structured deliverables from a feature spec into individual registry files
@@ -150,7 +151,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Bootstrap and Installer | 3/3 | ✓ Complete | 2026-01-24 |
-| 2. Templates and Scaffolding | 0/TBD | Not started | - |
+| 2. Templates and Scaffolding | 0/2 | In progress | - |
 | 3. Core Parsing | 0/TBD | Not started | - |
 | 4. Idempotent Registry | 0/TBD | Not started | - |
 | 5. Linear Integration | 0/TBD | Not started | - |
