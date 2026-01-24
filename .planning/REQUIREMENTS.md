@@ -80,3 +80,19 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwmf-ve
 6. `/dwmf:start DEL-001` generates a bounded GSD execution packet
 7. `/dwmf:check-drift` produces actionable drift report
 8. All `.dwa/` state is git-trackable and human-inspectable
+
+## Traceability
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| REQ-001 | Phase 1: Bootstrap and Installer | Pending |
+| REQ-011 | Phase 1: Bootstrap and Installer | Pending |
+| REQ-002 | Phase 2: Templates and Scaffolding | Pending |
+| REQ-003 | Phase 3: Core Parsing | Pending |
+| REQ-010 | Phase 3: Core Parsing | Pending |
+| REQ-004 | Phase 4: Idempotent Registry | Pending |
+| REQ-005 | Phase 5: Linear Integration | Pending |
+| REQ-006 | Phase 6: GSD Execution Packets | Pending |
+| REQ-007 | Phase 7: Drift Detection | Pending |
+| REQ-008 | Phase 8: Polish and Extended Features | Pending |
+| REQ-009 | Phase 8: Polish and Extended Features | Pending |
