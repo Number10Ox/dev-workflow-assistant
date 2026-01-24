@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 2: Templates and Scaffolding
+**Current focus:** Phase 3: Core Parsing
 
 ## Current Position
 
-Phase: 2 of 8 (Templates and Scaffolding)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-24 - Completed 02-02-PLAN.md (Claude Code Skill and Tests)
+Phase: 3 of 8 (Core Parsing)
+Plan: 0 of TBD in current phase
+Status: Ready to plan
+Last activity: 2026-01-24 - Completed Phase 2 (Templates and Scaffolding) — verified ✓
 
-Progress: [██░░░░░░░░] 20%
+Progress: [██░░░░░░░░] 25%
 
 ## Performance Metrics
 
@@ -76,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24T20:17:38Z
-Stopped at: Completed 02-02-PLAN.md (Claude Code Skill and Tests) - Phase 2 complete
+Last session: 2026-01-24
+Stopped at: Completed Phase 2 (Templates and Scaffolding). 2 plans executed, verified ✓, 15 tests passing.
 Resume file: None

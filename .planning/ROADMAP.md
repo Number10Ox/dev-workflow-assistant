@@ -13,7 +13,7 @@ DWA delivers a complete deliverable-driven development workflow as an installabl
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Bootstrap and Installer** - Package installation mechanism and schema versioning foundation
-- [ ] **Phase 2: Templates and Scaffolding** - Feature spec template and /dwa:init skill
+- [x] **Phase 2: Templates and Scaffolding** - Feature spec template and /dwa:create-spec skill
 - [ ] **Phase 3: Core Parsing** - AST-based deliverables extraction with validation
 - [ ] **Phase 4: Idempotent Registry** - Safe re-parse preserving runtime state
 - [ ] **Phase 5: Linear Integration** - Issue sync per deliverable via MCP
@@ -45,15 +45,15 @@ Plans:
 **Depends on**: Phase 1
 **Requirements**: REQ-002
 **Success Criteria** (what must be TRUE):
-  1. `/dwa:init` creates a feature spec file from Template v2.0 with valid YAML front matter and an empty Deliverables Table
-  2. `/dwa:init` creates `.dwa/feature.json` with feature metadata (name, created date, spec path)
-  3. `/dwa:init` with Google Docs source imports a spec via MCP and converts it to local markdown preserving table structure
-  4. Running `/dwa:init` in a directory with an existing spec warns before overwriting
+  1. `/dwa:create-spec` creates a feature spec file from Template v2.0 with valid YAML front matter and an empty Deliverables Table
+  2. `/dwa:create-spec` creates `.dwa/feature.json` with feature metadata (name, created date, spec path)
+  3. `/dwa:create-spec` with Google Docs source imports a spec via MCP and converts it to local markdown preserving table structure
+  4. Running `/dwa:create-spec` in a directory with an existing spec warns before overwriting
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Handlebars template, scaffold utilities, and dependency setup
-- [ ] 02-02-PLAN.md -- /dwa:init skill file and scaffold utility tests
+- [x] 02-01-PLAN.md -- Handlebars template, scaffold utilities, and dependency setup
+- [x] 02-02-PLAN.md -- /dwa:create-spec skill file and scaffold utility tests
 
 ### Phase 3: Core Parsing
 **Goal**: Users can extract structured deliverables from a feature spec into individual registry files
@@ -151,7 +151,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Bootstrap and Installer | 3/3 | ✓ Complete | 2026-01-24 |
-| 2. Templates and Scaffolding | 0/2 | In progress | - |
+| 2. Templates and Scaffolding | 2/2 | ✓ Complete | 2026-01-24 |
 | 3. Core Parsing | 0/TBD | Not started | - |
 | 4. Idempotent Registry | 0/TBD | Not started | - |
 | 5. Linear Integration | 0/TBD | Not started | - |

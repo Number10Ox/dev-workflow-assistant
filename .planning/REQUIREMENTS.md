@@ -10,7 +10,7 @@ Install DWA skills globally via `npx dwa --install`. Copies skills, templates, a
 ### REQ-002: Feature Spec Scaffolding
 **Priority:** Critical
 **Phase:** 2
-`/dwa:init` scaffolds a feature spec from Template v2.0 (YAML front matter + Deliverables Table) or imports from Google Docs via MCP. Creates `.dwa/feature.json` with feature metadata.
+`/dwa:create-spec` scaffolds a feature spec from Template v2.0 (YAML front matter + Deliverables Table) or imports from Google Docs via MCP. Creates `.dwa/feature.json` with feature metadata.
 
 ### REQ-003: Deliverables Table Parsing
 **Priority:** Critical
@@ -73,7 +73,7 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwa-ver
 ## Success Criteria
 
 1. `npx dwa --install` installs successfully and skills are invocable
-2. `/dwa:init` produces a valid feature spec from template
+2. `/dwa:create-spec` produces a valid feature spec from template
 3. `/dwa:parse` extracts deliverables into `.dwa/deliverables/` with schema validation
 4. Re-running `/dwa:parse` preserves runtime fields (idempotent)
 5. `/dwa:sync` creates Linear issues with correct fields
@@ -87,7 +87,7 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwa-ver
 |-------------|-------|--------|
 | REQ-001 | Phase 1: Bootstrap and Installer | Complete |
 | REQ-011 | Phase 1: Bootstrap and Installer | Complete |
-| REQ-002 | Phase 2: Templates and Scaffolding | Pending |
+| REQ-002 | Phase 2: Templates and Scaffolding | Complete |
 | REQ-003 | Phase 3: Core Parsing | Pending |
 | REQ-010 | Phase 3: Core Parsing | Pending |
 | REQ-004 | Phase 4: Idempotent Registry | Pending |
