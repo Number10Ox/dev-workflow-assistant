@@ -9,7 +9,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "node --test tests/"
   },
   "keywords": [
     "claude-code",

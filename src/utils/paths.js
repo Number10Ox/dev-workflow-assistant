@@ -2,11 +2,19 @@ const os = require('node:os');
 const path = require('node:path');
 
 /**
+ * Get the home directory, with test override support.
+ * @returns {string} Path to home directory
+ */
+function homeDir() {
+  return process.env.DWA_TEST_HOME || os.homedir();
+}
+
+/**
  * Get the DWA installation directory.
  * @returns {string} Path to ~/.claude/dwa
  */
 function getInstallDir() {
-  return path.join(os.homedir(), '.claude', 'dwa');
+  return path.join(homeDir(), '.claude', 'dwa');
 }
 
 /**
@@ -14,7 +22,7 @@ function getInstallDir() {
  * @returns {string} Path to ~/.claude/skills
  */
 function getSkillsDir() {
-  return path.join(os.homedir(), '.claude', 'skills');
+  return path.join(homeDir(), '.claude', 'skills');
 }
 
 /**
