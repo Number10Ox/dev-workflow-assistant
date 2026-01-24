@@ -10,29 +10,29 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 2 of 8 (Templates and Scaffolding)
-Plan: 1 of TBD in current phase
-Status: In progress
-Last activity: 2026-01-24 - Completed 02-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 02-02-PLAN.md (Claude Code Skill and Tests)
 
-Progress: [█░░░░░░░░░] 16%
+Progress: [██░░░░░░░░] 20%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 5m 5s
-- Total execution time: 0.34 hours
+- Total plans completed: 5
+- Average duration: 4m 13s
+- Total execution time: 0.35 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
-| 02 - Templates | 1 | 2m 40s | 2m 40s |
+| 02 - Templates | 2 | 4m 36s | 2m 18s |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (4m 7s), 01-02 (7m 5s), 01-03 (6m 18s), 02-01 (2m 40s)
-- Trend: Improving velocity with simpler tasks
+- Last 5 plans: 01-02 (7m 5s), 01-03 (6m 18s), 02-01 (2m 40s), 02-02 (1m 56s)
+- Trend: Strong velocity improvement - Phase 2 averaging 2m 18s vs Phase 1's 5m 50s
 
 *Updated after each plan completion*
 
@@ -60,6 +60,9 @@ Recent decisions affecting current work:
 - [02-01]: Generate feature_id in FEAT-YYYY-NNN format with random 3-digit sequence.
 - [02-01]: Check both .dwa/feature.json AND feature-spec.md for existing feature detection.
 - [02-01]: Template path resolution uses package source (../../templates) not installed location for scaffolding.
+- [02-02]: Claude Code skill uses 4-step process: check existing, get title, scaffold, confirm.
+- [02-02]: [DWA_INSTALL_PATH] placeholder resolved by Claude at runtime to actual package location.
+- [02-02]: Tests use temp directory isolation via fs.mkdtemp, no DWA_TEST_HOME needed for scaffold tests.
 
 ### Pending Todos
 
@@ -73,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-24T20:12:47Z
-Stopped at: Completed 02-01-PLAN.md (Template Scaffolding Foundation)
+Last session: 2026-01-24T20:17:38Z
+Stopped at: Completed 02-02-PLAN.md (Claude Code Skill and Tests) - Phase 2 complete
 Resume file: None
