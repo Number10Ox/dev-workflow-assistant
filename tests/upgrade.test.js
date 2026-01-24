@@ -1,41 +1,36 @@
+const { test, describe, beforeEach, afterEach } = require('node:test');
+const assert = require('node:assert');
 const fs = require('fs-extra');
 const path = require('node:path');
 const os = require('node:os');
 const { backupInstallation } = require('../src/installer/backup');
-const { writeJsonWithSchema } = require('../src/utils/schema');
+
+let testDir;
+
+beforeEach(async () => {
+  testDir = path.join(os.tmpdir(), 'dwa-upgrade-test-' + Date.now());
+  await fs.ensureDir(testDir);
+});
+
+afterEach(async () => {
+  await fs.remove(testDir);
+});
 
 describe('upgrade command', () => {
-  let testDir;
-
-  beforeEach(async () => {
-    // Create unique test directory
-    testDir = path.join(os.tmpdir(), 'dwa-upgrade-test-' + Date.now());
-    await fs.ensureDir(testDir);
-  });
-
-  afterEach(async () => {
-    // Clean up
-    await fs.remove(testDir);
-  });
-
   test('backupInstallation creates timestamped backup', async () => {
-    // Create a fake installation directory
     const installDir = path.join(testDir, 'dwa');
     await fs.ensureDir(installDir);
     await fs.writeFile(path.join(installDir, 'test.txt'), 'original content');
 
-    // Create backup
     const backupDir = await backupInstallation(installDir);
 
-    // Verify backup exists
-    expect(await fs.pathExists(backupDir)).toBe(true);
-    expect(backupDir).toMatch(/\.backup\./);
+    assert.ok(await fs.pathExists(backupDir), 'Backup directory should exist');
+    assert.match(backupDir, /\.backup\./);
 
-    // Verify backup contains original file
     const backedUpFile = path.join(backupDir, 'test.txt');
-    expect(await fs.pathExists(backedUpFile)).toBe(true);
+    assert.ok(await fs.pathExists(backedUpFile), 'Backed up file should exist');
     const content = await fs.readFile(backedUpFile, 'utf8');
-    expect(content).toBe('original content');
+    assert.strictEqual(content, 'original content');
   });
 
   test('backupInstallation preserves timestamps', async () => {
@@ -44,17 +39,13 @@ describe('upgrade command', () => {
     const testFile = path.join(installDir, 'test.txt');
     await fs.writeFile(testFile, 'content');
 
-    // Get original timestamp
     const originalStat = await fs.stat(testFile);
-
-    // Create backup
     const backupDir = await backupInstallation(installDir);
 
-    // Verify timestamps preserved
     const backedUpFile = path.join(backupDir, 'test.txt');
     const backupStat = await fs.stat(backedUpFile);
-    
-    expect(backupStat.mtime.getTime()).toBe(originalStat.mtime.getTime());
+
+    assert.strictEqual(backupStat.mtime.getTime(), originalStat.mtime.getTime());
   });
 
   test('backupInstallation includes subdirectories', async () => {
@@ -65,8 +56,8 @@ describe('upgrade command', () => {
     const backupDir = await backupInstallation(installDir);
 
     const backedUpTemplate = path.join(backupDir, 'templates', 'spec.md');
-    expect(await fs.pathExists(backedUpTemplate)).toBe(true);
+    assert.ok(await fs.pathExists(backedUpTemplate), 'Backed up template should exist');
     const content = await fs.readFile(backedUpTemplate, 'utf8');
-    expect(content).toBe('template');
+    assert.strictEqual(content, 'template');
   });
 });
