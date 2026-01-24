@@ -1,0 +1,38 @@
+{
+  "name": "dwa",
+  "version": "1.0.0",
+  "description": "Dev Workflow Meta-Framework - deliverable-driven development skills for Claude Code",
+  "main": "src/cli.js",
+  "bin": "./bin/dwa.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "claude-code",
+    "skills",
+    "dwa",
+    "deliverables",
+    "workflow"
+  ],
+  "author": "",
+  "license": "MIT",
+  "files": [
+    "bin/",
+    "src/",
+    "skills/",
+    "templates/",
+    "references/"
+  ],
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "commander": "^12.0.0",
+    "fs-extra": "^11.0.0",
+    "ora": "^5.4.1",
+    "semver": "^7.0.0",
+    "write-file-atomic": "^7.0.0"
+  }
+}
