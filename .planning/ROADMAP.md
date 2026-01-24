@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 3: Core Parsing** - AST-based deliverables extraction with validation
 - [ ] **Phase 4: Idempotent Registry** - Safe re-parse preserving runtime state
 - [ ] **Phase 5: Linear Integration** - Issue sync per deliverable via MCP
-- [ ] **Phase 6: GSD Execution Packets** - Bounded context generation for AI execution
+- [ ] **Phase 6: Execution Packets** - Framework-agnostic bounded context generation
 - [ ] **Phase 7: Drift Detection** - Spec vs registry vs Linear divergence reporting
 - [ ] **Phase 8: Polish and Extended Features** - PR descriptions, Google Docs import, DX improvements
 
@@ -98,14 +98,14 @@ Plans:
 - [ ] 05-01: TBD
 - [ ] 05-02: TBD
 
-### Phase 6: GSD Execution Packets
-**Goal**: Users can start work on a single deliverable with a bounded context packet formatted for GSD consumption
+### Phase 6: Execution Packets
+**Goal**: Users can start work on a single deliverable with a framework-agnostic bounded context packet
 **Depends on**: Phase 5
 **Requirements**: REQ-006
 **Success Criteria** (what must be TRUE):
   1. `/dwmf:start DEL-###` generates a packet at `.dwa/packets/DEL-###.md` containing only the targeted deliverable's context
   2. The packet includes acceptance criteria, QA notes, dependencies, success criteria, and explicit stop conditions
-  3. The packet is formatted for GSD consumption (bounded context, no extraneous information from other deliverables)
+  3. The packet is framework-agnostic (objective, context, ACs, stop conditions) — consumable by GSD, BMAD, or manual execution
   4. Starting an already-started deliverable warns the user and requires confirmation before regenerating the packet
 **Plans**: TBD
 
@@ -153,6 +153,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
 | 3. Core Parsing | 0/TBD | Not started | - |
 | 4. Idempotent Registry | 0/TBD | Not started | - |
 | 5. Linear Integration | 0/TBD | Not started | - |
-| 6. GSD Execution Packets | 0/TBD | Not started | - |
+| 6. Execution Packets | 0/TBD | Not started | - |
 | 7. Drift Detection | 0/TBD | Not started | - |
 | 8. Polish and Extended Features | 0/TBD | Not started | - |

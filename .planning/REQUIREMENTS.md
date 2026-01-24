@@ -27,10 +27,10 @@ Re-parsing a spec updates spec-sourced fields (title, user story, AC, QA notes) 
 **Phase:** 5
 `/dwmf:sync` creates or updates Linear issues per deliverable with full context (user story, AC, QA notes, spec link). Uses MCP bridge via dev-workflow-assistant extension. Handles rate limits with exponential backoff. Uses externalId for deduplication.
 
-### REQ-006: Bounded GSD Execution Packets
+### REQ-006: Bounded Execution Packets
 **Priority:** High
 **Phase:** 6
-`/dwmf:start DEL-###` generates a bounded execution packet at `.dwa/packets/DEL-###.md` containing only the relevant deliverable context, acceptance criteria, dependencies, success criteria, and stop conditions. Formatted for GSD consumption.
+`/dwmf:start DEL-###` generates a framework-agnostic execution packet at `.dwa/packets/DEL-###.md` containing only the relevant deliverable context, acceptance criteria, dependencies, success criteria, and stop conditions. User decides how to execute (GSD, BMAD, manual, etc.).
 
 ### REQ-007: Drift Detection
 **Priority:** Medium
@@ -92,7 +92,7 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwmf-ve
 | REQ-010 | Phase 3: Core Parsing | Pending |
 | REQ-004 | Phase 4: Idempotent Registry | Pending |
 | REQ-005 | Phase 5: Linear Integration | Pending |
-| REQ-006 | Phase 6: GSD Execution Packets | Pending |
+| REQ-006 | Phase 6: Execution Packets | Pending |
 | REQ-007 | Phase 7: Drift Detection | Pending |
 | REQ-008 | Phase 8: Polish and Extended Features | Pending |
 | REQ-009 | Phase 8: Polish and Extended Features | Pending |

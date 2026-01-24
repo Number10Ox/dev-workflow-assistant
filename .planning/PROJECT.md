@@ -54,7 +54,7 @@ Deliverables parsed from a canonical feature spec drive all downstream work — 
 |----------|-----------|---------|
 | Separate repo from VS Code extension | Extension is infrastructure; DWMF is the workflow layer. Clean separation. | — Pending |
 | Claude Code skills (not extension commands) | User wants minimal extension work; skills are standard Claude Code pattern | — Pending |
-| GSD-first, extensible | Immediate value with GSD; adapter pattern for future runtimes | — Pending |
+| Framework-agnostic execution packets | Packets are bounded context documents (objective, ACs, stop conditions); any framework (GSD, BMAD, manual) can consume them. User decides execution approach. | — Decided |
 | File-based `.dwa/` registry | No server dependencies; works offline; git-trackable | — Pending |
 | Installable package via npx | Reusable across projects; shareable with others | — Pending |
 
