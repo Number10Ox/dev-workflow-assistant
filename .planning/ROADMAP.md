@@ -33,11 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Running `npx dwmf --uninstall` cleanly removes all installed files and deregisters commands
   4. Every `.dwa/` JSON file created by any skill includes a `schemaVersion` field from day one
   5. A `.dwmf-version` file tracks the installed package version for future migration support
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Project scaffold, CLI entry point, and shared utilities (paths, schema)
+- [ ] 01-02-PLAN.md -- Install command with file copy and version tracking
+- [ ] 01-03-PLAN.md -- Upgrade (with backup) and uninstall commands
 
 ### Phase 2: Templates and Scaffolding
 **Goal**: Users can initialize a new feature with a properly structured spec ready for deliverable extraction
