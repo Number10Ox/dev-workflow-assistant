@@ -97,9 +97,9 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. File writes are atomic (temp + rename) — crash never leaves partial state
 6. Removed deliverables are flagged, not silently deleted
 
-**Plans**: TBD
-- [ ] 03-01: AST parser with validation
-- [ ] 03-02: Idempotent registry merge logic
+**Plans**: 2 plans
+- [ ] 03-01-PLAN.md — AST parser with validation (TDD)
+- [ ] 03-02-PLAN.md — Idempotent registry merge logic (TDD)
 
 ---
 
