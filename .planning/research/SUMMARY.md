@@ -1,13 +1,13 @@
 # Project Research Summary
 
-**Project:** DWMF (Dev Workflow Meta-Framework)
+**Project:** DWA (Dev Workflow Meta-Framework)
 **Domain:** Installable Claude Code skills package — deliverable-driven development workflow
 **Researched:** 2026-01-24
 **Confidence:** MEDIUM-HIGH
 
 ## Executive Summary
 
-DWMF is a Claude Code skills package that bridges the gap between human-authored feature specs and per-deliverable AI execution via GSD. The core value proposition is treating deliverables as first-class units: a markdown feature spec is parsed into structured JSON registry entries, each of which can be synced to Linear and used to generate bounded execution packets for GSD. This is an emerging pattern with no established competition — most teams manually copy-paste between spec documents, issue trackers, and AI prompts. The architecture is well-understood because it follows the proven GSD installation pattern (npx install to ~/.claude/, skills as markdown orchestrators, file-based state in the user's project).
+DWA is a Claude Code skills package that bridges the gap between human-authored feature specs and per-deliverable AI execution via GSD. The core value proposition is treating deliverables as first-class units: a markdown feature spec is parsed into structured JSON registry entries, each of which can be synced to Linear and used to generate bounded execution packets for GSD. This is an emerging pattern with no established competition — most teams manually copy-paste between spec documents, issue trackers, and AI prompts. The architecture is well-understood because it follows the proven GSD installation pattern (npx install to ~/.claude/, skills as markdown orchestrators, file-based state in the user's project).
 
 The recommended approach is a layered build: installer CLI first (Node.js + commander), then markdown parsing pipeline (gray-matter + remark for robust table extraction), then file-based registry (.dwa/ directory with per-deliverable JSON), then Linear sync via MCP, and finally GSD packet generation. Each layer depends on the previous one, making the build order unambiguous. The stack is entirely standard Node.js tooling with high-confidence library choices — no novel technology bets.
 
@@ -17,7 +17,7 @@ The primary risks are in parsing robustness and integration reliability. Markdow
 
 ### Recommended Stack
 
-The stack is Node.js 20 LTS with ESM modules, distributed via npm. The CLI layer uses commander for argument parsing and the `bin` field for `npx dwmf --install`. Parsing uses gray-matter (YAML front matter extraction) and the remark ecosystem (remark-parse + remark-gfm + unist-util-visit) for AST-based markdown table extraction. File operations use Node.js built-ins (fs/promises, path, os). TypeScript for development, compiled to JS for distribution.
+The stack is Node.js 20 LTS with ESM modules, distributed via npm. The CLI layer uses commander for argument parsing and the `bin` field for `npx dwa --install`. Parsing uses gray-matter (YAML front matter extraction) and the remark ecosystem (remark-parse + remark-gfm + unist-util-visit) for AST-based markdown table extraction. File operations use Node.js built-ins (fs/promises, path, os). TypeScript for development, compiled to JS for distribution.
 
 **Core technologies:**
 - **commander**: CLI argument parsing -- industry standard, clean API, sufficient for install + subcommands
@@ -56,11 +56,11 @@ The stack is Node.js 20 LTS with ESM modules, distributed via npm. The CLI layer
 
 ### Architecture Approach
 
-DWMF uses a layered architecture: installer copies skill files to ~/.claude/dwmf/, skills are markdown orchestrators invoked as /dwmf:* commands, templates provide scaffolding structure, references share parsing/validation logic, and the .dwa/ registry stores per-project state. Skills communicate exclusively through file I/O (no shared memory), making them stateless and idempotent. External integrations (Linear, Google Docs) are bridged via MCP servers, keeping skills pure orchestration without API credentials.
+DWA uses a layered architecture: installer copies skill files to ~/.claude/dwa/, skills are markdown orchestrators invoked as /dwa:* commands, templates provide scaffolding structure, references share parsing/validation logic, and the .dwa/ registry stores per-project state. Skills communicate exclusively through file I/O (no shared memory), making them stateless and idempotent. External integrations (Linear, Google Docs) are bridged via MCP servers, keeping skills pure orchestration without API credentials.
 
 **Major components:**
-1. **Installer** (CLI) -- copies skills/templates/references to ~/.claude/dwmf/, registers in settings.json
-2. **Skills** (/dwmf:init, parse, sync, start, check-drift) -- markdown-based orchestrators, each with single responsibility
+1. **Installer** (CLI) -- copies skills/templates/references to ~/.claude/dwa/, registers in settings.json
+2. **Skills** (/dwa:init, parse, sync, start, check-drift) -- markdown-based orchestrators, each with single responsibility
 3. **Templates** -- passive scaffolds for feature specs, deliverable JSON, execution packets, drift reports
 4. **References** -- shared parsing patterns, validation schemas, integration logic used by multiple skills
 5. **Registry** (.dwa/) -- project-local file-based state: feature.json, deliverables/*.json, packets/*.md
@@ -80,20 +80,20 @@ Based on research, suggested phase structure:
 
 ### Phase 1: Package Bootstrap and Installer
 **Rationale:** Nothing works without the installation mechanism. This is the foundation all other phases depend on.
-**Delivers:** Working `npx dwmf --install` that copies skills to ~/.claude/dwmf/ and registers commands in settings.json. VERSION tracking. Uninstall/upgrade support.
+**Delivers:** Working `npx dwa --install` that copies skills to ~/.claude/dwa/ and registers commands in settings.json. VERSION tracking. Uninstall/upgrade support.
 **Addresses:** Installable skills package (differentiator), incremental adoption
 **Avoids:** Path assumption pitfall (use os.homedir()), overwrite protection
 **Stack:** Node.js 20, commander, fs/promises, path, os
 
 ### Phase 2: Templates and Spec Scaffolding
 **Rationale:** Skills need templates to reference. Users need a starting point before they can parse anything.
-**Delivers:** Feature Spec Template v2.0 (markdown with YAML front matter + Deliverables Table), deliverable JSON schema, execution packet template, drift report template. /dwmf:init skill.
+**Delivers:** Feature Spec Template v2.0 (markdown with YAML front matter + Deliverables Table), deliverable JSON schema, execution packet template, drift report template. /dwa:init skill.
 **Addresses:** Spec scaffolding (table stakes), template compliance validation
 **Avoids:** Template overwrite (check existing files), encoding issues in templates
 
 ### Phase 3: Core Parsing Pipeline
 **Rationale:** Parsing is the critical path -- every downstream feature depends on structured deliverables extracted from specs.
-**Delivers:** /dwmf:parse skill. YAML front matter extraction. Markdown table AST parsing. Deliverable JSON generation to .dwa/deliverables/. Schema validation.
+**Delivers:** /dwa:parse skill. YAML front matter extraction. Markdown table AST parsing. Deliverable JSON generation to .dwa/deliverables/. Schema validation.
 **Addresses:** Spec parsing (table stakes), deliverable registry (table stakes), deliverables as first-class units (differentiator)
 **Avoids:** Regex-based table parsing (use remark-gfm AST), YAML encoding issues (normalize, test edge cases), schema evolution (version from day one)
 **Stack:** gray-matter, remark, remark-parse, remark-gfm, unist-util-visit, ajv
@@ -106,20 +106,20 @@ Based on research, suggested phase structure:
 
 ### Phase 5: Linear Integration
 **Rationale:** This is where user-visible value starts: deliverables become Linear tickets automatically.
-**Delivers:** /dwmf:sync skill. Linear issue creation per deliverable. Registry update with linearIssueId. Status sync. Field mapping configuration.
+**Delivers:** /dwa:sync skill. Linear issue creation per deliverable. Registry update with linearIssueId. Status sync. Field mapping configuration.
 **Addresses:** Issue tracker sync (table stakes), registry-driven sync (differentiator)
 **Avoids:** Rate limits (exponential backoff, p-limit batching), duplicate issues (externalId), field mapping assumptions (query workspace schema first)
 **Stack:** Linear MCP (via dev-workflow-assistant)
 
 ### Phase 6: GSD Execution Packets
 **Rationale:** Completes the core loop: spec -> deliverables -> Linear -> bounded AI execution context.
-**Delivers:** /dwmf:start DEL-### skill. Bounded context packets with deliverable AC, QA notes, dependencies. Stop conditions. Success criteria extraction.
+**Delivers:** /dwa:start DEL-### skill. Bounded context packets with deliverable AC, QA notes, dependencies. Stop conditions. Success criteria extraction.
 **Addresses:** Bounded execution context (table stakes), GSD execution packets (differentiator)
 **Avoids:** Context overflow (token budgeting, include only relevant section), scope creep in packets (strict template, explicit stop conditions)
 
 ### Phase 7: Drift Detection
 **Rationale:** Only meaningful after execution has happened. Compares spec vs registry vs Linear to catch divergence.
-**Delivers:** /dwmf:check-drift skill. Spec-to-registry diff. Registry-to-Linear diff. Actionable drift report.
+**Delivers:** /dwa:check-drift skill. Spec-to-registry diff. Registry-to-Linear diff. Actionable drift report.
 **Addresses:** Drift detection (table stakes), file-based git-trackable state
 **Avoids:** False positives (semantic comparison, normalize before diff), noise (ignore whitespace/formatting changes)
 
@@ -178,7 +178,7 @@ The architecture and stack choices are high-confidence (verified from working GS
 
 ### Primary (HIGH confidence)
 - GSD package structure at /Users/jedwards/.claude/get-shit-done/ -- installation pattern, file layout, skill format, VERSION tracking
-- DWMF PROJECT.md at /Users/jedwards/workspace/JobPrep/dwmf/.planning/PROJECT.md -- project requirements, scope
+- DWA PROJECT.md at /Users/jedwards/workspace/JobPrep/dwa/.planning/PROJECT.md -- project requirements, scope
 
 ### Secondary (MEDIUM confidence)
 - Training knowledge of commander, gray-matter, remark ecosystem -- library capabilities and APIs

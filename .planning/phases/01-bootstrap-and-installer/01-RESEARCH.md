@@ -6,7 +6,7 @@
 
 ## Summary
 
-Phase 1 requires building an npx-installable package that copies DWMF skills, templates, and references to `~/.claude/dwmf/` and registers `/dwmf:*` commands. The research reveals that this requires:
+Phase 1 requires building an npx-installable package that copies DWA skills, templates, and references to `~/.claude/dwa/` and registers `/dwa:*` commands. The research reveals that this requires:
 
 1. **NPM package with bin entry point** - A Node.js CLI executable with shebang that handles `--install`, `--upgrade`, and `--uninstall` flags
 2. **Claude Code skills discovery** - Skills are auto-discovered from `~/.claude/skills/` (personal) or `.claude/skills/` (project), no explicit registration needed
@@ -53,9 +53,9 @@ npm install commander fs-extra write-file-atomic chalk ora semver glob
 
 ### Recommended Project Structure
 ```
-dwmf/
+dwa/
 ├── bin/
-│   └── dwmf.js              # CLI entry point (shebang, calls src/cli.js)
+│   └── dwa.js              # CLI entry point (shebang, calls src/cli.js)
 ├── src/
 │   ├── cli.js               # Commander.js setup
 │   ├── commands/
@@ -64,7 +64,7 @@ dwmf/
 │   │   └── uninstall.js     # --uninstall logic
 │   ├── installer/
 │   │   ├── copy-files.js    # fs-extra recursive copy
-│   │   ├── version.js       # Read/write .dwmf-version
+│   │   ├── version.js       # Read/write .dwa-version
 │   │   └── backup.js        # Backup existing installation
 │   └── utils/
 │       ├── paths.js         # Cross-platform path resolution
@@ -83,7 +83,7 @@ dwmf/
 
 **Example:**
 ```javascript
-// bin/dwmf.js
+// bin/dwa.js
 #!/usr/bin/env node
 // Source: https://deepgram.com/learn/npx-script
 
@@ -94,9 +94,9 @@ require('../src/cli.js');
 **package.json:**
 ```json
 {
-  "name": "dwmf",
+  "name": "dwa",
   "version": "1.0.0",
-  "bin": "./bin/dwmf.js"
+  "bin": "./bin/dwa.js"
 }
 ```
 
@@ -116,10 +116,10 @@ const path = require('node:path');
 
 function getInstallDir() {
   // Returns:
-  // Linux: /home/USER/.claude/dwmf
-  // macOS: /Users/USER/.claude/dwmf
-  // Windows: C:\Users\USER\.claude\dwmf
-  return path.join(os.homedir(), '.claude', 'dwmf');
+  // Linux: /home/USER/.claude/dwa
+  // macOS: /Users/USER/.claude/dwa
+  // Windows: C:\Users\USER\.claude\dwa
+  return path.join(os.homedir(), '.claude', 'dwa');
 }
 
 function getSkillsDir() {
@@ -133,7 +133,7 @@ function getSkillsDir() {
 
 **What:** Write JSON files atomically with `schemaVersion` field
 
-**When to use:** Every `.dwa/` JSON file and `.dwmf-version` file
+**When to use:** Every `.dwa/` JSON file and `.dwa-version` file
 
 **Example:**
 ```javascript
@@ -269,16 +269,16 @@ async function readWithMigration(filePath, currentVersion) {
 
 ### Pitfall 4: Skills Not Auto-Discovered
 
-**What goes wrong:** Skills installed to `~/.claude/dwmf/` aren't recognized by Claude Code
+**What goes wrong:** Skills installed to `~/.claude/dwa/` aren't recognized by Claude Code
 
-**Why it happens:** Claude Code auto-discovers from `~/.claude/skills/` not `~/.claude/dwmf/`
+**Why it happens:** Claude Code auto-discovers from `~/.claude/skills/` not `~/.claude/dwa/`
 
 **How to avoid:**
-- Install skills to `~/.claude/skills/dwmf-*` (each skill in its own folder)
-- OR use plugin pattern with `~/.claude/plugins/dwmf/skills/` structure
+- Install skills to `~/.claude/skills/dwa-*` (each skill in its own folder)
+- OR use plugin pattern with `~/.claude/plugins/dwa/skills/` structure
 - Skills must follow naming pattern: each skill is a directory with `SKILL.md`
 
-**Warning signs:** Running `/dwmf:*` commands shows "skill not found"
+**Warning signs:** Running `/dwa:*` commands shows "skill not found"
 
 ### Pitfall 5: Losing User Configuration on Upgrade
 
@@ -298,10 +298,10 @@ async function readWithMigration(filePath, currentVersion) {
 
 **What goes wrong:** Can't determine what version is installed when user runs `--upgrade`
 
-**Why it happens:** Forgot to write `.dwmf-version` file during install
+**Why it happens:** Forgot to write `.dwa-version` file during install
 
 **How to avoid:**
-- Write `.dwmf-version` file to install directory during `--install`
+- Write `.dwa-version` file to install directory during `--install`
 - Read this file during `--upgrade` to determine migration path
 - Use semantic versioning for comparison (`semver` package)
 
@@ -323,19 +323,19 @@ const { SCHEMA_VERSION } = require('../utils/schema');
 
 async function install() {
   const installDir = getInstallDir();
-  const spinner = ora('Installing DWMF...').start();
+  const spinner = ora('Installing DWA...').start();
 
   try {
     // Check if already installed
     if (await fs.pathExists(installDir)) {
-      spinner.fail('DWMF already installed. Use --upgrade to update.');
+      spinner.fail('DWA already installed. Use --upgrade to update.');
       process.exit(1);
     }
 
     // Create installation directory
     await fs.ensureDir(installDir);
 
-    // Copy skills to ~/.claude/skills/dwmf-*/
+    // Copy skills to ~/.claude/skills/dwa-*/
     const skillsSource = path.join(__dirname, '../../skills');
     const skillsTarget = path.join(getSkillsDir());
 
@@ -359,10 +359,10 @@ async function install() {
     // Write version file
     await writeVersion(installDir);
 
-    spinner.succeed('DWMF installed successfully!');
+    spinner.succeed('DWA installed successfully!');
     console.log(`\nSkills installed to: ${skillsTarget}`);
     console.log(`Templates installed to: ${installDir}/templates`);
-    console.log('\nYou can now use /dwmf:* commands in Claude Code.');
+    console.log('\nYou can now use /dwa:* commands in Claude Code.');
   } catch (error) {
     spinner.fail('Installation failed');
     console.error(error);
@@ -376,12 +376,12 @@ async function writeVersion(installDir) {
 
   const versionData = {
     schemaVersion: SCHEMA_VERSION,
-    dwmfVersion: packageJson.version,
+    dwaVersion: packageJson.version,
     installedAt: new Date().toISOString()
   };
 
   await writeFileAtomic(
-    path.join(installDir, '.dwmf-version'),
+    path.join(installDir, '.dwa-version'),
     JSON.stringify(versionData, null, 2)
   );
 }
@@ -400,23 +400,23 @@ const { getInstallDir } = require('../utils/paths');
 
 async function upgrade() {
   const installDir = getInstallDir();
-  const spinner = ora('Upgrading DWMF...').start();
+  const spinner = ora('Upgrading DWA...').start();
 
   try {
     // Check if installed
     if (!await fs.pathExists(installDir)) {
-      spinner.fail('DWMF not installed. Use --install first.');
+      spinner.fail('DWA not installed. Use --install first.');
       process.exit(1);
     }
 
     // Read current version
-    const versionFile = path.join(installDir, '.dwmf-version');
+    const versionFile = path.join(installDir, '.dwa-version');
     const currentVersion = await readVersion(versionFile);
     const packageJson = require('../../package.json');
 
     // Check if upgrade needed
-    if (!semver.lt(currentVersion.dwmfVersion, packageJson.version)) {
-      spinner.info(`Already on latest version (${currentVersion.dwmfVersion})`);
+    if (!semver.lt(currentVersion.dwaVersion, packageJson.version)) {
+      spinner.info(`Already on latest version (${currentVersion.dwaVersion})`);
       return;
     }
 
@@ -431,7 +431,7 @@ async function upgrade() {
     // Update version
     await writeVersion(installDir);
 
-    spinner.succeed(`Upgraded from ${currentVersion.dwmfVersion} to ${packageJson.version}`);
+    spinner.succeed(`Upgraded from ${currentVersion.dwaVersion} to ${packageJson.version}`);
   } catch (error) {
     spinner.fail('Upgrade failed');
     console.error(error);
@@ -477,7 +477,7 @@ async function upgradeFiles(installDir) {
 async function readVersion(versionFile) {
   if (!await fs.pathExists(versionFile)) {
     // Legacy installation without version file
-    return { dwmfVersion: '0.0.0', schemaVersion: '1.0.0' };
+    return { dwaVersion: '0.0.0', schemaVersion: '1.0.0' };
   }
 
   return await fs.readJson(versionFile);
@@ -496,7 +496,7 @@ const path = require('node:path');
 
 async function uninstall() {
   const installDir = getInstallDir();
-  const spinner = ora('Uninstalling DWMF...').start();
+  const spinner = ora('Uninstalling DWA...').start();
 
   try {
     // Remove installation directory
@@ -504,17 +504,17 @@ async function uninstall() {
       await fs.remove(installDir);
     }
 
-    // Remove skills (find all dwmf-* directories)
+    // Remove skills (find all dwa-* directories)
     const skillsDir = getSkillsDir();
     const skillDirs = await fs.readdir(skillsDir);
 
     for (const dir of skillDirs) {
-      if (dir.startsWith('dwmf-')) {
+      if (dir.startsWith('dwa-')) {
         await fs.remove(path.join(skillsDir, dir));
       }
     }
 
-    spinner.succeed('DWMF uninstalled successfully');
+    spinner.succeed('DWA uninstalled successfully');
   } catch (error) {
     spinner.fail('Uninstall failed');
     console.error(error);
@@ -546,13 +546,13 @@ Things that couldn't be fully resolved:
 
 1. **Plugin vs Direct Skills Installation**
    - What we know: Claude Code supports both `~/.claude/skills/` (direct) and `~/.claude/plugins/*/skills/` (plugin pattern)
-   - What's unclear: Which pattern is better for DWMF? Plugin provides namespacing but may be overkill for single package
-   - Recommendation: Start with direct installation to `~/.claude/skills/dwmf-*/` for simplicity. Each skill gets own directory with `dwmf-` prefix to avoid collisions. Can migrate to plugin pattern in future if needed.
+   - What's unclear: Which pattern is better for DWA? Plugin provides namespacing but may be overkill for single package
+   - Recommendation: Start with direct installation to `~/.claude/skills/dwa-*/` for simplicity. Each skill gets own directory with `dwa-` prefix to avoid collisions. Can migrate to plugin pattern in future if needed.
 
 2. **Skill Naming Convention**
    - What we know: Skill names become `/skill-name` commands
-   - What's unclear: Should skills be named `dwmf-init`, `dwmf-parse` (with prefix) or just `init`, `parse` (relying on directory structure)?
-   - Recommendation: Use unprefixed names (`init`, `parse`) but install to directories like `~/.claude/skills/dwmf-init/` so `/init` doesn't collide with other packages. Alternatively, use namespaced commands if Claude Code supports it (need to verify).
+   - What's unclear: Should skills be named `dwa-init`, `dwa-parse` (with prefix) or just `init`, `parse` (relying on directory structure)?
+   - Recommendation: Use unprefixed names (`init`, `parse`) but install to directories like `~/.claude/skills/dwa-init/` so `/init` doesn't collide with other packages. Alternatively, use namespaced commands if Claude Code supports it (need to verify).
 
 3. **Migration Strategy for Future Schema Changes**
    - What we know: Lazy migration (read-time) is cost-effective for mostly-cold data
@@ -562,7 +562,7 @@ Things that couldn't be fully resolved:
 4. **Handling Interrupted Installations**
    - What we know: Atomic file writes prevent partial JSON corruption
    - What's unclear: What if installation is interrupted mid-copy? Partial directory structure left behind
-   - Recommendation: Check for `.dwmf-version` file to determine if installation is complete. If directory exists but no version file, consider it incomplete and allow re-install (with warning).
+   - Recommendation: Check for `.dwa-version` file to determine if installation is complete. If directory exists but no version file, consider it incomplete and allow re-install (with warning).
 
 ## Sources
 
@@ -594,7 +594,7 @@ Things that couldn't be fully resolved:
 
 **Confidence breakdown:**
 - Standard stack: HIGH - fs-extra, commander, write-file-atomic are industry standard
-- Architecture: MEDIUM-HIGH - Patterns verified from official docs but DWMF-specific structure is custom
+- Architecture: MEDIUM-HIGH - Patterns verified from official docs but DWA-specific structure is custom
 - Pitfalls: MEDIUM - Based on common issues in cross-platform CLI tools and WebSearch findings
 - Claude Code integration: HIGH - Official documentation clearly describes skills discovery mechanism
 

@@ -1,7 +1,7 @@
 # Domain Pitfalls
 
 **Domain:** Dev workflow tools + Claude Code skills packages
-**Project:** DWMF (Markdown spec parser → JSON registry → Linear sync → GSD packets)
+**Project:** DWA (Markdown spec parser → JSON registry → Linear sync → GSD packets)
 **Researched:** 2026-01-24
 
 ## Critical Pitfalls
@@ -205,19 +205,19 @@ Mistakes that cause rewrites or major issues.
 **Why it happens:**
 - Claude Code skills are just markdown files with prompts
 - No dependency declaration or runtime checks
-- User installs DWMF package but not VS Code extension
+- User installs DWA package but not VS Code extension
 - MCP servers fail to start (config error, auth expired)
 
 **Consequences:**
 - Skill invocation fails: "Tool not found: mcp__linear__create_issue"
 - No helpful error message directing user to install dependencies
-- User thinks DWMF is broken, abandons project
+- User thinks DWA is broken, abandons project
 - Debugging requires checking Claude Code logs (non-obvious)
 
 **Prevention:**
 1. **Document dependencies prominently** in README and installation output:
    ```
-   DWMF requires the following MCP servers:
+   DWA requires the following MCP servers:
    - dev-workflow-assistant (Linear + Google Drive)
 
    Install: [link to setup guide]
@@ -234,10 +234,10 @@ Mistakes that cause rewrites or major issues.
    ```
 3. **Fail fast with helpful errors**:
    - "Linear MCP not found. Install dev-workflow-assistant: [link]"
-   - "Google Drive auth expired. Run: dwmf --setup-google-drive"
+   - "Google Drive auth expired. Run: dwa --setup-google-drive"
 4. **Provide setup wizard** that validates dependencies:
    ```bash
-   npx dwmf --install
+   npx dwa --install
    # Checks:
    # ✓ Claude Code detected
    # ✗ Linear MCP not found → Install dev-workflow-assistant?
@@ -267,7 +267,7 @@ Mistakes that cause rewrites or major issues.
 - Breaking changes deployed without upgrade path
 
 **Consequences:**
-- Existing projects break after DWMF update
+- Existing projects break after DWA update
 - User must manually edit JSON files to add missing fields
 - Data loss if migration doesn't preserve old fields
 - Users pin to old version, missing new features
@@ -307,7 +307,7 @@ Mistakes that cause rewrites or major issues.
      // ...
    });
    ```
-5. **Run migration on install**: `dwmf --migrate` command
+5. **Run migration on install**: `dwa --migrate` command
 6. **Test upgrade paths**: Load v1 JSON, verify it works with v2 code
 7. **Document breaking changes** in CHANGELOG
 
@@ -435,7 +435,7 @@ Mistakes that cause delays or technical debt.
 
 ### Pitfall 10: npm Package Installation Path Assumptions
 
-**What goes wrong:** Install script writes to `~/.claude/dwmf/` but `~` expands differently on Windows vs Unix. Windows uses `%USERPROFILE%`, leading to path resolution failures. Skills installed to wrong location, Claude Code doesn't find them.
+**What goes wrong:** Install script writes to `~/.claude/dwa/` but `~` expands differently on Windows vs Unix. Windows uses `%USERPROFILE%`, leading to path resolution failures. Skills installed to wrong location, Claude Code doesn't find them.
 
 **Why it happens:**
 - `~` is shell expansion, not Node.js built-in
@@ -447,7 +447,7 @@ Mistakes that cause delays or technical debt.
    ```typescript
    const path = require('path');
    const os = require('os');
-   const installPath = path.join(os.homedir(), '.claude', 'dwmf');
+   const installPath = path.join(os.homedir(), '.claude', 'dwa');
    ```
 2. **Use `path.join()`** for all path construction (handles separators)
 3. **Check permissions** before write:
@@ -578,7 +578,7 @@ Mistakes that cause annoyance but are fixable.
    - `.dwa/deliverables/DEL-002.json`
 2. **Provide merge tool** or resolution guide:
    ```bash
-   dwmf --resolve-conflicts
+   dwa --resolve-conflicts
    # Parses both versions, merges non-conflicting fields
    ```
 3. **Document merge process** in README
@@ -651,8 +651,8 @@ Mistakes that cause annoyance but are fixable.
 2. **Include file path + line number** in all errors
 3. **Link to troubleshooting docs**
 4. **Suggest automatic fixes** where possible:
-   - "Run: dwmf --fix-yaml"
-   - "Run: dwmf --validate-spec"
+   - "Run: dwa --fix-yaml"
+   - "Run: dwa --validate-spec"
 
 **Detection:**
 - User reports "error but don't know how to fix"
@@ -683,7 +683,7 @@ Mistakes that cause annoyance but are fixable.
 
 This research draws on:
 - **Domain expertise**: My training includes extensive knowledge of markdown parsing libraries (remark, markdown-it), YAML parsing challenges, file system concurrency patterns, Linear API documentation, and Claude Code skills architecture
-- **Project context**: Specific risks identified from DWMF's architecture (.dwa/ registry, Linear sync, GSD packets, npm installation)
+- **Project context**: Specific risks identified from DWA's architecture (.dwa/ registry, Linear sync, GSD packets, npm installation)
 - **Known pitfall patterns**: Common mistakes in similar dev tools (markdown-based project management, file-based registries, API integrations)
 
 **Verification limitations**:

@@ -6,12 +6,12 @@
 
 ## System Overview
 
-DWMF implements a layered architecture with clear separation between installation, skill invocation, template management, and registry operations.
+DWA implements a layered architecture with clear separation between installation, skill invocation, template management, and registry operations.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                     USER INVOCATION                          │
-│  /dwmf:init  /dwmf:parse  /dwmf:sync  /dwmf:start  etc.      │
+│  /dwa:init  /dwa:parse  /dwa:sync  /dwa:start  etc.      │
 ├─────────────────────────────────────────────────────────────┤
 │                     SKILL LAYER                              │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
@@ -47,22 +47,22 @@ DWMF implements a layered architecture with clear separation between installatio
 
 | Component | Responsibility | Location |
 |-----------|----------------|----------|
-| **Installer** | Copy skill files to ~/.claude/dwmf/, register in settings.json | CLI entry point (npx) |
-| **Skills** | Orchestrate workflow steps, parse user commands, coordinate operations | ~/.claude/dwmf/skills/*.md |
-| **Templates** | Provide scaffolds for specs, packets, and structured documents | ~/.claude/dwmf/templates/*.md |
-| **References** | Shared parsing logic, validation patterns, schema definitions | ~/.claude/dwmf/references/*.md |
+| **Installer** | Copy skill files to ~/.claude/dwa/, register in settings.json | CLI entry point (npx) |
+| **Skills** | Orchestrate workflow steps, parse user commands, coordinate operations | ~/.claude/dwa/skills/*.md |
+| **Templates** | Provide scaffolds for specs, packets, and structured documents | ~/.claude/dwa/templates/*.md |
+| **References** | Shared parsing logic, validation patterns, schema definitions | ~/.claude/dwa/references/*.md |
 | **Registry** | Store parsed deliverables, track status, maintain single source of truth | PROJECT/.dwa/ (user's project) |
 | **Integrations** | Bridge to external systems (Linear, Google Docs, GSD) | VS Code extension + MCP |
 
 ## Recommended Package Structure
 
-Analysis of GSD reveals the standard pattern for Claude Code skills packages. DWMF should follow this proven structure:
+Analysis of GSD reveals the standard pattern for Claude Code skills packages. DWA should follow this proven structure:
 
 ```
-~/.claude/dwmf/                    # Installation target
+~/.claude/dwa/                    # Installation target
 ├── VERSION                        # Version string (e.g., "1.0.0")
 ├── CHANGELOG.md                   # Release history
-├── skills/                        # User-invocable commands (/dwmf:*)
+├── skills/                        # User-invocable commands (/dwa:*)
 │   ├── init.md                    # Initialize feature from template or Docs
 │   ├── parse.md                   # Extract deliverables to registry
 │   ├── sync.md                    # Sync artifacts (Linear, registry)
@@ -88,7 +88,7 @@ Analysis of GSD reveals the standard pattern for Claude Code skills packages. DW
 **skills/ vs workflows/:**
 - **skills/**: Single-purpose, user-invocable commands. Each skill has one clear job.
 - **workflows/**: Multi-step orchestrations (like GSD's execute-plan.md). Only needed if you have complex multi-agent coordination.
-- **DWMF decision**: Start with skills/ only. Add workflows/ if orchestration complexity demands it.
+- **DWA decision**: Start with skills/ only. Add workflows/ if orchestration complexity demands it.
 
 **templates/ separation:**
 - Templates are passive artifacts, not executable logic.
@@ -102,7 +102,7 @@ Analysis of GSD reveals the standard pattern for Claude Code skills packages. DW
 
 **No agents/ directory:**
 - GSD has agents/ for sub-agents (gsd-planner, gsd-executor, gsd-researcher).
-- DWMF doesn't spawn sub-agents in v1 — orchestration is sequential.
+- DWA doesn't spawn sub-agents in v1 — orchestration is sequential.
 - Only add agents/ if you need parallel research or complex delegation.
 
 ## File Registry Architecture (.dwa/)
@@ -111,7 +111,7 @@ The file-based registry lives in the user's project, not in the installed packag
 
 ```
 PROJECT_ROOT/
-├── .dwa/                          # Registry root (created by /dwmf:init)
+├── .dwa/                          # Registry root (created by /dwa:init)
 │   ├── feature.json               # Feature metadata (title, spec path, Linear project)
 │   ├── deliverables/              # Parsed deliverable entries
 │   │   ├── DEL-001.json           # Individual deliverable (immutable from spec)
@@ -122,7 +122,7 @@ PROJECT_ROOT/
 │   │   ├── DEL-002.md
 │   │   └── ...
 │   ├── drift-report.md            # Latest drift check output
-│   └── .dwmf-version              # Version of DWMF that created registry
+│   └── .dwa-version              # Version of DWA that created registry
 └── feature-spec.md                # The canonical feature spec (source of truth)
 ```
 
@@ -175,8 +175,8 @@ One-sentence description of what this skill does.
 </purpose>
 
 <required_reading>
-@/Users/username/.claude/dwmf/references/parsing-patterns.md
-@/Users/username/.claude/dwmf/templates/feature-spec-v2.md
+@/Users/username/.claude/dwa/references/parsing-patterns.md
+@/Users/username/.claude/dwa/templates/feature-spec-v2.md
 </required_reading>
 
 <context>
@@ -189,7 +189,7 @@ Step-by-step execution logic with verification gates.
 </process>
 ```
 
-**When to use:** All user-facing skills (/dwmf:init, /dwmf:parse, etc.).
+**When to use:** All user-facing skills (/dwa:init, /dwa:parse, etc.).
 
 **Trade-offs:**
 - **Pro:** Each skill is independently understandable.
@@ -207,7 +207,7 @@ Step-by-step execution logic with verification gates.
   <files>feature-spec.md</files>
   <action>
 Copy template from:
-@/Users/username/.claude/dwmf/templates/feature-spec-v2.md
+@/Users/username/.claude/dwa/templates/feature-spec-v2.md
 
 Replace placeholders:
 - {{FEATURE_TITLE}} → user-provided title
@@ -224,9 +224,9 @@ Write to: feature-spec.md
 **When to use:** Any file generation (specs, packets, drift reports).
 
 **Trade-offs:**
-- **Pro:** Template updates benefit all users (upgrade ~/.claude/dwmf/).
+- **Pro:** Template updates benefit all users (upgrade ~/.claude/dwa/).
 - **Pro:** Clear separation: logic in skills, structure in templates.
-- **Con:** Versioning complexity if template schema changes (handle with .dwmf-version tracking).
+- **Con:** Versioning complexity if template schema changes (handle with .dwa-version tracking).
 
 ### Pattern 3: Idempotent Registry Operations
 
@@ -270,18 +270,18 @@ function parseDeliverables(specPath: string): void {
 
 **Flow:**
 ```
-/dwmf:init
+/dwa:init
   ↓ writes: .dwa/feature.json, feature-spec.md
 
-/dwmf:parse
+/dwa:parse
   ↓ reads: feature-spec.md
   ↓ writes: .dwa/deliverables/*.json
 
-/dwmf:sync
+/dwa:sync
   ↓ reads: .dwa/deliverables/*.json
   ↓ writes: .dwa/deliverables/*.json (updates linear_issue_id)
 
-/dwmf:start DEL-001
+/dwa:start DEL-001
   ↓ reads: .dwa/deliverables/DEL-001.json, feature-spec.md
   ↓ writes: .dwa/packets/DEL-001.md
 ```
@@ -369,20 +369,20 @@ Dependencies (completed):
 
 ```
 1. User creates/imports feature spec
-   /dwmf:init
+   /dwa:init
      ↓
    feature-spec.md (canonical source)
    .dwa/feature.json (metadata)
 
 2. Parse deliverables from spec
-   /dwmf:parse
+   /dwa:parse
      ↓ reads feature-spec.md
      ↓ extracts Deliverables Table
      ↓
    .dwa/deliverables/DEL-*.json (registry)
 
 3. Sync to Linear
-   /dwmf:sync
+   /dwa:sync
      ↓ reads .dwa/deliverables/*.json
      ↓ calls Linear MCP
      ↓ creates/updates issues
@@ -390,7 +390,7 @@ Dependencies (completed):
    .dwa/deliverables/*.json (updated with linear_issue_id)
 
 4. Start a deliverable
-   /dwmf:start DEL-001
+   /dwa:start DEL-001
      ↓ reads .dwa/deliverables/DEL-001.json
      ↓ reads feature-spec.md (relevant section)
      ↓ generates bounded packet
@@ -398,10 +398,10 @@ Dependencies (completed):
    .dwa/packets/DEL-001.md (GSD-ready)
 
 5. User executes with GSD
-   (outside DWMF — GSD reads packet and executes)
+   (outside DWA — GSD reads packet and executes)
 
 6. Check for drift
-   /dwmf:check-drift
+   /dwa:check-drift
      ↓ reads feature-spec.md
      ↓ reads .dwa/deliverables/*.json
      ↓ compares spec vs registry
@@ -420,7 +420,7 @@ Deliverable lifecycle:
 
 Status field updates:
 - **not-started**: Default after parsing
-- **in-progress**: Set by /dwmf:start or manual status update
+- **in-progress**: Set by /dwa:start or manual status update
 - **completed**: Set by drift check (detects merged PR) or manual
 
 ## Scaling Considerations
@@ -498,13 +498,13 @@ Status field updates:
 - Bypasses validation.
 
 **Do this instead:**
-- **Fix the source:** Edit feature-spec.md Deliverables Table, then re-run /dwmf:parse.
+- **Fix the source:** Edit feature-spec.md Deliverables Table, then re-run /dwa:parse.
 - **Add validation:** Skills should validate spec format BEFORE writing registry.
 - **Runtime fields only:** Only edit status, pr_url, etc. (fields NOT in spec).
 
 ### Anti-Pattern 5: Skill Chaining via Side Effects
 
-**What people do:** /dwmf:sync implicitly runs /dwmf:parse if deliverables/ is empty.
+**What people do:** /dwa:sync implicitly runs /dwa:parse if deliverables/ is empty.
 
 **Why it's wrong:**
 - Violates single responsibility (sync should sync, not parse).
@@ -512,8 +512,8 @@ Status field updates:
 - Debugging becomes harder (which skill caused the error?).
 
 **Do this instead:**
-- **Explicit prerequisites:** /dwmf:sync checks if deliverables/ exists, errors if not: "Run /dwmf:parse first."
-- **Workflow skills:** If chaining is needed, create /dwmf:full-workflow that explicitly calls init → parse → sync → start.
+- **Explicit prerequisites:** /dwa:sync checks if deliverables/ exists, errors if not: "Run /dwa:parse first."
+- **Workflow skills:** If chaining is needed, create /dwa:full-workflow that explicitly calls init → parse → sync → start.
 - **User clarity:** Better to require two commands than hide one inside the other.
 
 ## Installation Architecture
@@ -521,24 +521,24 @@ Status field updates:
 ### NPX Installation Flow
 
 ```bash
-npx dwmf --install
+npx dwa --install
 ```
 
 **Steps:**
-1. **Download package:** npm downloads dwmf package to temp directory.
+1. **Download package:** npm downloads dwa package to temp directory.
 2. **Run installer script:** package.json "bin" points to install.js.
 3. **Copy skill files:**
    ```javascript
-   const targetDir = path.join(os.homedir(), '.claude', 'dwmf');
+   const targetDir = path.join(os.homedir(), '.claude', 'dwa');
    fs.cpSync(path.join(__dirname, 'dist'), targetDir, { recursive: true });
    ```
-4. **Register skills:** Update ~/.claude/settings.json to add /dwmf:* commands.
+4. **Register skills:** Update ~/.claude/settings.json to add /dwa:* commands.
    ```json
    {
      "customInstructions": {
-       "dwmf:init": "file:///Users/username/.claude/dwmf/skills/init.md",
-       "dwmf:parse": "file:///Users/username/.claude/dwmf/skills/parse.md",
-       "dwmf:sync": "file:///Users/username/.claude/dwmf/skills/sync.md"
+       "dwa:init": "file:///Users/username/.claude/dwa/skills/init.md",
+       "dwa:parse": "file:///Users/username/.claude/dwa/skills/parse.md",
+       "dwa:sync": "file:///Users/username/.claude/dwa/skills/sync.md"
      }
    }
    ```
@@ -548,24 +548,24 @@ npx dwmf --install
 
 **Upgrade flow:**
 ```bash
-npx dwmf --upgrade
+npx dwa --upgrade
 ```
 
 **Steps:**
-1. Check ~/.claude/dwmf/VERSION vs latest npm version.
+1. Check ~/.claude/dwa/VERSION vs latest npm version.
 2. Backup existing skills (if user customized).
 3. Overwrite with new version.
-4. Compare .dwmf-version in project vs installed version.
+4. Compare .dwa-version in project vs installed version.
 5. Offer migration if registry schema changed.
 
 ### Uninstallation
 
 ```bash
-npx dwmf --uninstall
+npx dwa --uninstall
 ```
 
 **Steps:**
-1. Remove ~/.claude/dwmf/ directory.
+1. Remove ~/.claude/dwa/ directory.
 2. Remove skill registrations from settings.json.
 3. Warn user: "Project registries (.dwa/) are preserved. Delete manually if needed."
 
@@ -575,9 +575,9 @@ npx dwmf --uninstall
 
 | Service | Integration Pattern | Location | Notes |
 |---------|---------------------|----------|-------|
-| Google Docs | MCP (read-only) | dev-workflow-assistant extension | Import spec from Docs via /dwmf:init --from-docs |
+| Google Docs | MCP (read-only) | dev-workflow-assistant extension | Import spec from Docs via /dwa:init --from-docs |
 | Linear | MCP (read/write) | dev-workflow-assistant extension | Create/update issues, sync status |
-| GSD | File-based (read) | ~/.claude/get-shit-done/ | Packets generated by DWMF, executed by GSD |
+| GSD | File-based (read) | ~/.claude/get-shit-done/ | Packets generated by DWA, executed by GSD |
 | GitHub | Future (via Linear or direct MCP) | TBD | PR creation, status sync |
 
 ### Internal Boundaries
@@ -585,7 +585,7 @@ npx dwmf --uninstall
 | Boundary | Communication | Notes |
 |----------|---------------|-------|
 | Installer ↔ Settings | JSON file writes | settings.json registration must be idempotent |
-| Skills ↔ Templates | File copy | Skills read from ~/.claude/dwmf/templates/ |
+| Skills ↔ Templates | File copy | Skills read from ~/.claude/dwa/templates/ |
 | Skills ↔ References | Context inclusion | @references/*.md included in skill prompts |
 | Skills ↔ Registry | File I/O | Read/write .dwa/*.json via standard fs operations |
 | Registry ↔ MCP | File reads → API calls | MCP servers watch .dwa/ or triggered by skills |
@@ -599,9 +599,9 @@ Based on this architecture, recommended build phases:
 - Installer CLI (npx entry point)
 - settings.json registration
 - Basic registry structure (.dwa/feature.json, deliverables/)
-- VERSION and .dwmf-version tracking
+- VERSION and .dwa-version tracking
 
-**Validation:** npx dwmf --install succeeds, ~/.claude/dwmf/ exists.
+**Validation:** npx dwa --install succeeds, ~/.claude/dwa/ exists.
 
 ### Phase 2: Template Layer
 **Why next:** Skills need templates to scaffold files.
@@ -614,33 +614,33 @@ Based on this architecture, recommended build phases:
 
 ### Phase 3: Core Skills (init, parse)
 **Why next:** These enable the basic flow (spec → registry).
-- /dwmf:init (scaffold or import from Docs)
-- /dwmf:parse (extract Deliverables Table → .dwa/deliverables/)
+- /dwa:init (scaffold or import from Docs)
+- /dwa:parse (extract Deliverables Table → .dwa/deliverables/)
 - Parsing patterns reference (markdown table parser, YAML parser)
 - Validation schemas reference
 
-**Validation:** /dwmf:init → /dwmf:parse produces valid .dwa/ structure.
+**Validation:** /dwa:init → /dwa:parse produces valid .dwa/ structure.
 
 ### Phase 4: Linear Integration (sync)
 **Why next:** Value delivery starts here (Linear issues created).
-- /dwmf:sync skill
+- /dwa:sync skill
 - Linear integration reference
 - MCP bridge (assumes dev-workflow-assistant extension installed)
 
-**Validation:** /dwmf:sync creates Linear issues with correct fields.
+**Validation:** /dwa:sync creates Linear issues with correct fields.
 
 ### Phase 5: Execution (start, GSD packets)
 **Why next:** Enables AI execution workflow.
-- /dwmf:start skill
+- /dwa:start skill
 - Execution packet generation
 - GSD integration reference
 - Bounded context logic
 
-**Validation:** /dwmf:start DEL-001 generates valid GSD packet.
+**Validation:** /dwa:start DEL-001 generates valid GSD packet.
 
 ### Phase 6: Drift Detection (check-drift)
 **Why last:** Depends on completed execution to detect drift.
-- /dwmf:check-drift skill
+- /dwa:check-drift skill
 - Drift detection logic (spec vs registry comparison)
 - Drift report template
 
@@ -652,7 +652,7 @@ Based on this architecture, recommended build phases:
 **Rationale:** Claude Code skills are prompt files, not code. Orchestration logic lives in natural language, execution happens in Claude context.
 **Implication:** No build step for skills. Templates and references are plain markdown. Only installer needs TypeScript/JavaScript.
 
-### Decision 2: Registry in Project, Not in ~/.claude/dwmf/
+### Decision 2: Registry in Project, Not in ~/.claude/dwa/
 **Rationale:** Each project has its own feature specs and deliverables. Registry must be project-local, not global.
 **Implication:** Skills operate on cwd's .dwa/ directory. Installation is global, state is local.
 
@@ -676,7 +676,7 @@ Based on this architecture, recommended build phases:
 - GSD template patterns: phase-prompt.md (YAML frontmatter + task structure), project.md (living document)
 
 **Project Context:**
-- DWMF PROJECT.md: /Users/jedwards/workspace/JobPrep/dwmf/.planning/PROJECT.md
+- DWA PROJECT.md: /Users/jedwards/workspace/JobPrep/dwa/.planning/PROJECT.md
 - Feature Spec Template v2.0: (user-provided, referenced in PROJECT.md)
 - dev-workflow-assistant extension: (separate repo, provides Linear/Google MCP)
 
@@ -690,9 +690,9 @@ Based on this architecture, recommended build phases:
 **Confidence Level:** HIGH
 - GSD structure analysis: Direct file inspection (HIGH confidence)
 - Skills architecture: Observed pattern from GSD workflows (HIGH confidence)
-- Registry design: Inferred from DWMF requirements + file-based best practices (MEDIUM confidence)
+- Registry design: Inferred from DWA requirements + file-based best practices (MEDIUM confidence)
 - Installation mechanism: Standard npx pattern + settings.json (HIGH confidence)
 
 ---
-*Architecture research for: DWMF — Dev Workflow Meta-Framework*
+*Architecture research for: DWA — Dev Workflow Meta-Framework*
 *Researched: 2026-01-24*

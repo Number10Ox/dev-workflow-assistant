@@ -12,7 +12,7 @@ Dev workflow meta-frameworks bridge the gap between planning artifacts (specs, i
 2. **Issue trackers** (Linear, Jira) — track work but disconnected from specs and code
 3. **Meta-frameworks** (emerging category) — parse specs into executable units, sync state across planning/tracking/code
 
-DWMF sits in tier 3: it treats the feature spec as the source of truth, extracts deliverables as first-class units, and generates bounded execution contexts for AI. This is a **novel integration pattern** — most teams manually copy-paste between spec → Linear → AI prompts.
+DWA sits in tier 3: it treats the feature spec as the source of truth, extracts deliverables as first-class units, and generates bounded execution contexts for AI. This is a **novel integration pattern** — most teams manually copy-paste between spec → Linear → AI prompts.
 
 ## Table Stakes
 
@@ -49,29 +49,29 @@ Drift detection (requires all above)
 
 ## Differentiators
 
-Features that set DWMF apart from manual coordination or simpler tools. Not expected, but high value.
+Features that set DWA apart from manual coordination or simpler tools. Not expected, but high value.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Deliverables as first-class units** | Most tools track "features" or "issues"; DWMF tracks atomic deliverables with individual lifecycle | Medium | Each deliverable gets: JSON file, Linear ticket, execution packet, PR link |
+| **Deliverables as first-class units** | Most tools track "features" or "issues"; DWA tracks atomic deliverables with individual lifecycle | Medium | Each deliverable gets: JSON file, Linear ticket, execution packet, PR link |
 | **Multi-source spec import** | Scaffold locally OR import from Google Docs; meets users where specs already live | Medium | Google Docs MCP integration avoids "rewrite your specs" friction |
 | **GSD execution packets** | Not just "here's the spec" — generate bounded context optimized for AI execution (stop points, success criteria) | High | Requires understanding GSD contract; format must prevent scope creep |
 | **Registry-driven sync** | Linear issues update from registry, not manual edits; spec → registry → Linear ensures consistency | Medium | Prevents "update the ticket" toil; changes propagate automatically |
-| **Installable skills package** | Not per-project setup — `npx dwmf --install` makes skills available globally | Low | Reusability across projects; shareable via npm |
+| **Installable skills package** | Not per-project setup — `npx dwa --install` makes skills available globally | Low | Reusability across projects; shareable via npm |
 | **File-based, git-trackable state** | `.dwa/` directory commits with code; no external database; works offline | Low | Enables PR reviews to see deliverable changes; audit trail |
 | **Template compliance validation** | Reject malformed specs early with actionable errors | Medium | Prevents "garbage in" scenarios; schema validation on parse |
 | **Incremental adoption** | Works for one feature at a time; doesn't require team-wide process change | Low | Start small, prove value, expand usage |
 
 ### Why These Matter
 
-**Deliverables as first-class units:** Current workflow = "ship login feature" (vague). DWMF workflow = ship DEL-001 (email input), DEL-002 (password validation), DEL-003 (OAuth flow). Granularity enables:
+**Deliverables as first-class units:** Current workflow = "ship login feature" (vague). DWA workflow = ship DEL-001 (email input), DEL-002 (password validation), DEL-003 (OAuth flow). Granularity enables:
 - Parallel work (different devs, different deliverables)
 - Incremental shipping (DEL-001 ships before DEL-003 done)
 - Precise tracking (know exactly what's blocked vs done)
 
 **GSD execution packets:** Unbounded AI context = hallucination, scope creep, wasted iterations. Bounded packet = "implement DEL-001, stop when tests pass, these are the ACs." Faster, more predictable.
 
-**Registry-driven sync:** Manual workflow = update spec, update Linear, update PR. DWMF = update spec, run sync. Reduces toil, eliminates sync errors.
+**Registry-driven sync:** Manual workflow = update spec, update Linear, update PR. DWA = update spec, run sync. Reduces toil, eliminates sync errors.
 
 ## Anti-Features
 
@@ -84,7 +84,7 @@ Features to explicitly NOT build in v1. Common mistakes or scope creep traps.
 | **Custom issue tracker adapters** | Linear is sufficient for v1; each tracker has unique API quirks; maintenance burden | Linear-only; adapter pattern allows future extension |
 | **Visual spec editor** | Markdown is familiar; WYSIWYG editors are complex; users already have editors (VS Code, Docs) | Use existing editors; provide clear template |
 | **Automated code generation** | AI code quality varies; debugging generated code harder than writing it; false promise | Execution packets guide humans/AI, don't replace them |
-| **Built-in CI/CD integration** | Out of scope; users have existing pipelines; DWMF provides metadata, pipelines consume it | Expose deliverable status via registry; let pipelines read it |
+| **Built-in CI/CD integration** | Out of scope; users have existing pipelines; DWA provides metadata, pipelines consume it | Expose deliverable status via registry; let pipelines read it |
 | **Spec versioning UI** | Git already handles versioning; reinventing version control adds no value | Commit `.dwa/` directory; use git for history |
 | **Deliverable dependencies graph** | Complex to parse from specs; manual dependency tracking error-prone; adds significant complexity | Keep flat; users order deliverables in spec |
 | **Time tracking per deliverable** | Feature creep; Linear already has estimates; adds noise | Link to Linear ticket; use Linear's time tracking |
@@ -211,37 +211,37 @@ Spec parsing
 
 ## Comparison to Existing Tools
 
-### DWMF vs Notion/Confluence (Spec Management)
-| Criterion | DWMF | Notion | Winner |
+### DWA vs Notion/Confluence (Spec Management)
+| Criterion | DWA | Notion | Winner |
 |-----------|------|--------|--------|
-| Spec → Code integration | Parsed deliverables drive execution | Manual copy-paste | DWMF |
-| Issue sync | Automated (registry → Linear) | Manual or Zapier | DWMF |
+| Spec → Code integration | Parsed deliverables drive execution | Manual copy-paste | DWA |
+| Issue sync | Automated (registry → Linear) | Manual or Zapier | DWA |
 | Version control | Git (file-based) | Built-in (opaque) | Tie |
 | Editing UX | Markdown in VS Code | WYSIWYG | Notion |
-| Offline support | Full (file-based) | Limited | DWMF |
+| Offline support | Full (file-based) | Limited | DWA |
 
-**Recommendation:** DWMF for execution-focused workflows; Notion for collaborative spec editing.
+**Recommendation:** DWA for execution-focused workflows; Notion for collaborative spec editing.
 
-### DWMF vs Linear (Issue Tracking)
-| Criterion | DWMF | Linear | Winner |
+### DWA vs Linear (Issue Tracking)
+| Criterion | DWA | Linear | Winner |
 |-----------|------|--------|--------|
-| Deliverable granularity | First-class (each deliverable = JSON + ticket) | Manual (create tickets per deliverable) | DWMF |
-| Spec integration | Registry syncs from spec | Manual copy-paste | DWMF |
-| AI execution context | Generates bounded packets | No integration | DWMF |
+| Deliverable granularity | First-class (each deliverable = JSON + ticket) | Manual (create tickets per deliverable) | DWA |
+| Spec integration | Registry syncs from spec | Manual copy-paste | DWA |
+| AI execution context | Generates bounded packets | No integration | DWA |
 | Project management | Lightweight (file-based) | Full-featured (roadmaps, cycles) | Linear |
 | Team collaboration | Single-user | Multi-user | Linear |
 
-**Recommendation:** DWMF + Linear together. DWMF manages deliverable lifecycle, Linear provides team visibility.
+**Recommendation:** DWA + Linear together. DWA manages deliverable lifecycle, Linear provides team visibility.
 
-### DWMF vs Cursor/Aider (AI Coding)
-| Criterion | DWMF | Cursor | Aider | Winner |
+### DWA vs Cursor/Aider (AI Coding)
+| Criterion | DWA | Cursor | Aider | Winner |
 |-----------|------|--------|-------|--------|
-| Bounded execution | Packets limit scope per deliverable | Full codebase context | File-level context | DWMF |
-| Spec integration | Registry drives packets | None | None | DWMF |
+| Bounded execution | Packets limit scope per deliverable | Full codebase context | File-level context | DWA |
+| Spec integration | Registry drives packets | None | None | DWA |
 | Code generation | Guides AI, doesn't generate | Inline generation | CLI generation | Cursor (UX) |
-| Drift detection | Tracks deliverable status vs code | None | None | DWMF |
+| Drift detection | Tracks deliverable status vs code | None | None | DWA |
 
-**Recommendation:** DWMF generates execution context, Cursor/Aider consume it. Complementary tools.
+**Recommendation:** DWA generates execution context, Cursor/Aider consume it. Complementary tools.
 
 ## Sources
 
@@ -251,7 +251,7 @@ Findings based on:
 - Training knowledge of workflow automation patterns (Linear API, spec management, AI coding assistants)
 - Understanding of GSD execution model (bounded context, stop points)
 - Common pitfalls in multi-system sync (issue trackers, specs, code)
-- DWMF project context from PROJECT.md
+- DWA project context from PROJECT.md
 
 **Not verified against:**
 - Current 2026 ecosystem (WebSearch unavailable)

@@ -1,6 +1,6 @@
 # Technology Stack
 
-**Project:** DWMF (Dev Workflow Meta-Framework)
+**Project:** DWA (Dev Workflow Meta-Framework)
 **Researched:** 2026-01-24
 **Confidence:** MEDIUM (based on training data + GSD reference analysis)
 
@@ -27,7 +27,7 @@
   - **vs oclif:** Too heavyweight for simple install + command pattern; oclif is overkill for non-plugin architectures
   - **vs meow:** Too minimal; lacks subcommand support needed for potential future expansion
 
-- **Use case fit:** DWMF needs `--install` flag and potentially skill-specific commands. Commander's subcommand pattern maps cleanly to this.
+- **Use case fit:** DWA needs `--install` flag and potentially skill-specific commands. Commander's subcommand pattern maps cleanly to this.
 
 **Confidence:** HIGH (standard choice, well-established pattern)
 
@@ -83,7 +83,7 @@ visit(tree, 'table', (node) => {
 |------------|---------|---------|-----|
 | fs/promises | Built-in | File I/O | Native Node.js, async/await support, no dependencies |
 | path | Built-in | Path manipulation | Native Node.js, cross-platform path handling |
-| os | Built-in | Home directory resolution | Native `os.homedir()` for `~/.claude/dwmf/` |
+| os | Built-in | Home directory resolution | Native `os.homedir()` for `~/.claude/dwa/` |
 
 **Rationale:**
 - **Why NOT fs-extra:** Modern Node (16+) has `fs/promises` with async/await. No need for external dependency when built-in suffices.
@@ -96,7 +96,7 @@ import { mkdir, writeFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import { homedir } from 'os';
 
-const installDir = join(homedir(), '.claude', 'dwmf');
+const installDir = join(homedir(), '.claude', 'dwa');
 await mkdir(installDir, { recursive: true });
 await writeFile(join(installDir, 'skill.md'), content);
 ```
@@ -141,11 +141,11 @@ await writeFile(join(installDir, 'skill.md'), content);
 ### package.json Structure
 ```json
 {
-  "name": "dwmf",
+  "name": "dwa",
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "dwmf": "./dist/cli.js"
+    "dwa": "./dist/cli.js"
   },
   "files": [
     "dist/",
@@ -168,7 +168,7 @@ await writeFile(join(installDir, 'skill.md'), content);
 
 **Key decisions:**
 - **`"type": "module"`**: Use ES modules (modern standard, better tree-shaking)
-- **`bin` field**: Makes `npx dwmf --install` work
+- **`bin` field**: Makes `npx dwa --install` work
 - **`files` field**: Only ship necessary files (dist/, skills/, templates/); keep package size small
 - **`engines`**: Enforce Node 20+ for consistency
 
@@ -180,7 +180,7 @@ await writeFile(join(installDir, 'skill.md'), content);
 - Files are markdown skill files and JSON configs
 - No package.json in install directory (it's not an npm package there, just copied files)
 
-**DWMF installation pattern:**
+**DWA installation pattern:**
 ```javascript
 // cli.js
 import { Command } from 'commander';
@@ -193,16 +193,16 @@ import { dirname } from 'path';
 const program = new Command();
 
 program
-  .option('--install', 'Install DWMF skills to ~/.claude/dwmf')
+  .option('--install', 'Install DWA skills to ~/.claude/dwa')
   .action(async (options) => {
     if (options.install) {
-      const installDir = join(homedir(), '.claude', 'dwmf');
+      const installDir = join(homedir(), '.claude', 'dwa');
       const sourceDir = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills');
 
       await mkdir(installDir, { recursive: true });
       await cp(sourceDir, installDir, { recursive: true });
 
-      console.log(`✓ DWMF skills installed to ${installDir}`);
+      console.log(`✓ DWA skills installed to ${installDir}`);
     }
   });
 
@@ -242,21 +242,21 @@ npm install ajv
 npm install -D typescript @types/node vitest prettier eslint
 ```
 
-### For Users (How They Install DWMF)
+### For Users (How They Install DWA)
 ```bash
-# Install skills to ~/.claude/dwmf/
-npx dwmf --install
+# Install skills to ~/.claude/dwa/
+npx dwa --install
 
 # Or via global install (if preferred)
-npm install -g dwmf
-dwmf --install
+npm install -g dwa
+dwa --install
 ```
 
 ## Architecture Notes
 
 ### File Copying Strategy
 - **Source:** `skills/` directory in npm package
-- **Destination:** `~/.claude/dwmf/`
+- **Destination:** `~/.claude/dwa/`
 - **Method:** `fs/promises.cp()` with `{ recursive: true }`
 - **Overwrite behavior:** Decide per-file (VERSION always overwrites, user configs preserve?)
 
@@ -330,7 +330,7 @@ Compile TS to JS in `dist/`, ship `dist/` in npm package.
 **Stack implications:**
 - Set up package.json with `"type": "module"` and `bin` field
 - Install commander, implement `--install` flag
-- Test file copying from package to `~/.claude/dwmf/`
+- Test file copying from package to `~/.claude/dwa/`
 
 **Complexity:** LOW (standard npm package setup)
 
@@ -361,7 +361,7 @@ Compile TS to JS in `dist/`, ship `dist/` in npm package.
 1. **Feature Spec Template v2.0 Schema:** What exact YAML fields and table columns does it define? (Need template to finalize parser)
 2. **Idempotency Strategy:** How to merge parsed deliverables with existing `.dwa/deliverables/*.json` (preserve status, PR links)?
 3. **Error Handling:** What errors should halt vs. warn? (Malformed table, missing YAML, etc.)
-4. **Update Mechanism:** How do users update DWMF skills after initial install? (Re-run `--install` vs. `--update` flag?)
+4. **Update Mechanism:** How do users update DWA skills after initial install? (Re-run `--install` vs. `--update` flag?)
 
 ---
 
