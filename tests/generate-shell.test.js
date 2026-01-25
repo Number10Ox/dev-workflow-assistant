@@ -43,7 +43,7 @@ const DELIVERABLE_REGISTRY = {
 };
 
 /**
- * Test fixture - deliverable with drift
+ * Test fixture - deliverable with drift (Phase 5 event-sourced structure)
  */
 const DELIVERABLE_WITH_DRIFT = {
   schemaVersion: '1.0.0',
@@ -53,17 +53,23 @@ const DELIVERABLE_WITH_DRIFT = {
   acceptance_criteria: 'F1: Logout clears session',
   qa_notes: 'Verify session cleared',
   dependencies: 'DEL-001',
-  drift: [
+  drift_events: [
     {
-      kind: 'spec_mismatch',
-      description: 'User story wording changed',
+      id: 'drift-001',
+      at: '2026-01-25T10:00:00Z',
+      source: 'complete_command',
+      kind: 'spec_update_needed',
+      summary: 'User story wording changed',
       decision: 'pending',
       applies_to_next_work: true
     },
     {
-      kind: 'tdd_mismatch',
-      description: 'Security constraint added',
-      decision: 'acknowledged',
+      id: 'drift-002',
+      at: '2026-01-25T10:05:00Z',
+      source: 'complete_command',
+      kind: 'impl_deviation',
+      summary: 'Security constraint added',
+      decision: 'accept',
       applies_to_next_work: false
     }
   ],

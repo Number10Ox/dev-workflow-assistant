@@ -31,19 +31,27 @@ async function fetchDriftData(registry, featureJson, projectRoot) {
     }
   };
 
-  // Filter drift items from registry
-  if (registry.drift && Array.isArray(registry.drift)) {
-    result.items = registry.drift.filter(item => {
-      // Include if decision is pending
-      if (item.decision === 'pending') {
-        return true;
-      }
-      // Include if applies_to_next_work is true
-      if (item.applies_to_next_work === true) {
-        return true;
-      }
-      return false;
-    });
+  // Filter drift items from registry drift_events (Phase 5 event-sourced structure)
+  if (registry.drift_events && Array.isArray(registry.drift_events)) {
+    result.items = registry.drift_events
+      .filter(event => {
+        // Include if decision is pending
+        if (event.decision === 'pending') {
+          return true;
+        }
+        // Include if applies_to_next_work is true
+        if (event.applies_to_next_work === true) {
+          return true;
+        }
+        return false;
+      })
+      .map(event => ({
+        // Map event structure to packet item structure
+        kind: event.kind,
+        description: event.summary, // drift_events uses 'summary', packets use 'description'
+        decision: event.decision,
+        applies_to_next_work: event.applies_to_next_work
+      }));
   }
 
   // Compute source freshness
