@@ -176,11 +176,12 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. Partial failures report which deliverables succeeded/failed
 6. Registry stores `linear_issue_id` and `linear_url` after sync
 
-**Plans**: 4 plans in 2 waves
-- [ ] 06-01-PLAN.md — Extend IssueTracker interface with externalId, container, capabilities (bridge)
-- [ ] 06-02-PLAN.md — Linear provider implementation with rate limiting (bridge)
-- [ ] 06-03-PLAN.md — DWA sync infrastructure: content builder, fingerprint, external ID, bridge client
-- [ ] 06-04-PLAN.md — Sync command implementation with create/update/conflict handling
+**Plans**: 5 plans in 2 waves
+- [x] 06-01-PLAN.md — Extend IssueTracker interface with externalId, container, capabilities (bridge)
+- [x] 06-02-PLAN.md — Linear provider implementation with rate limiting (bridge)
+- [x] 06-03-PLAN.md — DWA sync infrastructure: content builder, fingerprint, external ID, bridge client
+- [x] 06-04-PLAN.md — Sync command implementation with create/update/conflict handling
+- [ ] 06-05-PLAN.md — Gap closure: Wire sync-linear command into CLI entry point
 
 ---
 
