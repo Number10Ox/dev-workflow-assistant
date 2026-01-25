@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 5 of 7 (Drift Tracking)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 05-02-PLAN.md (Complete Deliverable Command)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-25 - Completed 05-03-PLAN.md (Drift Log Rebuild)
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 3m 32s
-- Total execution time: 0.77 hours
+- Total plans completed: 14
+- Average duration: 3m 29s
+- Total execution time: 0.82 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [█████████░] 87%
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
-| 05 - Drift | 2 | 10m 8s | 5m 4s |
+| 05 - Drift | 3 | 13m 3s | 4m 21s |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (6m 0s), 04-02 (2m 0s), 05-01 (7m 40s), 05-02 (2m 28s)
-- Trend: TDD plans take longer due to test-first cycles (3 features x 2 commits each)
+- Last 5 plans: 04-02 (2m 0s), 05-01 (7m 40s), 05-02 (2m 28s), 05-03 (2m 55s)
+- Phase 5 complete with all drift infrastructure in place
 
 *Updated after each plan completion*
 
@@ -98,6 +98,9 @@ Recent decisions affecting current work:
 - [05-02]: Drift only recorded when both detected AND decision provided - allows caller to prompt user.
 - [05-02]: evidence_refs stored as array containing prUrl and commitSha.
 - [05-02]: Notes stored as author_notes field in drift events.
+- [05-03]: Drift log is a derived artifact - always rebuilt from registry drift_events, never manually edited.
+- [05-03]: Open drift (pending + escalate) shown prominently at top of drift log.
+- [05-03]: By-deliverable section uses chronological order (oldest first) within each group for narrative flow.
 
 ### Pending Todos
 
@@ -113,5 +116,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 05-02-PLAN.md (Complete Deliverable Command). 227 tests passing.
+Stopped at: Completed 05-03-PLAN.md (Drift Log Rebuild). Phase 5 complete. 234 tests passing.
 Resume file: None
