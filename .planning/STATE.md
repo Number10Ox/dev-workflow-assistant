@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 4: Execution Packets
+**Current focus:** Phase 5: Drift Tracking
 
 ## Current Position
 
-Phase: 4 of 7 (Execution Packets)
-Plan: 2 of 2 in current phase
-Status: Phase 4 complete
-Last activity: 2026-01-25 - Completed 04-02-PLAN.md (Packet Enrichment)
+Phase: 5 of 7 (Drift Tracking)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-25 - Completed 05-01-PLAN.md (Drift Event Infrastructure)
 
 Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 3m 19s
-- Total execution time: 0.61 hours
+- Total plans completed: 12
+- Average duration: 3m 37s
+- Total execution time: 0.73 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [████████░░] 80%
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
+| 05 - Drift | 1 | 7m 40s | 7m 40s |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (2m 50s), 03-02 (3m 29s), 04-01 (6m 0s), 04-02 (2m 0s)
-- Trend: Consistent execution - Phase 4 complete with skill and template creation
+- Last 5 plans: 03-02 (3m 29s), 04-01 (6m 0s), 04-02 (2m 0s), 05-01 (7m 40s)
+- Trend: TDD plans take longer due to test-first cycles (3 features x 2 commits each)
 
 *Updated after each plan completion*
 
@@ -90,6 +91,10 @@ Recent decisions affecting current work:
 - [04-02]: Contract mutation forbidden in sections 0-8; changes go to Patch Proposal only.
 - [04-02]: AC Coverage Map suggests test type per AC (unit/integration/manual).
 - [04-02]: Appendix template handles Nice-to-have and Edge AC overflow.
+- [05-01]: Use crypto.randomUUID() (Node built-in) instead of uuid package for zero additional dependencies.
+- [05-01]: AC count comparison uses semicolon, newline, and <br> as delimiters to handle various formats.
+- [05-01]: drift_open_count is derived (computed from events) not stored separately.
+- [05-01]: Structural comparison priority: removed > AC count > no PR URL > description.
 
 ### Pending Todos
 
@@ -105,5 +110,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 04-02-PLAN.md (Packet Enrichment). Phase 4 complete. 131 tests passing.
+Stopped at: Completed 05-01-PLAN.md (Drift Event Infrastructure). 178 tests passing.
 Resume file: None
