@@ -122,9 +122,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 4. `/dwa:enrich-packet` suggests files likely touched and key APIs from codebase analysis
 5. Starting already-started deliverable warns and requires confirmation
 
-**Plans**: TBD
-- [ ] 04-01: Packet shell generator (command)
-- [ ] 04-02: /dwa:enrich-packet skill
+**Plans**: 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md -- Packet shell generator (TDD): template, generation utilities, start command
+- [ ] 04-02-PLAN.md -- /dwa:enrich-packet skill: codebase analysis, implementation targets, enrichment sections
 
 ---
 
