@@ -14,7 +14,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Bootstrap and Installer** - Package installation and schema versioning
-- [ ] **Phase 2: Spec + TDD Scaffolding** - Canonical spec and technical design doc templates
+- [x] **Phase 2: Spec + TDD Scaffolding** - Canonical spec and technical design doc templates
 - [ ] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
 - [ ] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
 - [ ] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
@@ -50,7 +50,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
-### Phase 2: Spec + TDD Scaffolding
+### Phase 2: Spec + TDD Scaffolding ✓
 **Goal**: Users can scaffold both canonical spec (repo mirror of human spec) and technical design doc
 **Depends on**: Phase 1
 
@@ -74,7 +74,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] 02-01-PLAN.md — Update spec template with tdd_path field, update skill and tests (partial)
 - [x] 02-02-PLAN.md — TDD template (tdd-v1.hbs), scaffold-tdd.js utility, and tests (partial)
 - [x] 02-03-PLAN.md — /dwa:draft-tdd Claude Code skill (complete, awaits dependencies)
-- [ ] 02-04-PLAN.md — Gap closure: tdd_path field, TDD template, scaffold-tdd.js, tests
+- [x] 02-04-PLAN.md — Gap closure: tdd_path field, TDD template, scaffold-tdd.js, tests
 
 ---
 
@@ -212,7 +212,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | Phase | Status | Completed |
 |-------|--------|-----------|
 | 1. Bootstrap and Installer | ✓ Complete | 2026-01-24 |
-| 2. Spec + TDD Scaffolding | Gap closure | — |
+| 2. Spec + TDD Scaffolding | ✓ Complete | 2026-01-24 |
 | 3. Parsing + Idempotent Registry | Not started | — |
 | 4. Execution Packets | Not started | — |
 | 5. Drift Tracking | Not started | — |
