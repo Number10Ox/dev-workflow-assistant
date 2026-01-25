@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 ## Current Position
 
-Phase: 2 of 8 (Templates and Scaffolding)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-01-24 - Completed 02-04-PLAN.md (Gap Closure)
+Phase: 3 of 8 (Parsing + Idempotent Registry)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-24 - Completed 03-01-PLAN.md (Spec Parser with Validation)
 
-Progress: [████░░░░░░] 40%
+Progress: [████▌░░░░░] 45%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 3m 24s
-- Total execution time: 0.40 hours
+- Total plans completed: 8
+- Average duration: 3m 21s
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
@@ -29,10 +29,11 @@ Progress: [████░░░░░░] 40%
 |-------|-------|-------|----------|
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
+| 03 - Parsing | 1 | 2m 50s | 2m 50s |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (2m 40s), 02-02 (1m 56s), 02-03 (1m 6s), 02-04 (2m 27s)
-- Trend: Consistent velocity - Phase 2 complete averaging 2m 2s (65% faster than Phase 1)
+- Last 5 plans: 02-02 (1m 56s), 02-03 (1m 6s), 02-04 (2m 27s), 03-01 (2m 50s)
+- Trend: Consistent velocity - Phase 3 started with 2m 50s for TDD parser plan
 
 *Updated after each plan completion*
 
@@ -70,6 +71,10 @@ Recent decisions affecting current work:
 - [02-04]: Use gray-matter for YAML frontmatter parsing and updating.
 - [02-04]: Bidirectional linking: both spec and TDD reference each other via tdd_path.
 - [02-04]: TDD filename slugification: lowercase, hyphens, remove special chars.
+- [03-01]: Use `.default` for ES module imports (remark-parse, remark-gfm) in CommonJS context.
+- [03-01]: Find Deliverables Table by column header ("Deliverable ID") not by heading hierarchy.
+- [03-01]: Required columns: Deliverable ID, User Story, Description, Acceptance Criteria (testable), QA Plan Notes.
+- [03-01]: Row numbering in errors uses index +2 (header row + 0-index offset).
 
 ### Pending Todos
 
@@ -85,5 +90,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed Phase 2 (Templates and Scaffolding). 4 plans executed, all verified. 22 tests passing.
+Stopped at: Completed 03-01-PLAN.md (Spec Parser with Validation). 53 tests passing. Parser ready for registry integration.
 Resume file: None
