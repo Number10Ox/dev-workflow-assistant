@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 5: Drift Tracking
+**Current focus:** Phase 6: Linear Integration
 
 ## Current Position
 
-Phase: 5 of 7 (Drift Tracking)
-Plan: 4 of 4 in current phase
-Status: Phase complete
-Last activity: 2026-01-25 - Completed 05-04-PLAN.md (LLM-Powered Drift Skills)
+Phase: 6 of 7 (Linear Integration)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-25 - Completed 06-01-PLAN.md (Extend Bridge Interface)
 
-Progress: [██████████] 100%
+Progress: [████████████░░] 84%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15
-- Average duration: 3m 24s
-- Total execution time: 0.85 hours
+- Total plans completed: 16
+- Average duration: 3m 21s
+- Total execution time: 0.89 hours
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [██████████] 100%
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
+| 06 - Linear Integration | 1 | 3m 5s | 3m 5s |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (7m 40s), 05-02 (2m 28s), 05-03 (2m 55s), 05-04 (2m 11s)
-- Phase 5 complete with all drift infrastructure and LLM skills
+- Last 5 plans: 05-02 (2m 28s), 05-03 (2m 55s), 05-04 (2m 11s), 06-01 (3m 5s)
+- Phase 6 started with bridge interface extensions
 
 *Updated after each plan completion*
 
@@ -105,6 +106,11 @@ Recent decisions affecting current work:
 - [05-04]: summarize-drift adapts tone for technical (PR) vs stakeholder (PM) audiences.
 - [05-04]: Patch proposals are reviewable text, never auto-applied.
 - [05-gap]: fetchDriftData reads from drift_events (not drift) and maps summary to description for packet consumption.
+- [06-01]: Use IssueCreateInput interface instead of positional parameters for createIssue().
+- [06-01]: Use IssueFilter interface instead of string status parameter for listIssues().
+- [06-01]: Add queryByExternalId as required method in IssueTracker interface.
+- [06-01]: Set BRIDGE_API_VERSION to 2.0.0 to indicate breaking interface changes.
+- [06-01]: Use provider-agnostic 'container' field instead of 'projectId' for portability across Linear/JIRA/GitHub.
 
 ### Pending Todos
 
@@ -120,5 +126,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 05-04-PLAN.md (LLM-Powered Drift Skills). Phase 5 complete. Ready for Phase 6: Linear Integration.
+Stopped at: Completed 06-01-PLAN.md (Extend Bridge Interface). Phase 6 in progress (1/4 plans complete).
 Resume file: None
