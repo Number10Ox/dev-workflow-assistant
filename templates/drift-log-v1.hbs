@@ -1,0 +1,92 @@
+# Drift Log
+
+> Generated: {{generated_at}}
+> Open Drift: {{open_count}} | Total Events: {{total_events}}
+
+---
+
+## Open Drift (Requires Decision)
+
+{{#if open_drift.length}}
+{{#each open_drift}}
+### {{deliverable_id}} - {{kind}}
+
+**Summary:** {{summary}}
+**Decision:** {{decision}}
+**Recorded:** {{at}}
+{{#if applies_to_next_work}}
+**WARNING:** Applies to next work on this deliverable
+{{/if}}
+
+{{#if evidence_refs.length}}
+**Evidence:**
+{{#each evidence_refs}}
+- [{{this}}]({{this}})
+{{/each}}
+{{/if}}
+
+{{#if patch_proposals.length}}
+**Patch Proposals:**
+{{#each patch_proposals}}
+- {{this}}
+{{/each}}
+{{/if}}
+
+---
+
+{{/each}}
+{{else}}
+No open drift. All drift events have been resolved.
+
+---
+
+{{/if}}
+
+## Accepted Drift (Applied)
+
+{{#if accepted_drift.length}}
+| Deliverable | Timestamp | Summary |
+|-------------|-----------|---------|
+{{#each accepted_drift}}
+| {{deliverable_id}} | {{at}} | {{summary}} |
+{{/each}}
+{{else}}
+No accepted drift recorded.
+{{/if}}
+
+---
+
+## Reverted Drift (Rolled Back)
+
+{{#if reverted_drift.length}}
+| Deliverable | Timestamp | Summary |
+|-------------|-----------|---------|
+{{#each reverted_drift}}
+| {{deliverable_id}} | {{at}} | {{summary}} |
+{{/each}}
+{{else}}
+No reverted drift recorded.
+{{/if}}
+
+---
+
+## By Deliverable
+
+{{#if by_deliverable.length}}
+{{#each by_deliverable}}
+### {{deliverable_id}}
+
+{{#if events.length}}
+| Timestamp | Kind | Summary | Decision |
+|-----------|------|---------|----------|
+{{#each events}}
+| {{at}} | {{kind}} | {{summary}} | {{decision}} |
+{{/each}}
+{{else}}
+No drift events for this deliverable.
+{{/if}}
+
+{{/each}}
+{{else}}
+No deliverables with drift events.
+{{/if}}
