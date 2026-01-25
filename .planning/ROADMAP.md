@@ -2,7 +2,10 @@
 
 ## Overview
 
-DWA delivers a complete deliverable-driven development workflow as an installable Claude Code skills package. The build follows a strict dependency chain: installer provides the foundation, templates give specs structure, parsing extracts deliverables into a registry, idempotency makes the registry safe to re-parse, Linear sync creates tickets from deliverables, execution packets enable bounded AI work, drift detection catches divergence, and polish rounds out the experience with convenience features and extended input sources.
+DWA delivers a deliverable-driven development workflow combining VS Code extension commands (deterministic automation) with Claude Code skills (LLM-assisted content generation). The build follows a strict dependency chain: installer provides the foundation, scaffolding creates spec + TDD structure, parsing extracts deliverables into a registry, execution packets enable bounded AI work, drift tracking captures divergence, Linear sync creates tickets, and polish adds convenience features.
+
+**Commands** = VS Code extension (deterministic, no tokens)
+**Skills** = Claude Code (LLM judgment, content generation)
 
 ## Phases
 
@@ -10,151 +13,207 @@ DWA delivers a complete deliverable-driven development workflow as an installabl
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-Decimal phases appear between their surrounding integers in numeric order.
-
-- [x] **Phase 1: Bootstrap and Installer** - Package installation mechanism and schema versioning foundation
-- [x] **Phase 2: Templates and Scaffolding** - Feature spec template and /dwa:create-spec skill
-- [ ] **Phase 3: Core Parsing** - AST-based deliverables extraction with validation
-- [ ] **Phase 4: Idempotent Registry** - Safe re-parse preserving runtime state
-- [ ] **Phase 5: Linear Integration** - Issue sync per deliverable via MCP
-- [ ] **Phase 6: Execution Packets** - Framework-agnostic bounded context generation
-- [ ] **Phase 7: Drift Detection** - Spec vs registry vs Linear divergence reporting
-- [ ] **Phase 8: Polish and Extended Features** - PR descriptions, Google Docs import, DX improvements
+- [x] **Phase 1: Bootstrap and Installer** - Package installation and schema versioning
+- [ ] **Phase 2: Spec + TDD Scaffolding** - Canonical spec and technical design doc templates
+- [ ] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
+- [ ] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
+- [ ] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
+- [ ] **Phase 6: Linear Integration** - Issue sync from registry
+- [ ] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 
 ## Phase Details
 
-### Phase 1: Bootstrap and Installer
-**Goal**: Users can install DWA skills into any Claude Code environment via a single npx command
+### Phase 1: Bootstrap and Installer ✓
+**Goal**: Users can install DWA into any Claude Code environment via a single npx command
 **Depends on**: Nothing (first phase)
-**Requirements**: REQ-001, REQ-011
-**Success Criteria** (what must be TRUE):
-  1. Running `npx dwa --install` copies skills, templates, and references to `~/.claude/dwa/` and registers `/dwa:*` commands
-  2. Running `npx dwa --upgrade` updates existing installation without losing user configuration
-  3. Running `npx dwa --uninstall` cleanly removes all installed files and deregisters commands
-  4. Every `.dwa/` JSON file created by any skill includes a `schemaVersion` field from day one
-  5. A `.dwa-version` file tracks the installed package version for future migration support
-**Plans**: 3 plans
 
-Plans:
-- [x] 01-01-PLAN.md -- Project scaffold, CLI entry point, and shared utilities (paths, schema)
-- [x] 01-02-PLAN.md -- Install command with file copy and version tracking
-- [x] 01-03-PLAN.md -- Upgrade (with backup) and uninstall commands
+**Commands Delivered**:
+- `npx dwa --install` — copies skills, templates, references to expected locations
+- `npx dwa --upgrade` — updates existing installation preserving config
+- `npx dwa --uninstall` — cleanly removes all installed files
 
-### Phase 2: Templates and Scaffolding
-**Goal**: Users can initialize a new feature with a properly structured spec ready for deliverable extraction
+**Skills Delivered**: None (infrastructure only)
+
+**Demo**: Run `npx dwa --install`, verify `/dwa:*` commands available in Claude Code
+
+**Success Criteria**:
+1. Running `npx dwa --install` copies skills to `.llms/skills/dwa/` and registers commands
+2. Running `npx dwa --upgrade` updates without losing user configuration
+3. Running `npx dwa --uninstall` cleanly removes all installed files
+4. Every `.dwa/` JSON file includes a `schemaVersion` field from day one
+5. A `.dwa-version` file tracks installed package version for migrations
+
+**Plans**: 3 plans (complete)
+- [x] 01-01-PLAN.md — Project scaffold, CLI entry point, shared utilities
+- [x] 01-02-PLAN.md — Install command with file copy and version tracking
+- [x] 01-03-PLAN.md — Upgrade and uninstall commands
+
+---
+
+### Phase 2: Spec + TDD Scaffolding
+**Goal**: Users can scaffold both canonical spec (repo mirror of human spec) and technical design doc
 **Depends on**: Phase 1
-**Requirements**: REQ-002
-**Success Criteria** (what must be TRUE):
-  1. `/dwa:create-spec` creates a feature spec file from Template v2.0 with valid YAML front matter and an empty Deliverables Table
-  2. `/dwa:create-spec` creates `.dwa/feature.json` with feature metadata (name, created date, spec path)
-  3. `/dwa:create-spec` with Google Docs source imports a spec via MCP and converts it to local markdown preserving table structure
-  4. Running `/dwa:create-spec` in a directory with an existing spec warns before overwriting
-**Plans**: 2 plans
 
-Plans:
-- [x] 02-01-PLAN.md -- Handlebars template, scaffold utilities, and dependency setup
-- [x] 02-02-PLAN.md -- /dwa:create-spec skill file and scaffold utility tests
+**Commands Delivered**:
+- `Dev Workflow: Create Spec` — scaffolds `feature-spec.md` from Template v2.0 with TDD link placeholder
+- `Dev Workflow: Create TDD` — scaffolds `docs/tdds/<feature>-tdd.md` with decision log, guardrails, risks
 
-### Phase 3: Core Parsing
-**Goal**: Users can extract structured deliverables from a feature spec into individual registry files
+**Skills Delivered**:
+- `/dwa:draft-tdd` — LLM generates initial TDD outline from spec goals + constraints
+
+**Demo**: Scaffold spec + TDD for a feature, see linked structure ready to fill in
+
+**Success Criteria**:
+1. `Dev Workflow: Create Spec` creates spec with YAML front matter including `tdd_path` field
+2. `Dev Workflow: Create TDD` creates TDD at `docs/tdds/<feature>-tdd.md` with template sections
+3. `/dwa:draft-tdd` generates decision log, guardrails, and risks from spec context
+4. Both commands warn before overwriting existing files
+5. `.dwa/feature.json` stores metadata linking spec path and TDD path
+
+**Plans**: 3 plans
+- [ ] 02-01-PLAN.md — Update spec template with tdd_path field, update skill and tests
+- [ ] 02-02-PLAN.md — TDD template (tdd-v1.hbs), scaffold-tdd.js utility, and tests
+- [ ] 02-03-PLAN.md — /dwa:draft-tdd Claude Code skill
+
+---
+
+### Phase 3: Parsing + Idempotent Registry
+**Goal**: Users can extract deliverables from spec and safely re-parse after edits
 **Depends on**: Phase 2
-**Requirements**: REQ-003, REQ-010
-**Success Criteria** (what must be TRUE):
-  1. `/dwa:parse` extracts each row from the Deliverables Table into a separate `.dwa/deliverables/DEL-###.json` file with all columns mapped to JSON fields
-  2. Parsing uses AST-based extraction (remark-gfm), not regex, producing correct results for escaped pipes, empty cells, and multiline content
-  3. Before parsing, the spec is validated against Template v2.0 schema (YAML front matter fields, required table columns, row completeness) with failures reporting line numbers and fix suggestions
-  4. Malformed specs that fail validation produce actionable error messages and do not create partial registry state
+
+**Commands Delivered**:
+- `Dev Workflow: Parse Spec → Update Registry` — AST extraction → `.dwa/deliverables/DEL-###.json`
+
+**Skills Delivered**: None (deterministic parsing)
+
+**Demo**: Fill in spec deliverables, parse, edit spec, re-parse — registry updates without losing status/PR links
+
+**Success Criteria**:
+1. Parsing uses AST-based extraction (remark-gfm), not regex
+2. Each deliverable row becomes `.dwa/deliverables/DEL-###.json` with all columns mapped
+3. Spec is validated against Template v2.0 schema before parsing; failures report line numbers
+4. Re-parsing updates spec-sourced fields but preserves runtime fields (status, linear_id, pr_url)
+5. File writes are atomic (temp + rename) — crash never leaves partial state
+6. Removed deliverables are flagged, not silently deleted
+
 **Plans**: TBD
+- [ ] 03-01: AST parser with validation
+- [ ] 03-02: Idempotent registry merge logic
 
-Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+---
 
-### Phase 4: Idempotent Registry
-**Goal**: Users can safely re-parse a spec after edits without losing runtime state accumulated during execution
+### Phase 4: Execution Packets
+**Goal**: Users can generate rich bounded-context packets that feed GSD (or any framework)
 **Depends on**: Phase 3
-**Requirements**: REQ-004
-**Success Criteria** (what must be TRUE):
-  1. Re-running `/dwa:parse` on a modified spec updates spec-sourced fields (title, user story, AC, QA notes) in existing registry files
-  2. Re-parsing preserves runtime fields (linear_issue_id, status, pr_url, completed_at) that were set by other skills
-  3. File writes are atomic (write to temp, rename) so a crash mid-parse never leaves partial state
-  4. New deliverables added to the spec create new registry files; deliverables removed from the spec are flagged (not silently deleted)
+
+**Commands Delivered**:
+- `Dev Workflow: Start Deliverable` — generates packet shell at `.dwa/packets/DEL-###.md`
+
+**Skills Delivered**:
+- `/dwa:enrich-packet` — adds implementation targets, stop points, risk notes from codebase context
+
+**Demo**: Start DEL-001, see packet with TDD guardrails and stop points, feed to GSD
+
+**Success Criteria**:
+1. Packet includes all 10 sections (context, goal, story, ACs, QA, constraints, targets, plan request, drift, stops)
+2. Section 5 (Constraints) pulls from linked TDD file
+3. Section 8 (Drift) populated from registry drift data if present
+4. `/dwa:enrich-packet` suggests files likely touched and key APIs from codebase analysis
+5. Starting already-started deliverable warns and requires confirmation
+
 **Plans**: TBD
+- [ ] 04-01: Packet shell generator (command)
+- [ ] 04-02: /dwa:enrich-packet skill
 
-Plans:
-- [ ] 04-01: TBD
+---
 
-### Phase 5: Linear Integration
-**Goal**: Users can sync deliverables to Linear as individual issues with full context, driven from the registry
+### Phase 5: Drift Tracking
+**Goal**: Users can track per-deliverable drift and see a rolling summary
 **Depends on**: Phase 4
-**Requirements**: REQ-005
-**Success Criteria** (what must be TRUE):
-  1. `/dwa:sync` creates a Linear issue for each deliverable that lacks a `linear_issue_id`, populated with user story, acceptance criteria, QA notes, and spec link
-  2. `/dwa:sync` updates existing Linear issues when spec-sourced fields have changed in the registry
-  3. Linear issues use `externalId` for deduplication, preventing duplicate issues on re-sync
-  4. Rate limit responses (429) are handled with exponential backoff, and partial sync failures report which deliverables succeeded and which failed
-  5. After sync, each registry file stores its `linear_issue_id` for future reference
+
+**Commands Delivered**:
+- `Dev Workflow: Drift Check` — structural comparison (missing ACs, status mismatch, outdated timestamps)
+- `Dev Workflow: Complete Deliverable` — captures outcomes, PR link, evidence; records drift decision
+
+**Skills Delivered**:
+- `/dwa:propose-drift-fix` — suggests spec/TDD updates based on implementation delta
+- `/dwa:normalize-spec` — cleans messy spec edits into template-compliant structure
+
+**Demo**: Complete a deliverable with implementation changes, see drift logged, view rolling `.dwa/drift-log.md`
+
+**Success Criteria**:
+1. Per-deliverable drift stored in registry (`drift` field with observed/decision/patch)
+2. Rolling `.dwa/drift-log.md` aggregated from per-deliverable drift records
+3. `Dev Workflow: Drift Check` detects: missing ACs, status mismatch, missing links, spec vs registry divergence
+4. `/dwa:propose-drift-fix` generates concrete patch suggestions from git diff / PR description
+5. Drift section in next packet (section 8) populated from previous deliverable's drift
+
 **Plans**: TBD
+- [ ] 05-01: Drift check command and registry schema
+- [ ] 05-02: Complete deliverable command with drift capture
+- [ ] 05-03: /dwa:propose-drift-fix and /dwa:normalize-spec skills
 
-Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+---
 
-### Phase 6: Execution Packets
-**Goal**: Users can start work on a single deliverable with a framework-agnostic bounded context packet
+### Phase 6: Linear Integration
+**Goal**: Users can sync deliverables to Linear as individual issues
 **Depends on**: Phase 5
-**Requirements**: REQ-006
-**Success Criteria** (what must be TRUE):
-  1. `/dwa:start DEL-###` generates a packet at `.dwa/packets/DEL-###.md` containing only the targeted deliverable's context
-  2. The packet includes acceptance criteria, QA notes, dependencies, success criteria, and explicit stop conditions
-  3. The packet is framework-agnostic (objective, context, ACs, stop conditions) — consumable by GSD, BMAD, or manual execution
-  4. Starting an already-started deliverable warns the user and requires confirmation before regenerating the packet
+
+**Commands Delivered**:
+- `Dev Workflow: Sync Linear` — creates/updates Linear issues from registry
+
+**Skills Delivered**: None (API calls are deterministic)
+
+**Demo**: Sync deliverables, see tickets created in Linear with user story, ACs, QA notes, spec link
+
+**Success Criteria**:
+1. Creates Linear issue for each deliverable lacking `linear_issue_id`
+2. Updates existing issues when spec-sourced fields changed in registry
+3. Uses `externalId` for deduplication — no duplicate issues on re-sync
+4. Rate limits (429) handled with exponential backoff
+5. Partial failures report which deliverables succeeded/failed
+6. Registry stores `linear_issue_id` and `linear_url` after sync
+
 **Plans**: TBD
+- [ ] 06-01: Linear API integration with MCP
+- [ ] 06-02: Sync command with idempotent create/update
 
-Plans:
-- [ ] 06-01: TBD
+---
 
-### Phase 7: Drift Detection
-**Goal**: Users can detect divergence between their spec, registry, and Linear state with an actionable report
+### Phase 7: Polish and Extended Features
+**Goal**: Convenience features round out the workflow
 **Depends on**: Phase 6
-**Requirements**: REQ-007
-**Success Criteria** (what must be TRUE):
-  1. `/dwa:check-drift` produces a `.dwa/drift-report.md` comparing spec content against registry state
-  2. The report identifies missing deliverables (in spec but not registry, or vice versa), field mismatches, and orphaned entries
-  3. Comparison ignores whitespace and formatting differences, focusing on semantic content changes
-  4. When Linear integration is available, the report also compares registry state against Linear issue state
+
+**Commands Delivered**:
+- `Dev Workflow: Import Google Doc` — read-only import → canonical spec (via MCP)
+
+**Skills Delivered**:
+- `/dwa:generate-pr-description` — narrative PR text from deliverable metadata
+
+**Demo**: Import existing Google Doc spec, see conversion to canonical format with table preserved
+
+**Success Criteria**:
+1. Google Docs import converts to local markdown preserving table structure
+2. Lossy conversions (images, complex formatting) produce warnings listing what was lost
+3. PR description generated from user story, ACs, QA notes, deliverable ID
+4. Skills that depend on MCP check availability before invoking; fail fast with setup instructions
+
 **Plans**: TBD
+- [ ] 07-01: Google Docs MCP import
+- [ ] 07-02: /dwa:generate-pr-description skill
 
-Plans:
-- [ ] 07-01: TBD
-
-### Phase 8: Polish and Extended Features
-**Goal**: Users have convenience features that round out the workflow: PR descriptions from metadata, Google Docs import, and improved error experience
-**Depends on**: Phase 7
-**Requirements**: REQ-008, REQ-009
-**Success Criteria** (what must be TRUE):
-  1. PR description drafts are generated from deliverable metadata (user story, ACs, QA notes, deliverable ID) using template-based variable substitution
-  2. Google Docs specs can be imported via MCP read-only access, converting to local markdown with table structure preserved
-  3. Lossy conversions from Google Docs (unsupported formatting, embedded images) produce warnings listing what was lost
-  4. Skills that depend on MCP tools (Linear, Google Docs) check tool availability before invoking and fail fast with setup instructions when unavailable
-**Plans**: TBD
-
-Plans:
-- [ ] 08-01: TBD
-- [ ] 08-02: TBD
+---
 
 ## Progress
 
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8
+**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Bootstrap and Installer | 3/3 | ✓ Complete | 2026-01-24 |
-| 2. Templates and Scaffolding | 2/2 | ✓ Complete | 2026-01-24 |
-| 3. Core Parsing | 0/TBD | Not started | - |
-| 4. Idempotent Registry | 0/TBD | Not started | - |
-| 5. Linear Integration | 0/TBD | Not started | - |
-| 6. Execution Packets | 0/TBD | Not started | - |
-| 7. Drift Detection | 0/TBD | Not started | - |
-| 8. Polish and Extended Features | 0/TBD | Not started | - |
+| Phase | Status | Completed |
+|-------|--------|-----------|
+| 1. Bootstrap and Installer | ✓ Complete | 2026-01-24 |
+| 2. Spec + TDD Scaffolding | Planning | — |
+| 3. Parsing + Idempotent Registry | Not started | — |
+| 4. Execution Packets | Not started | — |
+| 5. Drift Tracking | Not started | — |
+| 6. Linear Integration | Not started | — |
+| 7. Polish and Extended Features | Not started | — |
