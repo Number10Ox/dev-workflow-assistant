@@ -70,10 +70,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 4. Both commands warn before overwriting existing files
 5. `.dwa/feature.json` stores metadata linking spec path and TDD path
 
-**Plans**: 3 plans
-- [ ] 02-01-PLAN.md — Update spec template with tdd_path field, update skill and tests
-- [ ] 02-02-PLAN.md — TDD template (tdd-v1.hbs), scaffold-tdd.js utility, and tests
-- [ ] 02-03-PLAN.md — /dwa:draft-tdd Claude Code skill
+**Plans**: 4 plans
+- [x] 02-01-PLAN.md — Update spec template with tdd_path field, update skill and tests (partial)
+- [x] 02-02-PLAN.md — TDD template (tdd-v1.hbs), scaffold-tdd.js utility, and tests (partial)
+- [x] 02-03-PLAN.md — /dwa:draft-tdd Claude Code skill (complete, awaits dependencies)
+- [ ] 02-04-PLAN.md — Gap closure: tdd_path field, TDD template, scaffold-tdd.js, tests
 
 ---
 
@@ -211,7 +212,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | Phase | Status | Completed |
 |-------|--------|-----------|
 | 1. Bootstrap and Installer | ✓ Complete | 2026-01-24 |
-| 2. Spec + TDD Scaffolding | Planning | — |
+| 2. Spec + TDD Scaffolding | Gap closure | — |
 | 3. Parsing + Idempotent Registry | Not started | — |
 | 4. Execution Packets | Not started | — |
 | 5. Drift Tracking | Not started | — |
