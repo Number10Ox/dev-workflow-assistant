@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 6 of 7 (Linear Integration)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 06-02-PLAN.md (Linear Provider Implementation)
+Last activity: 2026-01-25 - Completed 06-05-PLAN.md (CLI Integration - Gap Closure)
 
-Progress: [████████████░░] 84%
+Progress: [█████████████░] 88%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 17
-- Average duration: 3m 16s
-- Total execution time: 0.93 hours
+- Total plans completed: 18
+- Average duration: 3m 5s
+- Total execution time: 0.96 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [████████████░░] 84%
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
-| 06 - Linear Integration | 2 | 8m 31s | 4m 16s |
+| 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (2m 55s), 05-04 (2m 11s), 06-01 (3m 5s), 06-02 (4m 26s)
-- Phase 6 implementing Linear provider with rate limiting
+- Last 5 plans: 05-04 (2m 11s), 06-01 (3m 5s), 06-02 (4m 26s), 06-05 (1m 30s)
+- Phase 6 gap closure: CLI integration complete
 
 *Updated after each plan completion*
 
@@ -114,6 +114,9 @@ Recent decisions affecting current work:
 - [06-02]: Use type assertions (as any) for externalId/projectId when Linear SDK types are incomplete but GraphQL API supports fields.
 - [06-02]: Wrap all API methods with exponential backoff for comprehensive rate limit handling.
 - [06-02]: Return null from queryByExternalId when no matching issue found (not throw error).
+- [06-05]: Use async IIFE pattern to isolate async handling to sync-linear block only (no need to restructure entire CLI).
+- [06-05]: Include syncLinear in mutual exclusivity check (not sub-options like --dry-run, --force).
+- [06-05]: Commander.js camelCase conversion: --sync-linear becomes opts.syncLinear.
 
 ### Pending Todos
 
@@ -129,5 +132,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 06-02-PLAN.md (Linear Provider Implementation). Phase 6 in progress (2/4 plans complete).
+Stopped at: Completed 06-05-PLAN.md (CLI Integration - Gap Closure). Phase 6 in progress (3/4 plans complete).
 Resume file: None
