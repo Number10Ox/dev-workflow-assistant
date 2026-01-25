@@ -6,7 +6,7 @@
 <domain>
 ## Phase Boundary
 
-Convenience features for workflow completion: Google Docs import (command) converts Google Doc specs to canonical markdown via MCP, and PR description generation (skill) produces narrative PR text from deliverable metadata.
+Convenience features for workflow completion: Google Docs import (command) converts Google Doc specs to canonical markdown via Google Docs API (implementation adapter TBD), and PR description generation (skill) produces narrative PR text from deliverable metadata.
 
 </domain>
 
@@ -17,6 +17,7 @@ Convenience features for workflow completion: Google Docs import (command) conve
 
 - Default: Placeholder marker + warning (not fatal)
 - Placeholder format with HTML comment markers for stable idempotent parsing
+- Stable IDs: derived from Google Docs element IDs when available, else stable traversal index
 - Download to repo assets (`_assets/dwa-images/`) when auth allows
 - Optional `--strict-images` flag: fail if required images (tagged `[required]`) cannot be imported
 - Link-out fallback: include link to source doc if download fails
@@ -46,7 +47,7 @@ Convenience features for workflow completion: Google Docs import (command) conve
   - Authentication/authorization failures (can't read doc at all)
   - Unparseable document structure (empty/corrupt)
 - Missing deliverables table: warning only (Phase 3 parser validates "registry-ready")
-- Three strictness levels: `lenient` (default), `normal`, `strict`
+- Three strictness levels: `default` (best-effort), `normal`, `strict`
 - Import report always generated: `.dwa/import-reports/<docId>-<timestamp>.json`
 
 ### Google Docs Import - Headings
@@ -71,17 +72,25 @@ Convenience features for workflow completion: Google Docs import (command) conve
 
 ### Google Docs Import - Output Location
 
-- Default: Feature-root autodetect (walk up looking for `.dwa/`, `dwa.config.json`, or standard directories)
+- Default: Feature-root autodetect (walk up looking for `.dwa/` or `.dwa/config.json`)
 - `--out path/to/spec.md` override for explicit output
 - Prompt only when ambiguous (multiple candidates)
-- Provenance marker (`<!-- DWA:SOURCE ... -->`) prevents wrong overwrites
 - Assets co-located with spec in `_assets/` subdirectory
 
-### Google Docs Import - Re-import Behavior
+### Google Docs Import - Markers and Hashing
 
-- Bounded import region markers: `<!-- DWA:IMPORT_BEGIN -->` ... `<!-- DWA:IMPORT_END -->`
-- Replace only imported region on reimport, leaving human edits outside intact
-- Hash check (`dwa_import_hash`) for local edits inside imported region:
+Unified marker strategy (mirrors Phase 6 sync block approach):
+
+```md
+<!-- DWA:SOURCE doc="gdoc" docId="..." -->
+<!-- DWA:IMPORT_BEGIN docId="..." revisionId="..." importHash="sha256:..." -->
+...imported content...
+<!-- DWA:IMPORT_END -->
+```
+
+- Source marker lives **outside** import region (so humans can edit region without losing provenance)
+- Import hash stored **inside** the begin marker attributes and in import report
+- Hash check for local edits inside imported region:
   - Match: safe to update
   - Mismatch: write preview + show diff + prompt (don't clobber)
 - No automatic merges (MVP) — too complex, can add later
@@ -121,6 +130,87 @@ Convenience features for workflow completion: Google Docs import (command) conve
 - Normalize whitespace inside delimiters, collapse redundant runs
 - Modes: `markdown` (default), `minimal`, `markdown+html` (allows `<u>`)
 
+### Google Docs Import - Footnotes
+
+- Default: Preserve as Markdown footnotes
+- Inline reference: `text[^fn1]`
+- Definitions appended at end of imported region: `[^fn1]: Footnote content...`
+- If footnote content contains rich formatting: simplify to plain text + links
+- Warn only if a footnote cannot be extracted
+- Config: `footnotes.mode = "preserve"` (default), `"drop-with-summary"`
+
+### Google Docs Import - Page Breaks
+
+- Default: Convert to horizontal rule with marker comment
+  ```md
+  <!-- DWA:PAGE_BREAK -->
+  ---
+  ```
+- Config: `pageBreak.mode = "hr"` (default), `"drop"`, `"drop-with-summary"`
+
+### Google Docs Import - Table of Contents
+
+- Detect auto-generated TOC blocks → drop (Markdown viewers can generate TOC; plus TOC changes with headings)
+- Emit info-level note: `DWA-GDOC-TOC-100 Dropped auto-generated table of contents`
+- No config needed — always drop
+
+### Google Docs Import - Equations / Math
+
+- If Docs API exposes clean equation text: emit as inline `$...$` or block `$$...$$`
+- Otherwise: placeholder + warning + link-out
+  ```md
+  <!-- DWA:EQUATION id="eq_002" status="unconverted" -->
+  ```
+- Config: `math.mode = "placeholder"` (default), `"latex"`, `"drop-with-warning"`
+
+### Google Docs Import - Drawings / Diagrams
+
+- Treat as images (reuse Images section logic):
+  - If downloadable → save as asset (png) + embed
+  - Else placeholder + warning
+- Optionally link to the original Google Drawing
+
+### Google Docs Import - Callouts / Info Boxes
+
+- Normalize to Markdown blockquotes with tags:
+  ```md
+  > **Note:** ...
+  > **Warning:** ...
+  ```
+- If callout type unknown: `> **Callout:** ...`
+- Config: `callouts.mode = "blockquote"` (default), `"drop-style-keep-text"`
+
+### Google Docs Import - Embedded Charts
+
+- Treat as image (download if possible); else placeholder
+- Add metadata comment if it's a Sheets-linked object:
+  ```md
+  <!-- DWA:EMBED type="chart" source="sheets" url="..." -->
+  ```
+
+### Google Docs Import - Smart Chips / @mentions
+
+- Convert to plain text + link when possible:
+  - Person: `@Name` (no link) or link if present
+  - File: `[FileName](drive_url)`
+  - Date: `2026-01-25` (normalize to ISO format)
+- Warn only if a chip cannot be rendered sensibly
+
+### Google Docs Import - Text Normalization
+
+- Normalize line endings to `\n`
+- Convert NBSP → space
+- Typographic quotes: preserve as-is (no normalization)
+- Keep text normalization summary in import report (not per-instance warnings)
+
+### PR Description Generation - Safety Boundary
+
+- **Read-only**: skill never modifies specs/registry automatically
+- Output written to:
+  - Clipboard / scratch buffer, OR
+  - `.dwa/pr-descriptions/<deliverable_or_branch>.md`
+- User explicitly copies or pastes to PR
+
 ### Claude's Discretion
 
 The following areas were not discussed — Claude has flexibility during planning:
@@ -135,11 +225,12 @@ The following areas were not discussed — Claude has flexibility during plannin
 <specifics>
 ## Specific Ideas
 
-- "Placeholder IDs should be stable (deterministic from doc structure) so reimports don't churn"
+- "Stable IDs derived from Google Docs element IDs when available, else stable traversal index — so reimports don't churn"
 - "Import should feel like pg_dump for Google Docs — predictable, automatable, CI-friendly"
-- "Provenance markers preserve source tracking even after local edits"
+- "Source marker lives outside import region so humans can edit without losing provenance"
 - "Phase 7 importer stays narrow (conversion only); Phase 3 validation enforces 'registry-ready'"
 - "No silent overwrites — hash mismatches always prompt"
+- "Unified marker strategy mirrors Phase 6's sync block approach"
 
 </specifics>
 
