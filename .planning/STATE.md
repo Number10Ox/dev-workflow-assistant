@@ -12,27 +12,27 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 Phase: 3 of 8 (Core Parsing)
 Plan: 0 of TBD in current phase
 Status: Ready to plan
-Last activity: 2026-01-24 - Completed Phase 2 (Templates and Scaffolding) — verified ✓
+Last activity: 2026-01-24 - Completed 02-03-PLAN.md (Draft TDD Skill)
 
-Progress: [██░░░░░░░░] 25%
+Progress: [███░░░░░░░] 30%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 4m 13s
-- Total execution time: 0.35 hours
+- Total plans completed: 6
+- Average duration: 3m 41s
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
-| 02 - Templates | 2 | 4m 36s | 2m 18s |
+| 02 - Templates | 3 | 5m 42s | 1m 54s |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (7m 5s), 01-03 (6m 18s), 02-01 (2m 40s), 02-02 (1m 56s)
-- Trend: Strong velocity improvement - Phase 2 averaging 2m 18s vs Phase 1's 5m 50s
+- Last 5 plans: 01-03 (6m 18s), 02-01 (2m 40s), 02-02 (1m 56s), 02-03 (1m 6s)
+- Trend: Strong velocity improvement - Phase 2 averaging 1m 54s vs Phase 1's 5m 50s
 
 *Updated after each plan completion*
 
@@ -63,6 +63,9 @@ Recent decisions affecting current work:
 - [02-02]: Claude Code skill uses 4-step process: check existing, get title, scaffold, confirm.
 - [02-02]: [DWA_INSTALL_PATH] placeholder resolved by Claude at runtime to actual package location.
 - [02-02]: Tests use temp directory isolation via fs.mkdtemp, no DWA_TEST_HOME needed for scaffold tests.
+- [02-03]: Skill uses 5-step process (vs 4-step for create-spec) adding prerequisite check for spec existence.
+- [02-03]: Prerequisite validation requires both feature-spec.md AND .dwa/feature.json.
+- [02-03]: TDD overwrite check looks at both feature.json tdd_path and docs/tdds/ directory.
 
 ### Pending Todos
 
@@ -73,9 +76,10 @@ None yet.
 - ~~Phase 3: Feature Spec Template v2.0 exact schema (column names, YAML fields) must be defined before parser implementation.~~ **RESOLVED:** Template structure finalized in 02-01 with 7-column Deliverables Table and structured frontmatter.
 - Phase 4: Idempotency edge cases (deliverable deletion, ID renumbering, splits) need design decisions during planning.
 - Phase 5: Linear API rate limits, GraphQL mutations, externalId support, and MCP tool names need verification.
+- scaffoldTDD utility (src/scaffolding/scaffold-tdd.js) does not exist yet - will be created when TDD scaffolding is implemented.
 
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed Phase 2 (Templates and Scaffolding). 2 plans executed, verified ✓, 15 tests passing.
+Stopped at: Completed Phase 2 (Templates and Scaffolding). 3 plans executed, all verified. 15 tests passing.
 Resume file: None
