@@ -63,6 +63,31 @@ if (opts.install) {
     }
     throw err;
   }
+} else if (opts.syncLinear) {
+  (async () => {
+    try {
+      const { syncLinear } = require('./commands/sync-linear');
+      const result = await syncLinear({
+        projectRoot: process.cwd(),
+        dryRun: opts.dryRun,
+        force: opts.force,
+        deliverables: opts.deliverables,
+        project: opts.project
+      });
+      if (!result.success) {
+        console.error(result.message);
+        process.exit(1);
+      }
+      console.log(result.message);
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        console.error('Error: sync-linear command not available');
+        process.exit(1);
+      }
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
 } else {
   // No operation specified - show help
   program.help();
