@@ -6,143 +6,112 @@
 <domain>
 ## Phase Boundary
 
-Track divergence between planned work (spec/registry) and actual implementation. Deliver commands to detect drift and complete deliverables with drift decisions, plus skills to propose fixes and normalize specs. Rolling drift log aggregates per-deliverable drift records.
+Capture, record, and resolve divergence between planned work (spec/TDD/registry contract) and actual implementation outcomes. Phase 5 turns drift into first-class, durable records per deliverable, supports explicit drift decisions at completion time, and produces a rolling drift log for visibility.
+
+Inputs include Phase 4 drift signals (freshness/structural/contract/execution-state warnings) and completion evidence (PR URL, commit SHA, test outcomes).
 
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Drift Detection Types
+### Source of Truth
 
-Four drift types detected by commands (deterministic only):
+- Drift is persisted in the deliverable registry (`.dwa/deliverables/DEL-###.json`) as an append-only event log
+- The rolling drift log (`.dwa/drift-log.md`) is a derived artifact deterministically rebuilt from registry drift events (no manual edits)
 
-1. **Freshness Drift (Provenance-Based)**
-   - Spec changed (git SHA or content hash differs)
-   - TDD changed
-   - Registry changed
-   - Packet provenance missing or inconsistent
-   - Behavior: mark packet STALE, recommend regeneration
+### Drift Event Model (Registry)
 
-2. **Structural Drift (Schema/Hygiene)**
-   - Missing required registry fields (ID, description, AC list)
-   - Missing required links (spec/TDD) based on configuration
-   - Broken references (linked file paths do not exist)
-   - Orphan status present (`orphaned: true`)
-   - Behavior: emit warnings; errors only if packet cannot generate safely
+Each deliverable registry file contains:
+- `drift_events: []` (append-only)
+- `drift_open_count` (derived or maintained)
+- `last_completed_at`, `last_completed_commit`, `last_completed_pr_url` (optional convenience fields)
 
-3. **Contract Drift (Deterministic Content Changes)**
-   - Acceptance Criteria changed (added/removed/edited lines)
-   - QA verification steps changed
-   - Deliverable description changed
-   - Dependencies/type changed
-   - Behavior: emit warnings, recommend packet regeneration
+**drift_event fields (minimum):**
+- `id` (e.g., D1, D2 or UUID)
+- `at` (timestamp)
+- `source` (complete_command | manual | skill)
+- `kind` (enum; see below)
+- `summary` (one paragraph max)
+- `decision` (pending | accept | revert | escalate)
+- `applies_to_next_work` (bool)
+- `evidence_refs` (PR URL, commit SHA, test output link, screenshot link)
+- `patch_proposals` (optional array of proposed edits; text or diff-style)
+- `author` (user/tool)
 
-4. **Execution-State Drift (Runtime vs Links/Status)**
-   - `status=Done` but missing `pr_url`
-   - `pr_url` present but `status=Not Started`
-   - `linear_id` present but Linear URL missing/malformed
-   - Required evidence fields missing if configured
-   - Behavior: emit warnings/info; packet generation proceeds
+### Drift Kinds (Phase 5)
 
-**Not detected by commands (deferred to skills):**
-- Semantic "AC wording changed significantly" beyond deterministic diff
-- AC quality judgments ("vague," "not testable")
-- "Implementation diverged from intent" (requires PR/code analysis)
-- Architectural correctness or refactor judgments
+Phase 5 records drift created by implementation outcomes, not pre-execution checks. Drift kinds include:
 
-### Severity Policy
+- `impl_deviation` (implementation differs from contract)
+- `scope_change` (work added/removed vs planned deliverable)
+- `qa_gap` (missing/changed verification, tests not added, manual QA required)
+- `spec_update_needed` (contract should change to match reality)
+- `tdd_update_needed` (guardrails/architecture plan needs update)
+- `followup_required` (new deliverable/ticket needed)
+- `rollback_required` (must revert or re-align code)
 
-- **Error:** Prevents safe packet generation (missing deliverable contract, malformed required data)
-- **Warning:** Packet generated but may be stale/incomplete/misaligned
-- **Info:** Coordination hygiene reminders (status/link mismatch, missing recommended fields)
+(Phase 4 "freshness/structural/contract/execution-state drift signals" may be referenced as evidence, but do not replace Phase 5 drift events.)
 
-### Diagnostic Code Ranges
+### Commands Delivered in Phase 5 (Deterministic)
 
-- `DWA-W3xx` Freshness drift (STALE sources)
-- `DWA-W4xx` Structural drift (missing/broken prerequisites)
-- `DWA-W5xx` Contract drift (AC/QA/desc/deps changed)
-- `DWA-W6xx` Execution-state drift (status/PR/Linear inconsistencies)
-- `DWA-E1xx` Fatal errors preventing packet generation
+**Dev Workflow: Complete Deliverable**
+- Prompts for completion evidence: PR URL, commit SHA, test status (pass/fail), notes
+- If Phase 4 flagged major drift (or contract changed), prompts user to choose a drift decision:
+  - `accept` (update spec/TDD to match reality)
+  - `revert` (bring implementation back to spec)
+  - `escalate` (needs stakeholder decision)
+  - `pending` (record now, decide later)
+- Appends a `drift_event` when drift exists (or records no_drift outcome if configured)
+- Updates runtime fields: status, pr_url, last_completed_at, etc.
 
-### Provenance Tracking
+**Dev Workflow: Rebuild Drift Log**
+- Rebuilds `.dwa/drift-log.md` from all deliverables' `drift_events`
+- Produces:
+  - "Open Drift" summary at top (pending/escalate/applies_to_next_work)
+  - Chronological log grouped by deliverable
 
-Record per source (spec, TDD):
-- `git_commit_sha` (if repo is in git)
-- `git_dirty` (true/false at generation time)
-- `content_sha256` (hash of file contents) — **primary change detector**
-- `file_mtime` (optional; for debugging and quick comparisons)
-- `path`
+### Skills Delivered in Phase 5 (LLM)
 
-Example provenance structure:
-```yaml
-provenance:
-  spec:
-    path: docs/specs/FEAT-2026-001.md
-    git_commit: a1b2c3d
-    git_dirty: true
-    content_sha256: "..."
-    mtime: "2026-01-24T18:12:03Z"
-```
+**/dwa:propose-drift-patches**
+- Given the packet + completion notes (+ optional PR diff if available), proposes edits to:
+  - canonical spec deliverable row (AC/QA/desc)
+  - TDD guardrails/decisions
+  - Linear issue description (optional, later)
+- Outputs patch proposals only; never applies automatically
 
-If `git_dirty=true`, label packet as "generated from uncommitted changes".
+**/dwa:summarize-drift**
+- Produces a human-readable summary for the drift log or PR comment
 
-### Magnitude Scoring (Contract Drift)
+### Resolution Mechanics
 
-Simple deterministic scoring for AC/QA changes:
-
-1. **Compare by item ID** (C#, F#, E#, N# prefixes)
-   - Unchanged: exact normalized text match
-   - Edited: same ID, text differs
-   - Added/Removed: ID present/absent
-
-2. **Normalize text before comparing**
-   - Trim whitespace
-   - Collapse multiple spaces
-   - Normalize line endings
-   - Keep case-sensitive
-
-3. **Score with weights**
-   - Added item: +3
-   - Removed item: +3
-   - Edited item: +2
-
-4. **Thresholds**
-   - Minor: points <= 2 and no adds/removes (pure edits)
-   - Major: any add/remove OR points >= 4 OR >= 20% items changed
-
-5. **Output format**
-   - `DWA-W501 (minor): AC text edited: F7`
-   - `DWA-W502 (major): AC changed: +2, -1, ~3 edited`
-   - Include diff summary: Added: F21, E9 / Removed: N4 / Edited: C3, F7, F8
-
-### Invocation Pattern
-
-- **Automatic:** Start Deliverable runs drift check internally (non-blocking, warns as needed)
-- **Standalone:** Separate `Dev Workflow: Drift Check` command for explicit/batch review
+- If `decision=accept`: next action is to apply patch proposals to spec/TDD (manual or via separate command later)
+- If `decision=revert`: next action is a follow-up deliverable/ticket to realign code (record as followup_required)
+- If `decision=escalate`: mark as open drift requiring stakeholder review; optionally generate a Linear ticket (Phase 6/7 integration)
 
 ### Claude's Discretion
 
-- Exact implementation of content hashing (crypto module choice)
-- How to handle files outside git (still hash, skip git fields)
-- Formatting of drift warnings in terminal output
-- Whether to cache provenance to avoid re-hashing unchanged files
+- Exact drift_event schema names (snake_case vs camelCase)
+- Whether drift_open_count is derived on rebuild or updated on each complete
+- Formatting of `.dwa/drift-log.md` (sections, grouping)
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-- Diagnostic codes follow pattern established in other commands (DWA-Wxxx for warnings, DWA-Exxx for errors)
-- Provenance structure should be consistent with what's already stored in packets (section 9)
-- Magnitude scoring uses the C#/F#/E#/N# prefix convention already established for AC categorization
+- Drift is created primarily at completion time, because that's when implementation reality is known
+- Drift log is regenerated from registry to minimize merge conflicts and ensure correctness
+- Patch proposals are reviewable artifacts; contract changes are never silently applied
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+- Automatic semantic drift detection from PR diffs (future)
+- Auto-creating follow-up deliverables from drift decisions (future)
+- Two-way Google Docs / Linear write-back automation (later phases)
 
 </deferred>
 
