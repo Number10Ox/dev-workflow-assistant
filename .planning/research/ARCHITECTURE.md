@@ -694,5 +694,5 @@ Based on this architecture, recommended build phases:
 - Installation mechanism: Standard npx pattern + settings.json (HIGH confidence)
 
 ---
-*Architecture research for: DWA — Dev Workflow Meta-Framework*
+*Architecture research for: DWA - Dev Workflow Assistant*
 *Researched: 2026-01-24*

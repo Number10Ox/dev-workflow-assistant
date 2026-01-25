@@ -1,4 +1,4 @@
-# DWA — Deliverable Work Artifacts
+# DWA - Dev Workflow Assistant
 
 ## What This Is
 
