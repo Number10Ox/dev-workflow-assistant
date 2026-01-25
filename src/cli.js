@@ -7,14 +7,19 @@ program
   .version(packageJson.version)
   .option('--install', 'Install DWA skills, templates, and references')
   .option('--upgrade', 'Upgrade existing DWA installation')
-  .option('--uninstall', 'Remove DWA installation completely');
+  .option('--uninstall', 'Remove DWA installation completely')
+  .option('--sync-linear', 'Sync deliverables to Linear')
+  .option('--dry-run', 'Preview sync without making changes (requires --sync-linear)')
+  .option('--force', 'Overwrite DWA sections even if manually edited (requires --sync-linear)')
+  .option('--deliverables <ids>', 'Comma-separated deliverable IDs to sync (requires --sync-linear)')
+  .option('--project <id>', 'Linear project ID or URL (requires --sync-linear)');
 
 program.parse(process.argv);
 
 const opts = program.opts();
 
 // Check for mutual exclusivity
-const operationCount = [opts.install, opts.upgrade, opts.uninstall].filter(Boolean).length;
+const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear].filter(Boolean).length;
 
 if (operationCount > 1) {
   console.error('Error: Only one operation allowed at a time');
