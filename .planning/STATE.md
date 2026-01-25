@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 3 of 8 (Parsing + Idempotent Registry)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-24 - Completed 03-01-PLAN.md (Spec Parser with Validation)
+Last activity: 2026-01-25 - Completed 03-02-PLAN.md (Idempotent Registry Updates)
 
-Progress: [████▌░░░░░] 45%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
-- Average duration: 3m 21s
-- Total execution time: 0.45 hours
+- Total plans completed: 9
+- Average duration: 3m 22s
+- Total execution time: 0.51 hours
 
 **By Phase:**
 
@@ -29,11 +29,11 @@ Progress: [████▌░░░░░] 45%
 |-------|-------|-------|----------|
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
-| 03 - Parsing | 1 | 2m 50s | 2m 50s |
+| 03 - Parsing | 2 | 6m 19s | 3m 10s |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (1m 56s), 02-03 (1m 6s), 02-04 (2m 27s), 03-01 (2m 50s)
-- Trend: Consistent velocity - Phase 3 started with 2m 50s for TDD parser plan
+- Last 5 plans: 02-03 (1m 6s), 02-04 (2m 27s), 03-01 (2m 50s), 03-02 (3m 29s)
+- Trend: Consistent velocity - Phase 3 averaging 3m 10s for TDD plans
 
 *Updated after each plan completion*
 
@@ -75,6 +75,11 @@ Recent decisions affecting current work:
 - [03-01]: Find Deliverables Table by column header ("Deliverable ID") not by heading hierarchy.
 - [03-01]: Required columns: Deliverable ID, User Story, Description, Acceptance Criteria (testable), QA Plan Notes.
 - [03-01]: Row numbering in errors uses index +2 (header row + 0-index offset).
+- [03-02]: Normalize table column names to snake_case in registry JSON (e.g., "Acceptance Criteria (testable)" -> acceptance_criteria).
+- [03-02]: Use fast-deep-equal for change detection - skip writes when content unchanged.
+- [03-02]: Runtime fields preserved on re-parse: status, linear_id, linear_url, pr_url, completed_at, created_at.
+- [03-02]: Orphan flagging adds orphaned: true and orphaned_at timestamp, does not delete files.
+- [03-02]: Un-orphan removes flags when deliverable reappears in spec.
 
 ### Pending Todos
 
@@ -84,11 +89,11 @@ None yet.
 
 - ~~Phase 3: Feature Spec Template v2.0 exact schema (column names, YAML fields) must be defined before parser implementation.~~ **RESOLVED:** Template structure finalized in 02-01 with 7-column Deliverables Table and structured frontmatter.
 - ~~scaffoldTDD utility (src/scaffolding/scaffold-tdd.js) does not exist yet - will be created when TDD scaffolding is implemented.~~ **RESOLVED:** Created in 02-04 with bidirectional linking and comprehensive tests.
-- Phase 4: Idempotency edge cases (deliverable deletion, ID renumbering, splits) need design decisions during planning.
+- ~~Phase 4: Idempotency edge cases (deliverable deletion, ID renumbering, splits) need design decisions during planning.~~ **RESOLVED:** Orphan flagging pattern established in 03-02 - soft delete with orphaned: true, un-orphan on restoration.
 - Phase 5: Linear API rate limits, GraphQL mutations, externalId support, and MCP tool names need verification.
 
 ## Session Continuity
 
-Last session: 2026-01-24
-Stopped at: Completed 03-01-PLAN.md (Spec Parser with Validation). 53 tests passing. Parser ready for registry integration.
+Last session: 2026-01-25
+Stopped at: Completed 03-02-PLAN.md (Idempotent Registry Updates). 89 tests passing. Registry ready for sync command integration.
 Resume file: None
