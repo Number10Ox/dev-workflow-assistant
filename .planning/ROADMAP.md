@@ -203,9 +203,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 3. PR description generated from user story, ACs, QA notes, deliverable ID
 4. Skills that depend on MCP check availability before invoking; fail fast with setup instructions
 
-**Plans**: TBD
-- [ ] 07-01: Google Docs MCP import
-- [ ] 07-02: /dwa:generate-pr-description skill
+**Plans**: 4 plans in 3 waves
+- [ ] 07-01-PLAN.md — Google Docs import infrastructure (MCP client, diagnostics, hashing, reports)
+- [ ] 07-02-PLAN.md — Google Docs JSON to markdown converter (gdoc-to-mdast, mdast-to-markdown)
+- [ ] 07-03-PLAN.md — Import command with markers, hash verification, CLI integration
+- [ ] 07-04-PLAN.md — PR description generation skill with template and metadata extraction
 
 ---
 
