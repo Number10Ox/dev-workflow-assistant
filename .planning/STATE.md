@@ -9,30 +9,30 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 ## Current Position
 
-Phase: 3 of 8 (Core Parsing)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-01-24 - Completed 02-03-PLAN.md (Draft TDD Skill)
+Phase: 2 of 8 (Templates and Scaffolding)
+Plan: 4 of 4 in current phase
+Status: Phase complete
+Last activity: 2026-01-24 - Completed 02-04-PLAN.md (Gap Closure)
 
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 3m 41s
-- Total execution time: 0.37 hours
+- Total plans completed: 7
+- Average duration: 3m 24s
+- Total execution time: 0.40 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
-| 02 - Templates | 3 | 5m 42s | 1m 54s |
+| 02 - Templates | 4 | 8m 9s | 2m 2s |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (6m 18s), 02-01 (2m 40s), 02-02 (1m 56s), 02-03 (1m 6s)
-- Trend: Strong velocity improvement - Phase 2 averaging 1m 54s vs Phase 1's 5m 50s
+- Last 5 plans: 02-01 (2m 40s), 02-02 (1m 56s), 02-03 (1m 6s), 02-04 (2m 27s)
+- Trend: Consistent velocity - Phase 2 complete averaging 2m 2s (65% faster than Phase 1)
 
 *Updated after each plan completion*
 
@@ -66,6 +66,10 @@ Recent decisions affecting current work:
 - [02-03]: Skill uses 5-step process (vs 4-step for create-spec) adding prerequisite check for spec existence.
 - [02-03]: Prerequisite validation requires both feature-spec.md AND .dwa/feature.json.
 - [02-03]: TDD overwrite check looks at both feature.json tdd_path and docs/tdds/ directory.
+- [02-04]: TDD files stored in docs/tdds/ (not .dwa/) as they are technical documentation.
+- [02-04]: Use gray-matter for YAML frontmatter parsing and updating.
+- [02-04]: Bidirectional linking: both spec and TDD reference each other via tdd_path.
+- [02-04]: TDD filename slugification: lowercase, hyphens, remove special chars.
 
 ### Pending Todos
 
@@ -74,12 +78,12 @@ None yet.
 ### Blockers/Concerns
 
 - ~~Phase 3: Feature Spec Template v2.0 exact schema (column names, YAML fields) must be defined before parser implementation.~~ **RESOLVED:** Template structure finalized in 02-01 with 7-column Deliverables Table and structured frontmatter.
+- ~~scaffoldTDD utility (src/scaffolding/scaffold-tdd.js) does not exist yet - will be created when TDD scaffolding is implemented.~~ **RESOLVED:** Created in 02-04 with bidirectional linking and comprehensive tests.
 - Phase 4: Idempotency edge cases (deliverable deletion, ID renumbering, splits) need design decisions during planning.
 - Phase 5: Linear API rate limits, GraphQL mutations, externalId support, and MCP tool names need verification.
-- scaffoldTDD utility (src/scaffolding/scaffold-tdd.js) does not exist yet - will be created when TDD scaffolding is implemented.
 
 ## Session Continuity
 
 Last session: 2026-01-24
-Stopped at: Completed Phase 2 (Templates and Scaffolding). 3 plans executed, all verified. 15 tests passing.
+Stopped at: Completed Phase 2 (Templates and Scaffolding). 4 plans executed, all verified. 22 tests passing.
 Resume file: None
