@@ -15,18 +15,29 @@ Extract deliverables from feature spec markdown into JSON registry files (`.dwa/
 
 ### Validation feedback
 - Collect all errors before failing (not fail-fast) — user fixes everything in one pass
-- Error format: line number + message (e.g., "Line 42: Missing 'Type' column")
+- Error format: diagnostic code + line number + message (e.g., "DWA-E001 Line 42: Missing 'Type' column")
 - Errors reported in document order, not grouped by type
 - Validation gates: structure AND content
   - Structure: YAML frontmatter exists, deliverables table found, required columns present
   - Content: IDs are unique, types are valid enum values, no empty required cells
+- Fix suggestions are optional, never required — keep errors actionable but minimal
+
+### Output behavior
+- Report always generated: errors, warnings, and success summary
+- On success: summary of deliverables parsed, any warnings, registry changes made
+- On failure: all validation errors with diagnostic codes
+
+### Re-parse behavior
+- Registry updates are per-deliverable atomic (each DEL-###.json written independently)
+- Orphaned deliverables (in registry but removed from spec) are soft-deleted by default
+  - Moved to `.dwa/deliverables/_orphaned/` or flagged with `orphaned: true`
+- Runtime fields preserved on re-parse: status, linear_id, pr_url, etc.
 
 ### Claude's Discretion
-- Whether to include fix suggestions in error messages (may depend on error type)
-- Exact wording and formatting of error messages
-- How to handle edge cases not explicitly covered (malformed tables, missing columns, duplicate IDs)
-- Re-parse behavior: how removed/renamed deliverables are flagged
-- Output verbosity on successful parse
+- Exact diagnostic code scheme (DWA-E### for errors, DWA-W### for warnings)
+- Exact wording and formatting of messages
+- Soft-delete implementation (separate folder vs flag)
+- Warning thresholds and edge case handling
 
 </decisions>
 
