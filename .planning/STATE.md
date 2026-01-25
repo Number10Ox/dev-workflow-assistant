@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 5 of 7 (Drift Tracking)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 05-01-PLAN.md (Drift Event Infrastructure)
+Last activity: 2026-01-25 - Completed 05-02-PLAN.md (Complete Deliverable Command)
 
-Progress: [████████░░] 80%
+Progress: [█████████░] 87%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 3m 37s
-- Total execution time: 0.73 hours
+- Total plans completed: 13
+- Average duration: 3m 32s
+- Total execution time: 0.77 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [████████░░] 80%
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
-| 05 - Drift | 1 | 7m 40s | 7m 40s |
+| 05 - Drift | 2 | 10m 8s | 5m 4s |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (3m 29s), 04-01 (6m 0s), 04-02 (2m 0s), 05-01 (7m 40s)
+- Last 5 plans: 04-01 (6m 0s), 04-02 (2m 0s), 05-01 (7m 40s), 05-02 (2m 28s)
 - Trend: TDD plans take longer due to test-first cycles (3 features x 2 commits each)
 
 *Updated after each plan completion*
@@ -95,6 +95,9 @@ Recent decisions affecting current work:
 - [05-01]: AC count comparison uses semicolon, newline, and <br> as delimiters to handle various formats.
 - [05-01]: drift_open_count is derived (computed from events) not stored separately.
 - [05-01]: Structural comparison priority: removed > AC count > no PR URL > description.
+- [05-02]: Drift only recorded when both detected AND decision provided - allows caller to prompt user.
+- [05-02]: evidence_refs stored as array containing prUrl and commitSha.
+- [05-02]: Notes stored as author_notes field in drift events.
 
 ### Pending Todos
 
@@ -110,5 +113,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 05-01-PLAN.md (Drift Event Infrastructure). 178 tests passing.
+Stopped at: Completed 05-02-PLAN.md (Complete Deliverable Command). 227 tests passing.
 Resume file: None
