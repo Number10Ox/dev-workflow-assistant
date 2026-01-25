@@ -104,6 +104,7 @@ Recent decisions affecting current work:
 - [05-04]: propose-drift-patches reads from registry drift_events, not drift-log.md.
 - [05-04]: summarize-drift adapts tone for technical (PR) vs stakeholder (PM) audiences.
 - [05-04]: Patch proposals are reviewable text, never auto-applied.
+- [05-gap]: fetchDriftData reads from drift_events (not drift) and maps summary to description for packet consumption.
 
 ### Pending Todos
 

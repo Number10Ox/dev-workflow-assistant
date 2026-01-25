@@ -216,6 +216,6 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 2. Spec + TDD Scaffolding | ✓ Complete | 2026-01-24 |
 | 3. Parsing + Idempotent Registry | ✓ Complete | 2026-01-25 |
 | 4. Execution Packets | ✓ Complete | 2026-01-25 |
-| 5. Drift Tracking | Complete | 2026-01-25 |
+| 5. Drift Tracking | ✓ Complete | 2026-01-25 |
 | 6. Linear Integration | Not started | — |
 | 7. Polish and Extended Features | Not started | — |
