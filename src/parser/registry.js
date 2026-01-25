@@ -32,12 +32,20 @@ const SPEC_FIELD_MAP = {
  * Set by other commands (Linear sync, complete deliverable, etc.)
  */
 const RUNTIME_FIELDS = [
+  // Existing fields (preserve these)
   'status',
   'linear_id',
   'linear_url',
   'pr_url',
   'completed_at',
-  'created_at'
+  'created_at',
+  'drift_events',
+  // New fields for Linear sync (add these)
+  'linear_issue_id',
+  'linear_identifier',
+  'linear_external_id',
+  'linear_project_id',
+  'dwa_sync_hash'
 ];
 
 /**
@@ -206,10 +214,38 @@ async function updateRegistry(deliverables, registryDir) {
   return result;
 }
 
+/**
+ * Update Linear sync fields in a registry file.
+ *
+ * @param {string} registryDir - Path to registry directory
+ * @param {string} deliverableId - Deliverable ID (e.g., "DEL-001")
+ * @param {object} linearFields - Fields to update
+ * @param {string} [linearFields.linear_issue_id]
+ * @param {string} [linearFields.linear_identifier]
+ * @param {string} [linearFields.linear_url]
+ * @param {string} [linearFields.linear_external_id]
+ * @param {string} [linearFields.linear_project_id]
+ * @param {string} [linearFields.dwa_sync_hash]
+ * @returns {Promise<void>}
+ */
+async function updateLinearFields(registryDir, deliverableId, linearFields) {
+  const filePath = path.join(registryDir, `${deliverableId}.json`);
+
+  if (!await fs.pathExists(filePath)) {
+    throw new Error(`Registry file not found: ${filePath}`);
+  }
+
+  const existing = await fs.readJSON(filePath);
+  const updated = { ...existing, ...linearFields };
+
+  await writeJsonWithSchema(filePath, updated);
+}
+
 module.exports = {
   updateRegistry,
   normalizeDeliverable,
   mergeFields,
+  updateLinearFields,
   SPEC_FIELD_MAP,
   RUNTIME_FIELDS
 };
