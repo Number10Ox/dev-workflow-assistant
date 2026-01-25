@@ -1,18 +1,20 @@
-# Phase 2: Templates and Scaffolding - Research
+# Phase 2: Spec + TDD Scaffolding - Research
 
 **Researched:** 2026-01-24
-**Domain:** Claude Code skills, file scaffolding, template-based generation, Google Docs MCP integration
+**Domain:** Technical Design Document (TDD) scaffolding, spec-to-TDD linking, Claude Code skills for LLM-assisted content generation
 **Confidence:** HIGH
 
 ## Summary
 
-Phase 2 implements `/dwa:init`, a Claude Code skill that scaffolds feature specs from Template v2.0 or imports from Google Docs via MCP. This research investigated three critical domains: (1) Claude Code skill file format and execution model, (2) file scaffolding patterns for Node.js, and (3) Google Docs MCP integration capabilities.
+Phase 2 extends the existing spec scaffolding system to add Technical Design Document (TDD) support. Research investigated three critical domains: (1) TDD template structure and sections used in industry, (2) linking patterns between feature specs and technical design docs, and (3) Claude Code skill design for LLM-assisted TDD drafting.
 
-Claude Code skills are markdown files with YAML frontmatter that instruct Claude to execute specific workflows. Skills can invoke Node.js utilities installed by Phase 1, use template files for scaffolding, and call MCP servers for external integrations. The skill file itself contains no executable code — it's a prompt that Claude reads and follows.
+TDDs are separate artifacts from feature specs that capture technical decisions, architecture boundaries, risks, and test strategies. Industry standard TDD templates include: Introduction/Objectives, Architecture Diagrams, Design Details/Components, Implementation Plan, Testing Strategies, and Revision/Decision History. The Architecture Decision Record (ADR) format provides the structured pattern for decision logging, with each decision capturing context, the decision itself, and consequences.
 
-Template scaffolding requires a template engine (Handlebars recommended), placeholder replacement logic, and atomic file writes. The Feature Spec Template v2.0 format (already user-provided) defines YAML front matter fields and a Deliverables Table structure that Phase 3 will parse. Google Docs import requires MCP integration via the dev-workflow-assistant extension, which provides OAuth-authenticated access to Google Drive.
+Linking specs to TDDs is bidirectional: the spec's YAML frontmatter includes a `tdd_path` field, and the feature.json registry stores both paths for programmatic access. TDD files live at `docs/tdds/<feature>-tdd.md` (not in `.dwa/`) since they are technical documentation meant to be committed and versioned.
 
-**Primary recommendation:** Use Handlebars for template rendering with a dedicated `templates/` directory in the installed package. Create utility functions for file scaffolding that the skill instructs Claude to invoke. Support both local scaffolding and Google Docs import via conditional logic in the skill.
+The `/dwa:draft-tdd` skill follows the same 4-step pattern as `/dwa:create-spec`: check existing, get feature info, scaffold from template, confirm. The skill reads the feature spec's frontmatter and deliverables to generate an initial TDD outline with context-specific sections. The scaffolding utilities from Phase 2-01 (scaffold.js) can be reused with a new TDD template.
+
+**Primary recommendation:** Create a separate TDD template (templates/tdd-v1.hbs) with sections for Objectives, Architecture, Decision Log, Guardrails, Risks, and Test Strategy. Add tdd_path field to feature-spec-v2.hbs frontmatter. Store both spec_path and tdd_path in feature.json. Implement `/dwa:draft-tdd` skill that reads spec context and scaffolds TDD using existing scaffoldFromTemplate pattern.
 
 ## Standard Stack
 
@@ -21,284 +23,346 @@ The established libraries/tools for this domain:
 ### Core
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
-| handlebars | ^4.7.8 | Template engine | Industry standard, simple syntax, supports partials and helpers |
-| gray-matter | ^4.0.3 | YAML frontmatter parsing/stringifying | Battle-tested (used by Gatsby, Netlify, Astro), supports both parse and stringify |
-| fs-extra | ^11.0.0 | File system utilities | Already in Phase 1 dependencies, provides `ensureDir`, `copy`, atomic writes |
-| write-file-atomic | ^7.0.0 | Atomic file writes | Already in Phase 1 dependencies, prevents partial state on write failures |
+| handlebars | ^4.7.8 | Template engine for TDD template | Already in Phase 2-01, reusable for TDD scaffolding |
+| gray-matter | ^4.0.3 | YAML frontmatter parsing/stringifying | Already in Phase 2-01, needed to read spec frontmatter for TDD context |
+| fs-extra | ^11.0.0 | File system utilities | Already in Phase 1, provides ensureDir, pathExists for docs/tdds/ |
+| write-file-atomic | ^7.0.0 | Atomic file writes | Already in Phase 1, needed for TDD file creation |
 
-**Why these choices:**
-- **Handlebars over template literals:** Supports external template files (in `templates/` directory), helpers for date formatting, conditional logic
-- **gray-matter over front-matter:** Provides `stringify()` method (not just parse), which is needed if importing from Google Docs and converting to markdown with frontmatter
-- **Reuse Phase 1 dependencies:** fs-extra and write-file-atomic already installed, no new dependencies needed for file operations
+**Why reuse existing stack:**
+- No new dependencies needed — TDD scaffolding uses identical patterns to spec scaffolding
+- Same template engine (Handlebars) for consistent rendering approach
+- Same utilities (writeJsonWithSchema) for feature.json updates
+- Same atomic write patterns for file safety
 
 ### Supporting
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| @modelcontextprotocol/* | Latest | MCP client integration | Google Docs import feature (if using official MCP SDK) |
-| google-drive-mcp | Community | Google Drive/Docs access | If dev-workflow-assistant extension not available |
+| unified | ^11.0.0 | Markdown parsing (future) | Phase 3+ when parsing TDD sections programmatically |
+| remark-parse | ^11.0.0 | Markdown AST parsing (future) | Phase 3+ for extracting decision log entries |
+| remark-gfm | ^4.0.0 | GitHub Flavored Markdown (future) | Phase 3+ for table parsing in TDD |
 
 **Notes:**
-- Google Docs integration assumes dev-workflow-assistant extension provides MCP bridge
-- If extension unavailable, community MCP servers exist (google-drive-mcp, google-docs-mcp)
-- Phase 2 focuses on scaffolding; actual Google Docs fetch happens via MCP tools Claude already has access to
+- TDD scaffolding in Phase 2 only creates template files — no parsing needed yet
+- Markdown parsing libraries listed for future phases when TDD content needs extraction
+- Phase 2 focus is template creation and linking, not content parsing
 
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| Handlebars | Mustache | Simpler but no helpers (date formatting, case conversion) |
-| Handlebars | Template literals | No external template files, harder to maintain templates |
-| gray-matter | front-matter | Parse-only (no stringify), would need separate library for writing frontmatter |
-| fs-extra | fs/promises | Phase 1 already uses fs-extra (CommonJS), consistency matters |
+| Separate TDD template | Embed TDD in spec as sections | Spec file becomes too large; TDD evolution decoupled from spec |
+| docs/tdds/ location | .dwa/tdds/ location | TDDs are technical docs meant for version control, not registry artifacts |
+| tdd_path in frontmatter | Hard-coded convention | Explicit linking more robust; allows custom TDD locations |
+| Handlebars template | Template literals | Phase 2-01 already uses Handlebars; consistency matters |
 
 **Installation:**
 ```bash
-npm install handlebars gray-matter
+# No new dependencies needed
+# Phase 2-01 already installed: handlebars, gray-matter
+# Phase 1 already installed: fs-extra, write-file-atomic
 ```
 
 ## Architecture Patterns
 
 ### Recommended Project Structure
 ```
-~/.claude/dwa/                        # Installed by Phase 1
-├── skills/
-│   └── init/
-│       ├── SKILL.md                  # /dwa:init skill (instructs Claude)
-│       └── examples/
-│           └── sample-spec.md        # Example output for reference
-├── templates/
-│   └── feature-spec-v2.hbs           # Handlebars template (user-provided structure)
-├── utils/
-│   ├── scaffold.js                   # Scaffolding utilities (called by Claude)
-│   └── schema.js                     # Schema version helper (from Phase 1)
-└── references/
-    └── template-spec.md              # Documentation of Template v2.0 format
-
-.dwa/                                 # Project-local registry (created by /dwa:init)
-├── feature.json                      # Feature metadata
-└── (deliverables/ added in Phase 3)
+project-root/
+├── feature-spec.md               # Canonical spec (Phase 2-01)
+├── docs/
+│   └── tdds/
+│       └── <feature>-tdd.md      # Technical Design Doc (Phase 2)
+├── .dwa/
+│   └── feature.json              # Registry with spec_path AND tdd_path
+└── (installed package at ~/.claude/dwa/)
+    ├── templates/
+    │   ├── feature-spec-v2.hbs   # Spec template (Phase 2-01)
+    │   └── tdd-v1.hbs            # TDD template (NEW)
+    ├── src/scaffolding/
+    │   ├── scaffold.js           # Reusable scaffoldFromTemplate
+    │   └── check-existing.js     # Reusable checkExisting
+    └── skills/
+        ├── dwa-create-spec/      # Spec skill (Phase 2-01)
+        └── dwa-draft-tdd/        # TDD skill (NEW)
 ```
 
-### Pattern 1: Skill as Orchestrator (Claude Code Skills)
-**What:** A Claude Code skill is a markdown file with YAML frontmatter and markdown instructions. Claude reads the file and executes the instructions using available tools.
+### Pattern 1: Bidirectional Spec ↔ TDD Linking
+**What:** Feature spec frontmatter includes tdd_path field; feature.json includes both spec_path and tdd_path; TDD frontmatter includes spec_path for reverse link.
 
-**When to use:** All user-facing commands (`/dwa:init`, `/dwa:parse`, etc.)
+**When to use:** All features with technical design complexity requiring architecture decisions, guardrails, or risk documentation.
 
 **Example:**
-```markdown
+
+Feature spec frontmatter (feature-spec.md):
+```yaml
 ---
-name: init
-description: Initialize a new feature spec from Template v2.0 or import from Google Docs
-disable-model-invocation: true
+feature_id: FEAT-2026-123
+title: "User Authentication"
+owner: "Jane Doe"
+status: Draft
+tdd_path: "docs/tdds/user-auth-tdd.md"  # NEW FIELD
+spec_schema_version: v2.0
 ---
-
-# DWA: Initialize Feature Spec
-
-## Purpose
-Scaffold a feature spec from Template v2.0 or import from Google Docs via MCP.
-
-## Prerequisites
-- DWA installed via `npx dwa --install`
-- Current directory is project root
-
-## Process
-
-### Step 1: Check for existing spec
-<task type="auto">
-  <action>
-Check if feature-spec.md or .dwa/feature.json exists in current directory.
-If exists, warn user: "Feature spec already initialized. Overwrite? (y/n)"
-If user says no, stop.
-  </action>
-</task>
-
-### Step 2: Determine source (template or Google Docs)
-<task type="interactive">
-  <action>
-Ask user: "Initialize from (1) Template or (2) Google Docs URL?"
-
-If template:
-  - Ask: "Feature title?"
-  - Call scaffoldFromTemplate(title)
-
-If Google Docs:
-  - Ask: "Google Docs URL?"
-  - Call importFromGoogleDocs(url)
-  </action>
-</task>
-
-### Step 3: Create .dwa/feature.json
-<task type="auto">
-  <action>
-Use writeJsonWithSchema from Phase 1 utils to create .dwa/feature.json:
-{
-  "schemaVersion": "1.0.0",
-  "title": "[user-provided title]",
-  "spec_path": "feature-spec.md",
-  "created_at": "[current ISO timestamp]"
-}
-  </action>
-  <verify>
-.dwa/feature.json exists and contains schemaVersion field
-  </verify>
-</task>
-
-### Step 4: Confirm success
-<task type="auto">
-  <action>
-Print success message:
-"✓ Feature spec initialized: feature-spec.md
-✓ Feature registry created: .dwa/feature.json
-
-Next steps:
-1. Edit feature-spec.md to add deliverables
-2. Run /dwa:parse to extract deliverables"
-  </action>
-</task>
 ```
 
-**Key characteristics:**
-- YAML frontmatter controls invocation (`disable-model-invocation: true` means only user can invoke)
-- Markdown content is instructions for Claude to follow
-- References utility functions that Claude will invoke via Bash tool
-- Uses `<task>` blocks for structured workflow (GSD pattern)
+TDD frontmatter (docs/tdds/user-auth-tdd.md):
+```yaml
+---
+feature_id: FEAT-2026-123
+title: "User Authentication — Technical Design"
+spec_path: "../feature-spec.md"  # Reverse link
+tdd_schema_version: v1.0
+created: 2026-01-24
+updated: 2026-01-24
+---
+```
 
-### Pattern 2: Template-Based Scaffolding
-**What:** Generate files by rendering Handlebars templates with user-provided data, then writing atomically.
+Feature registry (.dwa/feature.json):
+```json
+{
+  "schemaVersion": "1.0.0",
+  "feature_id": "FEAT-2026-123",
+  "title": "User Authentication",
+  "spec_path": "feature-spec.md",
+  "tdd_path": "docs/tdds/user-auth-tdd.md",
+  "created_at": "2026-01-24T10:00:00.000Z"
+}
+```
 
-**When to use:** Creating feature-spec.md from Template v2.0
+**Why bidirectional:**
+- From spec: User editing spec can quickly jump to TDD
+- From TDD: Developer editing TDD can jump back to requirements
+- From registry: Commands can update both files programmatically
+- Validation: Can detect broken links (spec exists but TDD missing)
+
+### Pattern 2: TDD Template Structure (Industry Standard)
+**What:** TDD templates follow a consistent structure derived from industry practice: Objectives → Architecture → Decisions → Guardrails → Risks → Testing.
+
+**When to use:** All TDD scaffolding operations.
+
+**Example structure:**
+```markdown
+---
+# TDD Frontmatter (YAML)
+feature_id: {{feature_id}}
+title: "{{title}} — Technical Design"
+spec_path: "{{spec_path}}"
+tdd_schema_version: v1.0
+created: {{created_date}}
+updated: {{created_date}}
+---
+
+# Technical Design: {{title}}
+
+## 1) Objectives
+
+### Primary Goals
+[SMART objectives derived from spec]
+
+### Secondary Goals
+[Nice-to-have objectives]
+
+## 2) Architecture Overview
+
+### System Context
+[How this feature fits in the overall system]
+
+### Component Diagram
+[Placeholder for diagram or description]
+
+### Key Interactions
+[External systems, APIs, databases touched]
+
+## 3) Decision Log
+
+> Architecture Decision Records (ADR) format
+
+### Decision 001: [Decision Title]
+- **Date:** YYYY-MM-DD
+- **Status:** Proposed | Accepted | Deprecated | Superseded
+- **Context:** [What situation forces this decision?]
+- **Decision:** [What we're doing]
+- **Consequences:** [Positive and negative outcomes]
+
+## 4) Guardrails
+
+> Architectural boundaries and "do not" constraints
+
+- **Performance:** [Latency/throughput requirements]
+- **Security:** [Authentication, authorization, data protection]
+- **Scalability:** [Expected load, growth constraints]
+- **Compatibility:** [Browser/platform/version requirements]
+- **Do NOT:**
+  - [Specific anti-patterns to avoid]
+
+## 5) Risks & Mitigations
+
+| Risk | Likelihood | Impact | Mitigation Strategy | Owner |
+|------|------------|--------|---------------------|-------|
+| [Risk description] | High/Med/Low | High/Med/Low | [How to mitigate] | [Who] |
+
+## 6) Test Strategy
+
+### Unit Testing
+- Coverage targets: [%]
+- Key areas: [What to test]
+
+### Integration Testing
+- Critical paths: [User flows to test]
+- Test environments: [Where to test]
+
+### Evidence Requirements
+- [ ] Unit tests for [component]
+- [ ] Integration tests for [flow]
+- [ ] Performance benchmarks for [metric]
+
+## 7) Implementation Notes
+
+[Open questions, technical debt, future work]
+
+## 8) Revision History
+
+| Date | Author | Changes | Related Deliverable |
+|------|--------|---------|---------------------|
+| {{created_date}} | {{owner}} | Initial draft | - |
+```
+
+**Why this structure:**
+- Sections 1-2 (Objectives, Architecture): From industry TDD templates (NotePlan, Devplan)
+- Section 3 (Decision Log): From ADR format (adr.github.io, MADR template)
+- Section 4 (Guardrails): From agile architecture fitness functions and AI guardrails best practices
+- Section 5 (Risks): Standard risk matrix used in TDD templates
+- Section 6 (Test Strategy): Derived from PROJECT.md's evidence requirements
+- Section 8 (Revision History): Maintains change log for living document
+
+### Pattern 3: Reusable Scaffold Function for TDD
+**What:** The scaffoldFromTemplate function from Phase 2-01 is reusable — same function, different template path.
+
+**When to use:** TDD scaffolding from `/dwa:draft-tdd` skill.
 
 **Example:**
 ```javascript
-// Source: Based on generate-template-files and scaffold-generator patterns
-// File: ~/.claude/dwa/utils/scaffold.js
+// File: src/scaffolding/scaffold-tdd.js
 
-const Handlebars = require('handlebars');
+const path = require('node:path');
+const { scaffoldFromTemplate } = require('./scaffold'); // REUSE PHASE 2-01
 const fs = require('fs-extra');
-const path = require('path');
-const { writeJsonWithSchema } = require('./schema');
 
-// Register Handlebars helpers
-Handlebars.registerHelper('isoDate', () => new Date().toISOString());
-Handlebars.registerHelper('gitUser', () => {
-  // Shell out to get git config user.name
-  const { execSync } = require('child_process');
+/**
+ * Scaffold a TDD from template, reading feature info from spec frontmatter
+ */
+async function scaffoldTDD(featureId, featureTitle, specPath, targetDir) {
+  // 1. Ensure docs/tdds/ directory exists
+  const tddsDir = path.join(targetDir, 'docs', 'tdds');
+  await fs.ensureDir(tddsDir);
+
+  // 2. Generate TDD filename from feature title
+  const slug = featureTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const tddFilename = `${slug}-tdd.md`;
+  const tddPath = path.join(tddsDir, tddFilename);
+
+  // 3. Scaffold from TDD template (same pattern as spec)
+  const templatePath = path.join(__dirname, '..', '..', 'templates', 'tdd-v1.hbs');
+  const templateContent = await fs.readFile(templatePath, 'utf8');
+
+  const Handlebars = require('handlebars');
+  const template = Handlebars.compile(templateContent);
+  const rendered = template({
+    feature_id: featureId,
+    title: featureTitle,
+    spec_path: path.relative(path.dirname(tddPath), specPath),
+    created_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    owner: getGitUser()
+  });
+
+  // 4. Write TDD file atomically
+  const writeFileAtomic = require('write-file-atomic');
+  await writeFileAtomic(tddPath, rendered, { encoding: 'utf8' });
+
+  // 5. Return relative path from project root
+  return path.relative(targetDir, tddPath);
+}
+
+function getGitUser() {
+  const { execSync } = require('node:child_process');
   try {
     return execSync('git config user.name', { encoding: 'utf8' }).trim();
   } catch {
     return 'Unknown';
   }
-});
-
-async function scaffoldFromTemplate(featureTitle, targetDir = process.cwd()) {
-  // 1. Load template from installed location
-  const templatePath = path.join(__dirname, '..', 'templates', 'feature-spec-v2.hbs');
-  const templateContent = await fs.readFile(templatePath, 'utf8');
-
-  // 2. Compile template
-  const template = Handlebars.compile(templateContent);
-
-  // 3. Render with context
-  const rendered = template({
-    title: featureTitle,
-    author: '{{gitUser}}', // Helper will resolve
-    date: '{{isoDate}}'    // Helper will resolve
-  });
-
-  // 4. Write feature spec atomically
-  const specPath = path.join(targetDir, 'feature-spec.md');
-  await fs.writeFile(specPath, rendered, 'utf8');
-
-  // 5. Create .dwa directory and feature.json
-  const dwaDir = path.join(targetDir, '.dwa');
-  await fs.ensureDir(dwaDir);
-
-  const featureJson = path.join(dwaDir, 'feature.json');
-  await writeJsonWithSchema(featureJson, {
-    title: featureTitle,
-    spec_path: 'feature-spec.md',
-    created_at: new Date().toISOString()
-  });
-
-  return { specPath, featureJson };
 }
 
-module.exports = { scaffoldFromTemplate };
+module.exports = { scaffoldTDD };
 ```
 
-**Template structure (feature-spec-v2.hbs):**
+**Key characteristics:**
+- Reuses scaffoldFromTemplate pattern (template + context → rendered file)
+- Creates docs/tdds/ directory if missing (ensureDir)
+- Generates slug from feature title for filename consistency
+- Calculates relative path from TDD to spec for reverse link
+- Returns relative path for storing in feature.json
+
+### Pattern 4: /dwa:draft-tdd Skill Design (4-Step Process)
+**What:** Claude Code skill that scaffolds TDD by reading spec context and calling scaffold utilities.
+
+**When to use:** User invokes `/dwa:draft-tdd` after creating feature spec.
+
+**Example SKILL.md structure:**
 ```markdown
 ---
-title: {{title}}
-author: {{author}}
-created: {{date}}
-status: draft
+name: draft-tdd
+description: Draft a Technical Design Document from an existing feature spec. Creates docs/tdds/<feature>-tdd.md with decision log, guardrails, and risks.
+disable-model-invocation: true
+argument-hint: [optional-tdd-filename]
 ---
 
-# {{title}}
+# DWA: Draft Technical Design Document
 
-## Overview
-[Brief description of the feature]
+## Purpose
+Generate a TDD outline from the feature spec's goals, constraints, and deliverables. The TDD captures architecture decisions, guardrails, risks, and test strategy.
 
-## User Stories
-[User stories go here]
+## Process
 
-## Deliverables Table
+### Step 1: Check prerequisites
+- Verify feature-spec.md exists in current directory
+- Verify .dwa/feature.json exists (need feature_id for linking)
+- If either missing: error "No feature spec found. Run /dwa:create-spec first."
 
-| ID | Title | User Story | Acceptance Criteria | QA Notes | Dependencies | Estimate |
-|----|-------|------------|---------------------|----------|--------------|----------|
-| DEL-001 | [Example deliverable] | As a user... | - AC1<br>- AC2 | Test with... | - | 2d |
+### Step 2: Check for existing TDD
+- Check if docs/tdds/ directory exists and contains TDD for this feature
+- Check feature.json for tdd_path field
+- If TDD exists: warn "TDD already exists at [path]. Overwrite? (y/n)"
+- If user says no, stop
 
-## Technical Notes
-[Any technical considerations]
+### Step 3: Read spec context
+- Parse feature-spec.md frontmatter with gray-matter
+- Extract: feature_id, title, owner
+- Skim deliverables to identify technical complexity (number of deliverables, AC complexity)
+
+### Step 4: Scaffold TDD
+- Call scaffoldTDD(feature_id, title, spec_path, cwd)
+- Update feature.json with tdd_path field
+- Update feature-spec.md frontmatter with tdd_path field
+
+### Step 5: Confirm success
+- Report: "TDD created at [path]"
+- "Next steps:"
+- "1. Review Objectives section — align with spec goals"
+- "2. Fill in Architecture Overview — diagram or description"
+- "3. Document key decisions in Decision Log using ADR format"
+- "4. Define Guardrails — performance, security, compatibility constraints"
 ```
 
-**Why this pattern:**
-- Templates live in `~/.claude/dwa/templates/`, not hardcoded in JavaScript
-- Upgrades to DWA package update templates automatically
-- Handlebars helpers handle dynamic values (dates, git user)
-- Clear separation: structure in templates, logic in utilities
-
-### Pattern 3: Google Docs Import via MCP
-**What:** Use MCP tools to fetch Google Docs content, convert to markdown, parse/preserve tables.
-
-**When to use:** User chooses Google Docs import option in `/dwa:init`
-
-**Implementation approach:**
-```markdown
-## Google Docs Import Process
-
-<task type="auto">
-  <name>Import from Google Docs</name>
-  <action>
-1. Parse Google Docs URL to extract document ID
-2. Use MCP tool to fetch document content (assumes dev-workflow-assistant extension provides MCP bridge)
-3. Convert Google Docs format to markdown:
-   - Parse tables → markdown table syntax
-   - Parse text → markdown paragraphs
-   - Preserve formatting where possible
-4. Extract YAML frontmatter if present, or generate default frontmatter
-5. Write to feature-spec.md
-6. Warn user about any lossy conversions (complex formatting, images)
-  </action>
-  <verify>
-- feature-spec.md contains valid YAML frontmatter
-- Deliverables Table (if present) uses GitHub Flavored Markdown table syntax
-- No Google Docs-specific formatting remains
-  </verify>
-</task>
-```
-
-**Key considerations:**
-- MCP integration depends on dev-workflow-assistant extension (external dependency)
-- Skill instructs Claude to use MCP tools, doesn't implement MCP client itself
-- Table conversion is critical: Google Docs tables → GFM markdown tables
-- Warn on lossy conversion (images, complex formatting not supported)
+**Why this structure:**
+- Matches `/dwa:create-spec` pattern (consistent UX)
+- Reads spec context before scaffolding (context-aware generation)
+- Updates both feature.json AND spec frontmatter (bidirectional linking)
+- Provides clear next steps (user knows what to edit)
 
 ### Anti-Patterns to Avoid
-- **Hard-coding template structure in JavaScript:** Templates should be external files, not string literals
-- **Non-atomic writes:** Always use write-file-atomic or fs-extra writeFile for JSON files (prevents partial state)
-- **Silent overwrites:** Always check for existing files and warn user before overwriting
-- **Skipping schema versioning:** Every JSON file must include `schemaVersion` field (use `writeJsonWithSchema` helper from Phase 1)
+- **TDD in .dwa/ directory:** TDDs are technical docs for version control, not registry artifacts
+- **Hard-coded TDD path in spec:** Use tdd_path field in frontmatter for flexibility
+- **One-way linking:** Always update both spec and feature.json when creating TDD
+- **TDD content in spec file:** Keep TDD separate; spec is for requirements, TDD is for technical decisions
+- **Skipping tdd_schema_version:** Version TDD template format separately from spec template
 
 ## Don't Hand-Roll
 
@@ -306,415 +370,441 @@ Problems that look simple but have existing solutions:
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| YAML frontmatter parsing | Regex-based parser | gray-matter | Handles edge cases (quoted strings, nested objects, YAML/JSON/TOML formats) |
-| Template rendering | String replacement with ${} | Handlebars | Supports helpers, partials, complex logic, external template files |
-| Atomic file writes | fs.writeFile with try/catch | write-file-atomic | Prevents partial writes on crashes, handles cross-platform temp file cleanup |
-| Date formatting | Manual ISO string construction | Handlebars helper + Date.toISOString() | Consistent formatting, timezone handling |
-| Google Docs table conversion | HTML parser + regex | MCP tool response + markdown-table | MCP servers already handle Google Docs API, table export format complexities |
+| ADR format for decisions | Custom decision log format | MADR template (Markdown ADR) | Industry standard, tooling exists, widely understood |
+| TDD template structure | Ad-hoc sections | Industry TDD templates (NotePlan, Devplan) | Proven sections cover objectives, architecture, risks, testing |
+| Relative path calculation | String manipulation | path.relative() | Handles cross-platform paths, edge cases (../ traversal) |
+| TDD filename slugification | Custom regex | String.replace(/[^a-z0-9]+/g, '-') | Simple, reliable, avoids filesystem-unsafe characters |
+| Bidirectional linking | Manual path updates | Update both spec frontmatter AND feature.json | Prevents link drift, enables validation |
 
-**Key insight:** Template scaffolding has dozens of edge cases (Unicode, file permissions, cross-platform paths, partial writes on crash). Battle-tested libraries handle these; custom solutions don't.
+**Key insight:** TDD structure is well-established in industry (objectives, architecture, decisions, risks, testing). Don't invent new sections — follow proven patterns so developers recognize the format.
 
 ## Common Pitfalls
 
-### Pitfall 1: Template Placeholder Leakage
-**What goes wrong:** Scaffolding completes but generated file contains unreplaced placeholders like `{{AUTHOR}}` or `{{DATE}}`.
+### Pitfall 1: TDD Path Drift (Spec and Registry Out of Sync)
+**What goes wrong:** Spec frontmatter says `tdd_path: "docs/tdds/old-name.md"` but feature.json says `tdd_path: "docs/tdds/new-name.md"`. User clicks link in spec and gets 404.
 
 **Why it happens:**
-- Handlebars template uses placeholders not in context object
-- Typo in placeholder name (template has `{{featureTitle}}`, context provides `title`)
-- Helpers not registered before template compilation
+- TDD file renamed manually without updating spec or registry
+- Spec frontmatter updated but feature.json not updated (or vice versa)
+- Multiple sources of truth without consistency checks
 
 **How to avoid:**
-1. Register all Handlebars helpers BEFORE calling `Handlebars.compile()`
-2. Validate template context: ensure all required fields present
-3. Add verification step: grep for `{{` in output file, fail if found
+1. Always update BOTH spec frontmatter AND feature.json when creating/moving TDD
+2. Add validation command (future phase): check spec tdd_path matches feature.json tdd_path
+3. Use relative paths consistently (from project root)
+4. Store canonical path in feature.json, derive from there
 
 **Warning signs:**
-- User reports "template file has weird {{brackets}} text"
-- Frontmatter missing values (empty author field)
+- User reports "TDD link is broken"
+- File exists but path doesn't match registry
 
-**Example verification:**
+**Example fix:**
 ```javascript
-// After rendering template
-const hasPlaceholders = /\{\{[^}]+\}\}/.test(rendered);
-if (hasPlaceholders) {
-  throw new Error('Template rendering incomplete: placeholders remain');
+// When scaffolding TDD, update both sources
+await updateSpecFrontmatter(specPath, { tdd_path: relativeTddPath });
+await updateFeatureJson(featureJsonPath, { tdd_path: relativeTddPath });
+```
+
+### Pitfall 2: TDD Schema Version Mismatch
+**What goes wrong:** TDD template evolves (add new sections, change ADR format). Old TDDs have v1.0 schema, new TDDs have v1.1 schema. Parsing commands break.
+
+**Why it happens:**
+- No schema versioning in TDD frontmatter
+- Template changes without version bump
+- No migration path for old TDDs
+
+**How to avoid:**
+1. Include tdd_schema_version in frontmatter (like spec_schema_version)
+2. Bump version when template structure changes
+3. Commands check schema version before parsing
+4. Provide migration commands (future phase)
+
+**Warning signs:**
+- Parsing errors on old TDDs after template update
+- New sections missing in old TDDs
+
+**Example version check:**
+```javascript
+const { data } = matter(tddContent);
+if (data.tdd_schema_version !== '1.0') {
+  console.warn(`TDD schema version ${data.tdd_schema_version} may not be compatible`);
 }
 ```
 
-### Pitfall 2: YAML Frontmatter Syntax Errors
-**What goes wrong:** Scaffolded spec has invalid YAML frontmatter. Phase 3 parsing fails with "YAML parse error".
+### Pitfall 3: Decision Log Format Inconsistency
+**What goes wrong:** Developers add decisions to Decision Log in different formats. Some use ADR format (Context/Decision/Consequences), others use freeform text. Parsing logic can't extract decisions reliably.
 
 **Why it happens:**
-- Template generates frontmatter with unquoted special characters (`: # [ ]`)
-- User-provided title contains YAML-unsafe characters: `Feature: Login & Signup`
-- Newlines or quotes in values not escaped
+- Template shows ADR example but doesn't enforce structure
+- No validation or linting for decision format
+- Developers unfamiliar with ADR format
 
 **How to avoid:**
-1. Use gray-matter's `stringify()` method instead of string templates for frontmatter
-2. Sanitize user input: quote strings with special characters
-3. Validate frontmatter immediately after generation: parse with gray-matter, fail if error
+1. Template includes clear ADR format example with all required fields
+2. Skill instruction includes: "Use ADR format for all decisions"
+3. Provide decision number sequence (001, 002, 003) for easy reference
+4. Future: Validate decision format with remark parser
 
 **Warning signs:**
-- Error message: "bad indentation of a mapping entry"
-- Frontmatter looks correct visually but won't parse
+- Decisions missing Status or Consequences fields
+- Inconsistent heading levels (### vs ####)
 
-**Example safe generation:**
-```javascript
-const matter = require('gray-matter');
+**Example template guidance:**
+```markdown
+## 3) Decision Log
 
-// Generate frontmatter safely
-const frontmatter = matter.stringify('', {
-  title: userProvidedTitle,  // gray-matter handles quoting automatically
-  author: authorName,
-  created: new Date().toISOString(),
-  status: 'draft'
-});
+> Use Architecture Decision Record (ADR) format for all decisions.
+> Each decision must include: Date, Status, Context, Decision, Consequences.
 
-// Append markdown content
-const fullContent = frontmatter + '\n\n' + markdownBody;
+### Decision 001: [Example Decision Title]
+- **Date:** 2026-01-24
+- **Status:** Accepted
+- **Context:** We need to choose between REST and GraphQL for the API.
+- **Decision:** We will use GraphQL for flexible querying.
+- **Consequences:**
+  - Positive: Clients can request exactly what they need
+  - Negative: Learning curve for team, more complex caching
 ```
 
-### Pitfall 3: Overwriting Existing Work Without Warning
-**What goes wrong:** User runs `/dwa:init` in directory with existing feature-spec.md. Command silently overwrites file, losing work.
+### Pitfall 4: Guardrails Too Vague to Be Useful
+**What goes wrong:** TDD Guardrails section says "must be performant" or "should be secure". When creating execution packets, these guardrails don't provide actionable constraints.
 
 **Why it happens:**
-- No existence check before scaffolding
-- Skill assumes new project, doesn't handle re-initialization
-- User accidentally runs command twice
+- Template doesn't provide concrete examples
+- Developers unfamiliar with writing testable constraints
+- No link between spec's "Constraints" section and TDD guardrails
 
 **How to avoid:**
-1. Check for `.dwa/feature.json` FIRST (indicates initialization already happened)
-2. Check for `feature-spec.md` SECOND (user might have manually created spec)
-3. Prompt user with clear warning: "Feature already initialized. Overwrite? (y/n)"
-4. If user declines, exit cleanly with no changes
+1. Template includes specific guardrail examples (latency < 200ms, supports 10k concurrent users)
+2. Skill instruction: "Convert spec constraints into measurable guardrails"
+3. Guardrails organized by category (Performance, Security, Scalability, Compatibility)
+4. Each guardrail should be testable (unit/integration/load test)
 
 **Warning signs:**
-- User reports "my spec disappeared after running /dwa:init again"
-- Loss of deliverables data
+- Guardrails use words like "should" or "must" without metrics
+- No connection to spec's Constraints section
+- Execution packets don't reference guardrails (because they're not actionable)
 
-**Example check:**
-```javascript
-const fs = require('fs-extra');
-const path = require('path');
+**Example specific guardrails:**
+```markdown
+## 4) Guardrails
 
-async function checkExisting(targetDir) {
-  const featureJson = path.join(targetDir, '.dwa', 'feature.json');
-  const specPath = path.join(targetDir, 'feature-spec.md');
+### Performance
+- API response time: < 200ms p95
+- Database queries: < 50ms per query
+- No N+1 queries in list endpoints
 
-  const jsonExists = await fs.pathExists(featureJson);
-  const specExists = await fs.pathExists(specPath);
+### Security
+- Authentication: OAuth 2.0 with JWT tokens
+- Authorization: RBAC with role checks on all mutations
+- Data encryption: TLS 1.3 in transit, AES-256 at rest
 
-  if (jsonExists || specExists) {
-    return {
-      alreadyInitialized: true,
-      files: { featureJson: jsonExists, spec: specExists }
-    };
-  }
+### Scalability
+- Supports 10,000 concurrent users
+- Horizontal scaling via stateless services
+- Database read replicas for query distribution
 
-  return { alreadyInitialized: false };
-}
+### Compatibility
+- Browsers: Chrome 120+, Firefox 120+, Safari 17+
+- Node.js: 18.x LTS or later
 ```
 
-### Pitfall 4: Google Docs Table Structure Lost in Conversion
-**What goes wrong:** User imports from Google Docs. Deliverables Table in original doc becomes unformatted text in markdown. Phase 3 parsing fails.
+### Pitfall 5: TDD Not Updated as Implementation Evolves
+**What goes wrong:** Implementation reveals new architectural decisions or risks. Developer updates code and tests but forgets to update TDD. TDD becomes stale, loses value as "living document".
 
 **Why it happens:**
-- MCP tool returns HTML or plain text, not markdown tables
-- Table cell newlines become literal `\n` characters instead of `<br>` tags
-- Column alignment lost (Google Docs uses rich formatting, markdown uses `|` delimiters)
+- No workflow hook to update TDD during implementation
+- Developers see TDD as "planning artifact" not "living document"
+- No reminder to update TDD in execution packet template
 
 **How to avoid:**
-1. Explicitly request markdown format from MCP tool (if supported)
-2. Parse HTML tables → convert to GitHub Flavored Markdown table syntax
-3. Test table conversion: ensure `|` delimiters, header row separator (`|---|---|`)
-4. Validate with remark-gfm parser: can it parse the generated table?
-5. Warn user if complex table formatting detected (merged cells not supported in markdown)
+1. Execution packet template includes: "Section 8: TDD Updates" (captures decisions made during implementation)
+2. Complete Deliverable command prompts: "Were new architectural decisions made? Update TDD."
+3. TDD frontmatter includes updated field (timestamp of last change)
+4. Future: Drift check validates TDD updated field vs last commit date
 
 **Warning signs:**
-- Spec looks correct visually but Phase 3 parse fails with "table not found"
-- Cell content has `\n` instead of line breaks
-- Table missing header separator row
+- TDD created date months old, no updates
+- Implementation includes architecture decisions not in TDD
+- Execution packets don't reference TDD sections
 
-**Example validation:**
-```javascript
-const unified = require('unified');
-const remarkParse = require('remark-parse');
-const remarkGfm = require('remark-gfm');
-const { visit } = require('unist-util-visit');
+**Example workflow integration:**
+```markdown
+# Execution Packet — DEL-003 — Database Layer
 
-async function validateTableStructure(markdownContent) {
-  const tree = unified()
-    .use(remarkParse)
-    .use(remarkGfm)
-    .parse(markdownContent);
+## 8) TDD Updates
 
-  let foundTable = false;
-  visit(tree, 'table', (node) => {
-    foundTable = true;
-    // Check for required columns
-    const headers = node.children[0].children.map(cell =>
-      cell.children[0]?.value || ''
-    );
-    const requiredCols = ['ID', 'Title', 'User Story', 'Acceptance Criteria'];
-    const hasRequired = requiredCols.every(col => headers.includes(col));
+Decisions made during implementation:
 
-    if (!hasRequired) {
-      throw new Error(`Table missing required columns: ${requiredCols.join(', ')}`);
-    }
-  });
+### Decision 004: Use Connection Pooling
+- **Date:** 2026-01-25
+- **Status:** Accepted
+- **Context:** Initial implementation created new DB connection per request
+- **Decision:** Implemented connection pooling with max 20 connections
+- **Consequences:**
+  - Positive: Reduced connection overhead, improved latency
+  - Negative: Need to handle pool exhaustion errors
 
-  if (!foundTable) {
-    throw new Error('No table found in imported content');
-  }
-}
-```
-
-### Pitfall 5: Schema Version Mismatch Between Components
-**What goes wrong:** Phase 1 installer writes `schemaVersion: "1.0.0"` to version file. Phase 2 scaffolding writes `schemaVersion: "1.0"` to feature.json. Version comparison logic breaks.
-
-**Why it happens:**
-- Hardcoded version strings in multiple places
-- No central SCHEMA_VERSION constant
-- String comparison instead of semver comparison
-
-**How to avoid:**
-1. Import `SCHEMA_VERSION` constant from Phase 1's `utils/schema.js`
-2. Always use `writeJsonWithSchema()` helper (already includes version)
-3. Never hardcode version strings in skills or utilities
-
-**Warning signs:**
-- Error: "Schema version mismatch" when reading feature.json
-- Upgrade command reports registry needs migration when it doesn't
-
-**Example correct usage:**
-```javascript
-const { writeJsonWithSchema, SCHEMA_VERSION } = require('./schema');
-
-// CORRECT: Use helper
-await writeJsonWithSchema(featureJsonPath, {
-  title: 'My Feature',
-  spec_path: 'feature-spec.md',
-  created_at: new Date().toISOString()
-});
-
-// WRONG: Manual version
-await fs.writeJSON(featureJsonPath, {
-  schemaVersion: '1.0.0',  // Hardcoded, will drift
-  // ...
-});
+[Action: Add this decision to TDD after deliverable completion]
 ```
 
 ## Code Examples
 
-Verified patterns from official sources:
+Verified patterns from existing code and industry sources:
 
-### Claude Code Skill Structure
-```yaml
-# Source: https://code.claude.com/docs/en/skills
----
-name: init
-description: Initialize a new feature spec from Template v2.0 or import from Google Docs. Creates feature-spec.md and .dwa/feature.json.
-disable-model-invocation: true
-argument-hint: [optional-google-docs-url]
----
+### Updating Spec Frontmatter with TDD Path
+```javascript
+// Source: gray-matter stringify pattern (https://github.com/jonschlinkert/gray-matter)
+const matter = require('gray-matter');
+const fs = require('fs-extra');
 
-# DWA: Initialize Feature Spec
+async function updateSpecWithTDDPath(specPath, tddPath) {
+  // 1. Read and parse existing spec
+  const specContent = await fs.readFile(specPath, 'utf8');
+  const { data, content } = matter(specContent);
 
-## Purpose
-Scaffold a feature spec from Template v2.0 or import from Google Docs via MCP.
+  // 2. Add tdd_path to frontmatter
+  data.tdd_path = tddPath;
 
-## Required Reading
-@~/.claude/dwa/references/template-spec.md
+  // 3. Stringify back to file (preserves frontmatter structure)
+  const updated = matter.stringify(content, data);
 
-## Process
-[Step-by-step instructions for Claude to follow]
+  // 4. Write atomically
+  const writeFileAtomic = require('write-file-atomic');
+  await writeFileAtomic(specPath, updated, { encoding: 'utf8' });
+}
 ```
 
-**Key YAML fields:**
-- `name`: Becomes `/dwa:init` command
-- `description`: Helps Claude decide when to load skill automatically (though disabled here)
-- `disable-model-invocation: true`: Only user can invoke, Claude won't auto-trigger
-- `argument-hint`: Shows in autocomplete (e.g., `/dwa:init [optional-google-docs-url]`)
-
-### Handlebars Template with Helpers
+### Scaffolding TDD from Template
 ```javascript
-// Source: https://handlebarsjs.com/guide/
+// Source: Reuse Phase 2-01 pattern from src/scaffolding/scaffold.js
 const Handlebars = require('handlebars');
-const { execSync } = require('child_process');
+const fs = require('fs-extra');
+const path = require('node:path');
 
-// Register helper for current date
-Handlebars.registerHelper('isoDate', () => new Date().toISOString());
+async function scaffoldTDD(featureId, featureTitle, specPath, targetDir) {
+  // 1. Ensure docs/tdds/ exists
+  const tddsDir = path.join(targetDir, 'docs', 'tdds');
+  await fs.ensureDir(tddsDir);
 
-// Register helper for git user
-Handlebars.registerHelper('gitUser', () => {
+  // 2. Generate TDD filename
+  const slug = featureTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const tddFilename = `${slug}-tdd.md`;
+  const tddPath = path.join(tddsDir, tddFilename);
+
+  // 3. Load and render template
+  const templatePath = path.join(__dirname, '..', '..', 'templates', 'tdd-v1.hbs');
+  const templateContent = await fs.readFile(templatePath, 'utf8');
+  const template = Handlebars.compile(templateContent);
+
+  // Calculate relative path from TDD to spec
+  const relativeSpecPath = path.relative(path.dirname(tddPath), path.join(targetDir, specPath));
+
+  const rendered = template({
+    feature_id: featureId,
+    title: featureTitle,
+    spec_path: relativeSpecPath,
+    created_date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+    owner: getGitUser()
+  });
+
+  // 4. Verify no placeholder leakage
+  if (/\{\{[^}]+\}\}/.test(rendered)) {
+    throw new Error('TDD template rendering incomplete: unreplaced placeholders remain');
+  }
+
+  // 5. Write atomically
+  const writeFileAtomic = require('write-file-atomic');
+  await writeFileAtomic(tddPath, rendered, { encoding: 'utf8' });
+
+  // 6. Return path relative to project root
+  return path.relative(targetDir, tddPath);
+}
+
+function getGitUser() {
+  const { execSync } = require('node:child_process');
   try {
     return execSync('git config user.name', { encoding: 'utf8' }).trim();
   } catch {
     return 'Unknown';
   }
-});
-
-// Compile and render template
-const template = Handlebars.compile(`
----
-title: {{title}}
-author: {{gitUser}}
-created: {{isoDate}}
----
-
-# {{title}}
-`);
-
-const output = template({ title: 'My Feature' });
-// Output:
-// ---
-// title: My Feature
-// author: John Doe
-// created: 2026-01-24T10:00:00.000Z
-// ---
-//
-// # My Feature
-```
-
-### YAML Frontmatter Parse and Stringify
-```javascript
-// Source: https://github.com/jonschlinkert/gray-matter
-const matter = require('gray-matter');
-
-// Parse existing file
-const fileContent = `---
-title: Login Feature
-author: Jane
----
-
-# Login Feature`;
-
-const { data, content } = matter(fileContent);
-// data = { title: 'Login Feature', author: 'Jane' }
-// content = '# Login Feature'
-
-// Stringify (create frontmatter from object)
-const newFile = matter.stringify('# New Feature', {
-  title: 'New Feature',
-  author: 'John',
-  created: new Date().toISOString()
-});
-// Output:
-// ---
-// title: New Feature
-// author: John
-// created: 2026-01-24T10:00:00.000Z
-// ---
-//
-// # New Feature
-```
-
-### Atomic File Write with Verification
-```javascript
-// Source: Phase 1 implementation pattern
-const fs = require('fs-extra');
-const writeFileAtomic = require('write-file-atomic');
-const { writeJsonWithSchema } = require('./schema');
-
-async function scaffoldFeature(title, targetDir) {
-  // 1. Check for existing files first
-  const featureJsonPath = path.join(targetDir, '.dwa', 'feature.json');
-  const exists = await fs.pathExists(featureJsonPath);
-
-  if (exists) {
-    throw new Error('Feature already initialized. Use /dwa:parse to update.');
-  }
-
-  // 2. Create .dwa directory
-  await fs.ensureDir(path.join(targetDir, '.dwa'));
-
-  // 3. Write feature.json atomically with schema
-  await writeJsonWithSchema(featureJsonPath, {
-    title: title,
-    spec_path: 'feature-spec.md',
-    created_at: new Date().toISOString()
-  });
-
-  // 4. Render and write spec file
-  const specContent = renderTemplate(title);
-  const specPath = path.join(targetDir, 'feature-spec.md');
-  await writeFileAtomic(specPath, specContent, 'utf8');
-
-  // 5. Verify writes succeeded
-  const jsonExists = await fs.pathExists(featureJsonPath);
-  const specExists = await fs.pathExists(specPath);
-
-  if (!jsonExists || !specExists) {
-    throw new Error('Scaffolding verification failed');
-  }
-
-  return { featureJsonPath, specPath };
 }
+```
+
+### Updating Feature Registry with TDD Path
+```javascript
+// Source: Phase 1 writeJsonWithSchema pattern
+const { writeJsonWithSchema } = require('../utils/schema');
+const fs = require('fs-extra');
+const path = require('node:path');
+
+async function updateFeatureJsonWithTDD(targetDir, tddPath) {
+  const featureJsonPath = path.join(targetDir, '.dwa', 'feature.json');
+
+  // 1. Read existing feature.json
+  const existing = await fs.readJSON(featureJsonPath);
+
+  // 2. Add tdd_path field
+  existing.tdd_path = tddPath;
+
+  // 3. Write back with schema version preserved
+  await writeJsonWithSchema(featureJsonPath, {
+    ...existing,
+    schemaVersion: undefined // writeJsonWithSchema adds this
+  });
+}
+```
+
+### Claude Code Skill for TDD Drafting
+```markdown
+# Source: Phase 2-02 /dwa:create-spec skill pattern
+---
+name: draft-tdd
+description: Draft a Technical Design Document from an existing feature spec. Creates docs/tdds/<feature>-tdd.md with decision log, guardrails, and risks.
+disable-model-invocation: true
+argument-hint: [optional-tdd-filename]
+---
+
+# DWA: Draft Technical Design Document
+
+## Purpose
+Generate a TDD outline from the feature spec's goals, constraints, and deliverables.
+
+## Process
+
+### Step 1: Check prerequisites
+```javascript
+const { checkExisting } = require('[DWA_INSTALL_PATH]/src/scaffolding/check-existing');
+const fs = require('fs-extra');
+const path = require('path');
+
+// Check spec exists
+const specPath = path.join(process.cwd(), 'feature-spec.md');
+if (!await fs.pathExists(specPath)) {
+  throw new Error('No feature spec found. Run /dwa:create-spec first.');
+}
+
+// Check registry exists
+const result = await checkExisting(process.cwd());
+if (!result.files.featureJson) {
+  throw new Error('No feature registry found. Run /dwa:create-spec first.');
+}
+```
+
+### Step 2: Check for existing TDD
+```javascript
+const featureJson = await fs.readJSON(path.join(process.cwd(), '.dwa', 'feature.json'));
+if (featureJson.tdd_path) {
+  const tddExists = await fs.pathExists(path.join(process.cwd(), featureJson.tdd_path));
+  if (tddExists) {
+    // Ask user before overwriting
+  }
+}
+```
+
+### Step 3: Read spec context
+```javascript
+const matter = require('gray-matter');
+const specContent = await fs.readFile(specPath, 'utf8');
+const { data } = matter(specContent);
+
+const featureId = data.feature_id;
+const featureTitle = data.title;
+```
+
+### Step 4: Scaffold TDD
+```javascript
+const { scaffoldTDD } = require('[DWA_INSTALL_PATH]/src/scaffolding/scaffold-tdd');
+const tddPath = await scaffoldTDD(featureId, featureTitle, 'feature-spec.md', process.cwd());
+
+// Update feature.json
+await updateFeatureJsonWithTDD(process.cwd(), tddPath);
+
+// Update spec frontmatter
+await updateSpecWithTDDPath(specPath, tddPath);
+```
+
+### Step 5: Confirm success
+Report to user:
+- "TDD created at [tddPath]"
+- "Next steps:"
+- "1. Review Objectives section"
+- "2. Fill in Architecture Overview"
+- "3. Document decisions in Decision Log (ADR format)"
 ```
 
 ## State of the Art
 
 | Old Approach | Current Approach | When Changed | Impact |
 |--------------|------------------|--------------|--------|
-| Separate `.claude/commands/` directory for slash commands | Skills in `.claude/skills/` with SKILL.md files | December 2025 | Commands still work, but skills support additional features (supporting files, frontmatter controls) |
-| Manual template string replacement | Handlebars/Mustache template engines | Ongoing standard | Template files separate from code, easier to maintain and upgrade |
-| fs.writeFile for JSON | write-file-atomic | Phase 1 decision | Prevents partial state on crashes, critical for registry integrity |
-| Regex-based YAML parsing | gray-matter library | Industry standard since ~2015 | Handles all YAML edge cases (quotes, special chars, nested objects) |
+| TDD embedded in spec file | TDD as separate artifact at docs/tdds/ | PROJECT.md architecture decision | TDD evolves independently, cleaner spec files |
+| Freeform decision notes | ADR (Architecture Decision Record) format | Industry standard ~2019 | Structured decisions, tooling support, widely recognized |
+| Hard-coded TDD location | tdd_path field in spec frontmatter | This phase | Flexible TDD organization, validation possible |
+| Manual TDD creation | Scaffolded from template with spec context | This phase | Consistent structure, auto-linked to spec |
+| TDD as static doc | Living document updated during implementation | Agile architecture trend ~2020 | TDD stays relevant, captures emergent decisions |
 
 **Deprecated/outdated:**
-- **Custom slash commands in `.claude/commands/`**: Still supported but deprecated in favor of skills with SKILL.md format (more flexible, supports frontmatter, supporting files)
-- **fs-extra over fs/promises**: Phase 1 already uses fs-extra (CommonJS compatibility), but note that modern Node.js 18+ has built-in fs/promises that would suffice for new projects
+- **TDD in spec file:** Causes spec to grow too large, couples requirements to technical decisions
+- **Word/PDF TDDs:** Version control issues, hard to link programmatically, not diff-friendly
+- **No decision log:** Architecture decisions lost in chat/email, not captured for future reference
 
 ## Open Questions
 
 Things that couldn't be fully resolved:
 
-1. **Feature Spec Template v2.0 exact format**
-   - What we know: YAML front matter + Deliverables Table (markdown table). Fields include: title, author, created, status. Table columns: ID, Title, User Story, Acceptance Criteria, QA Notes, Dependencies, Estimate.
-   - What's unclear: Exact column order, optional vs required columns, whether template already exists in user's possession or needs to be created
-   - Recommendation: Create example template based on patterns in .planning/research/ARCHITECTURE.md. User can customize before Phase 2 implementation. Store in `templates/feature-spec-v2.hbs`.
+1. **TDD content generation depth**
+   - What we know: `/dwa:draft-tdd` scaffolds TDD template from spec context
+   - What's unclear: How much content should the LLM generate vs leaving for user to fill? (Objectives from spec goals? Risks from spec constraints?)
+   - Recommendation: Phase 2 scaffolds empty template structure. Future phase adds LLM content generation from spec analysis. Start simple, add intelligence later.
 
-2. **Google Docs MCP integration specifics**
-   - What we know: dev-workflow-assistant extension provides MCP bridge. Community MCP servers exist (google-drive-mcp, google-docs-mcp). Google announced official MCP support for Google services in 2026.
-   - What's unclear: Exact MCP tool names/signatures available via dev-workflow-assistant extension. Does it return HTML, markdown, or JSON? Table conversion strategy.
-   - Recommendation: Implement local template scaffolding first (Phase 2.1). Add Google Docs import as enhancement (Phase 2.2) after confirming MCP tool availability. Skill should gracefully handle MCP tool absence with clear error message.
+2. **ADR numbering scheme**
+   - What we know: Decisions numbered sequentially (001, 002, 003) for reference
+   - What's unclear: Should numbering be global per-project or per-feature? Reset on new feature or continue sequence?
+   - Recommendation: Number per-feature (001-999). If decisions span features, reference them explicitly: "See Feature A Decision 005".
 
-3. **Template upgrade strategy**
-   - What we know: Templates stored in `~/.claude/dwa/templates/`. When user runs `npx dwa --upgrade`, newer templates replace old ones.
-   - What's unclear: What happens to feature-spec.md files created from old template version when template upgrades? Migration needed?
-   - Recommendation: Template format is user-facing contract. Major template changes should bump schemaVersion. Include template version in feature.json metadata for future drift detection.
+3. **TDD diagram support**
+   - What we know: TDD template includes "Architecture Diagrams" section
+   - What's unclear: What format for diagrams? (Mermaid, PlantUML, image files, external tools?)
+   - Recommendation: Phase 2 includes placeholder text. Phase 3+ can add Mermaid diagram scaffolding (text-based, version-controllable). Leave external tools as option.
 
-4. **Deliverables Table validation scope**
-   - What we know: Phase 3 will parse table. Phase 2 scaffolds empty table structure.
-   - What's unclear: Should Phase 2 validate table structure at scaffolding time, or only at parse time (Phase 3)?
-   - Recommendation: Phase 2 scaffolds valid structure from template (no validation needed). Phase 3 implements full validation with line numbers and fix suggestions (REQ-010).
+4. **Guardrails extraction from spec**
+   - What we know: Spec has "Constraints" section (1.4 Non-Goals / Constraints)
+   - What's unclear: Should `/dwa:draft-tdd` auto-extract spec constraints into TDD guardrails? Manual or automated?
+   - Recommendation: Phase 2 manual (user fills guardrails). Future skill `/dwa:sync-guardrails` can extract spec constraints → TDD guardrails.
+
+5. **TDD update workflow during execution**
+   - What we know: TDD should be updated during implementation (living document)
+   - What's unclear: How to remind developers to update TDD? Execution packet template? Git pre-commit hook?
+   - Recommendation: Execution packet Section 8 includes "TDD Updates" reminder. Complete Deliverable command (future phase) prompts for TDD updates. No automated enforcement (trust over process).
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Claude Code Skills Documentation](https://code.claude.com/docs/en/skills) - Official Anthropic documentation on skill structure, YAML frontmatter, invocation control
-- [Anthropic Skills GitHub Repository](https://github.com/anthropics/skills) - Official skill examples and templates
-- Phase 1 implementation (`src/utils/schema.js`, `src/utils/paths.js`) - Established patterns for schema versioning and file paths
-- .planning/research/ARCHITECTURE.md - Project-specific architecture decisions and file structure
+- Phase 2-01 implementation (templates/feature-spec-v2.hbs, src/scaffolding/scaffold.js, src/scaffolding/check-existing.js) — Existing scaffolding patterns to reuse
+- .planning/PROJECT.md — Architectural decision for TDD as separate artifact, TDD content definition
+- gray-matter NPM package documentation (https://github.com/jonschlinkert/gray-matter) — Frontmatter parse/stringify API
+- Phase 1 implementation (src/utils/schema.js) — Schema versioning pattern
 
 ### Secondary (MEDIUM confidence)
-- [gray-matter NPM package](https://www.npmjs.com/package/gray-matter) - YAML frontmatter parsing library (verified by multiple sources)
-- [Handlebars.js Official Documentation](https://handlebarsjs.com/) - Template engine documentation
-- [Google Cloud MCP Announcement](https://cloud.google.com/blog/products/ai-machine-learning/announcing-official-mcp-support-for-google-services) - Official Google MCP support announcement
-- [Google Drive MCP GitHub](https://github.com/piotr-agier/google-drive-mcp) - Community MCP server for Google Drive integration
+- [NotePlan Technical Design Document Template](https://noteplan.co/templates/technical-design-document-template) — Industry TDD structure (Objectives, Architecture, Design Details, Testing)
+- [MADR (Markdown Architectural Decision Records)](https://adr.github.io/madr/) — ADR format for Decision Log
+- [ADR GitHub Organization](https://adr.github.io/) — Architecture Decision Record templates and patterns
+- [Stack Overflow: Practical Guide to Writing Technical Specs](https://stackoverflow.blog/2020/04/06/a-practical-guide-to-writing-technical-specs/) — Relationship between feature specs and technical specs
+- [Thoughtworks: Spec-Driven Development 2025](https://www.thoughtworks.com/en-us/insights/blog/agile-engineering-practices/spec-driven-development-unpacking-2025-new-engineering-practices) — Current industry thinking on specs vs technical design docs
+- [Medium: Agile Architecture Fitness Functions & Guardrails](https://medium.com/@stefano.rossini.mail/agile-architecture-part-7-fitness-functions-architectural-guardrails-28ed22ade476) — Guardrails best practices
 
 ### Tertiary (LOW confidence - require validation)
-- WebSearch results on template scaffolding patterns (generate-template-files, simple-scaffold) - Patterns verified against official Handlebars docs
-- Community MCP servers (google-docs-mcp by a-bonus) - Functionality described but not tested with dev-workflow-assistant extension
+- WebSearch results on TDD best practices 2026 (Asana, Monday.com, Document360) — General TDD structure guidance
+- Google Cloud MCP announcement (Google services MCP support) — Future integration potential (not needed for Phase 2)
 
 ## Metadata
 
 **Confidence breakdown:**
-- Claude Code skills structure: HIGH - Official documentation verified, local examples examined
-- Template scaffolding: HIGH - Industry-standard libraries (Handlebars, gray-matter) with official documentation
-- Google Docs MCP: MEDIUM - Official Google announcement confirmed, but dev-workflow-assistant extension integration details unclear
-- Feature Spec Template v2.0 format: MEDIUM - Inferred from requirements and architecture docs, exact format not in codebase yet
+- TDD template structure: HIGH — Multiple industry sources agree (NotePlan, Devplan, ADR templates)
+- Spec ↔ TDD linking: HIGH — Based on PROJECT.md architecture decisions and industry practices
+- Reuse of Phase 2-01 utilities: HIGH — Code already exists and tested, pattern proven
+- /dwa:draft-tdd skill design: HIGH — Follows established /dwa:create-spec pattern from Phase 2-02
+- ADR format for decision log: HIGH — Industry standard (adr.github.io, MADR), widely adopted
 
 **Research date:** 2026-01-24
-**Valid until:** 60 days (skills format stable, libraries mature, MCP ecosystem evolving but core patterns established)
+**Valid until:** 60 days (TDD practices stable, templates evolve slowly, ADR format mature)
