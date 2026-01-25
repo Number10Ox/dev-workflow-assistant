@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 6 of 7 (Linear Integration)
-Plan: 3 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-25 - Completed 06-03-PLAN.md (DWA Linear Sync Infrastructure)
+Last activity: 2026-01-25 - Completed 06-02-PLAN.md (Linear Provider Implementation)
 
-Progress: [█████████████░] 89%
+Progress: [████████████░░] 84%
 
 ## Performance Metrics
 
 **Velocity:**
 - Total plans completed: 17
-- Average duration: 3m 13s
-- Total execution time: 0.91 hours
+- Average duration: 3m 16s
+- Total execution time: 0.93 hours
 
 **By Phase:**
 
@@ -32,11 +32,11 @@ Progress: [█████████████░] 89%
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
-| 06 - Linear Integration | 2 | 5m 44s | 2m 52s |
+| 06 - Linear Integration | 2 | 8m 31s | 4m 16s |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (2m 55s), 05-04 (2m 11s), 06-01 (3m 5s), 06-03 (2m 39s)
-- Phase 6 building DWA-side sync infrastructure
+- Last 5 plans: 05-03 (2m 55s), 05-04 (2m 11s), 06-01 (3m 5s), 06-02 (4m 26s)
+- Phase 6 implementing Linear provider with rate limiting
 
 *Updated after each plan completion*
 
@@ -111,11 +111,9 @@ Recent decisions affecting current work:
 - [06-01]: Add queryByExternalId as required method in IssueTracker interface.
 - [06-01]: Set BRIDGE_API_VERSION to 2.0.0 to indicate breaking interface changes.
 - [06-01]: Use provider-agnostic 'container' field instead of 'projectId' for portability across Linear/JIRA/GitHub.
-- [06-03]: DWA section wrapped in <!-- DWA:BEGIN --> / <!-- DWA:END --> markers for human/machine coexistence.
-- [06-03]: Sync hash computed on normalized content (consistent line endings, collapsed blank lines).
-- [06-03]: ExternalId format: FEAT-YYYY-NNN-DEL-### for global uniqueness.
-- [06-03]: BridgeClient discovers providers via vscode.extensions.getExtension().
-- [06-03]: Grouped AC format (C/F/E/N sections) matches execution packet style.
+- [06-02]: Use type assertions (as any) for externalId/projectId when Linear SDK types are incomplete but GraphQL API supports fields.
+- [06-02]: Wrap all API methods with exponential backoff for comprehensive rate limit handling.
+- [06-02]: Return null from queryByExternalId when no matching issue found (not throw error).
 
 ### Pending Todos
 
@@ -131,5 +129,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 06-03-PLAN.md (DWA Linear Sync Infrastructure). Phase 6 in progress (2/4 plans complete, 06-02 executed in parallel).
+Stopped at: Completed 06-02-PLAN.md (Linear Provider Implementation). Phase 6 in progress (2/4 plans complete).
 Resume file: None
