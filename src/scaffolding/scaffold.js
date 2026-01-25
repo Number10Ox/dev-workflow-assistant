@@ -53,6 +53,7 @@ async function scaffoldFromTemplate(featureTitle, targetDir) {
     feature_id: featureId,
     title: featureTitle,
     spec_path: 'feature-spec.md',
+    tdd_path: null,
     created_at: new Date().toISOString()
   });
 

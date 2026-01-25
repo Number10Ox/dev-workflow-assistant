@@ -38,6 +38,9 @@ describe('scaffoldFromTemplate', () => {
 
     // Verify auto-generated feature_id
     assert.match(content, /feature_id: FEAT-/, 'Should contain auto-generated feature_id');
+
+    // Verify tdd_path field
+    assert.match(content, /tdd_path: null/, 'Should contain tdd_path: null in frontmatter');
   });
 
   test('creates .dwa/feature.json with schema', async () => {
@@ -52,6 +55,7 @@ describe('scaffoldFromTemplate', () => {
     assert.ok(featureJson.feature_id.startsWith('FEAT-'), 'feature_id should start with FEAT-');
     assert.strictEqual(featureJson.title, 'My Feature', 'title should match input');
     assert.strictEqual(featureJson.spec_path, 'feature-spec.md', 'spec_path should be feature-spec.md');
+    assert.strictEqual(featureJson.tdd_path, null, 'tdd_path should be null initially');
 
     // Verify created_at is valid ISO date
     assert.ok(featureJson.created_at, 'created_at should exist');
