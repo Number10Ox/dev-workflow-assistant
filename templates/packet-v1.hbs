@@ -1,0 +1,147 @@
+---
+deliverable_id: {{deliverable_id}}
+packet_version: v1.0
+generated_at: {{generated_at}}
+word_count: {{word_count}}
+---
+
+# Execution Packet -- {{deliverable_id}} -- {{short_name}}
+
+## 0) Control Block
+
+**Stop After:** Plan generation (produce plan and STOP for approval)
+
+**Required Outputs:**
+- [ ] Implementation plan
+- [ ] Files to modify/create list
+- [ ] Test plan (unit + integration)
+- [ ] PR description draft
+
+{{#if staleness_warning}}
+**STALENESS WARNING:** {{staleness_warning}}
+{{/if}}
+
+---
+
+## 1) MUST / MUST NOT Guardrails
+
+### MUST
+{{#if constraints.must.length}}
+{{#each constraints.must}}
+- {{this}}
+{{/each}}
+{{else}}
+- Follow existing code patterns and conventions
+{{/if}}
+
+### MUST NOT
+{{#if constraints.must_not.length}}
+{{#each constraints.must_not}}
+- {{this}}
+{{/each}}
+{{else}}
+- Do not break existing functionality
+{{/if}}
+
+---
+
+## 2) Goal
+
+{{goal}}
+
+---
+
+## 3) User Story
+
+{{user_story}}
+
+---
+
+## 4) Acceptance Criteria
+
+{{#if acceptance_criteria.critical.length}}
+### Critical (C#)
+{{#each acceptance_criteria.critical}}
+- [ ] **C{{add @index 1}}:** {{this}}
+{{/each}}
+{{/if}}
+
+{{#if acceptance_criteria.functional.length}}
+### Functional (F#)
+{{#each acceptance_criteria.functional}}
+- [ ] **F{{add @index 1}}:** {{this}}
+{{/each}}
+{{/if}}
+
+{{#if acceptance_criteria.nice_to_have.length}}
+### Nice-to-have (N#)
+{{#each acceptance_criteria.nice_to_have}}
+- [ ] **N{{add @index 1}}:** {{this}}
+{{/each}}
+{{/if}}
+
+{{#if acceptance_criteria.edge.length}}
+### Edge Cases (E#)
+{{#each acceptance_criteria.edge}}
+- [ ] **E{{add @index 1}}:** {{this}}
+{{/each}}
+{{/if}}
+
+{{#if appendix_path}}
+**Note:** Additional acceptance criteria in [appendix]({{appendix_path}}).
+{{/if}}
+
+---
+
+## 5) QA Verification
+
+{{qa_notes}}
+
+---
+
+## 6) Dependencies
+
+{{#if dependencies.length}}
+{{#each dependencies}}
+- {{this}}
+{{/each}}
+{{else}}
+None specified.
+{{/if}}
+
+---
+
+## 7) Provenance
+
+- **Spec:** `{{provenance.spec.path}}` (SHA: {{#if provenance.spec.sha}}{{provenance.spec.sha}}{{else}}not in git{{/if}})
+- **TDD:** `{{provenance.tdd.path}}` (SHA: {{#if provenance.tdd.sha}}{{provenance.tdd.sha}}{{else}}not in git{{/if}})
+- **Registry Revision:** {{#if provenance.registry_sha}}{{provenance.registry_sha}}{{else}}N/A{{/if}}
+- **Packet Generator:** v{{provenance.generator_version}}
+- **Generated:** {{provenance.generated_at}}
+
+---
+
+## 8) Drift Since Last Packet
+
+{{#if drift.items.length}}
+{{#each drift.items}}
+- **{{this.kind}}:** {{this.description}} (decision: {{this.decision}})
+{{/each}}
+{{else}}
+No drift items flagged for this deliverable.
+{{/if}}
+
+{{#if drift.source_freshness.spec_changed}}
+**Note:** Spec modified since last packet generation.
+{{/if}}
+{{#if drift.source_freshness.tdd_changed}}
+**Note:** TDD modified since last packet generation.
+{{/if}}
+
+---
+
+## 9) Stop Points
+
+- [ ] After plan generation (wait for approval)
+- [ ] After core logic implementation (before tests)
+- [ ] After tests pass (before PR)
