@@ -93,6 +93,6 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwa-ver
 | REQ-004 | Phase 3: Parsing + Idempotent Registry | Complete |
 | REQ-006 | Phase 4: Execution Packets | Complete |
 | REQ-007 | Phase 5: Drift Tracking | Complete |
-| REQ-005 | Phase 6: Linear Integration | Pending |
+| REQ-005 | Phase 6: Linear Integration | Complete |
 | REQ-008 | Phase 7: Polish and Extended Features | Pending |
 | REQ-009 | Phase 7: Polish and Extended Features | Pending |

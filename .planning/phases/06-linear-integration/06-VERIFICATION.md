@@ -1,29 +1,36 @@
 ---
 phase: 06-linear-integration
-verified: 2026-01-25T19:45:00Z
-status: gaps_found
-score: 5/6 must-haves verified
-gaps:
-  - truth: "Users can invoke sync command to sync deliverables to Linear"
-    status: failed
-    reason: "sync-linear.js command exists but is NOT wired into CLI entry point"
-    artifacts:
-      - path: "src/commands/sync-linear.js"
-        issue: "Exists and exports syncLinear function, but src/cli.js has no --sync-linear option"
-      - path: "src/cli.js"
-        issue: "Only has --install, --upgrade, --uninstall options; missing sync-linear integration"
-    missing:
-      - "Add --sync-linear option to commander program in src/cli.js"
-      - "Wire sync-linear.js command handler into CLI routing logic"
-      - "Add --dry-run, --force, --deliverables, --project flags to command definition"
+verified: 2026-01-25T17:45:14Z
+status: passed
+score: 6/6 must-haves verified
+re_verification:
+  previous_status: gaps_found
+  previous_score: 5/6
+  gaps_closed:
+    - "Users can invoke sync command to sync deliverables to Linear"
+  gaps_remaining: []
+  regressions: []
+human_verification:
+  - test: "End-to-End Sync Flow"
+    expected: "Issues created in Linear with correct title, DWA section, externalId; registry updated with linear_issue_id, linear_identifier, linear_url; re-sync shows unchanged for same content; manual edit in Linear → re-sync shows conflict warning"
+    why_human: "Requires Linear API access, VS Code extension environment, actual API calls"
+  - test: "Rate Limit Handling"
+    expected: "Exponential backoff retries with jitter; operation eventually succeeds"
+    why_human: "Cannot programmatically trigger Linear's rate limiter without real API calls"
+  - test: "Conflict Detection"
+    expected: "Hash mismatch detected, sync skips with warning unless --force"
+    why_human: "Requires manual edit in Linear UI and observing CLI output"
+  - test: "Partial Failure Reporting"
+    expected: "Sync continues, reports which succeeded/failed in summary"
+    why_human: "Requires orchestrating partial failure conditions"
 ---
 
 # Phase 6: Linear Integration Verification Report
 
 **Phase Goal:** Users can sync deliverables to Linear as individual issues
-**Verified:** 2026-01-25T19:45:00Z
-**Status:** gaps_found
-**Re-verification:** No — initial verification
+**Verified:** 2026-01-25T17:45:14Z
+**Status:** passed
+**Re-verification:** Yes — after gap closure (Plan 06-05)
 
 ## Goal Achievement
 
@@ -36,9 +43,9 @@ gaps:
 | 3 | Uses externalId for deduplication — no duplicate issues on re-sync | ✓ VERIFIED | sync.js:94 generates externalId; line 114 queries by externalId; linearTracker.ts:157-169 implements queryByExternalId with filter |
 | 4 | Rate limits (429) handled with exponential backoff | ✓ VERIFIED | linearTracker.ts:46-81 — withRateLimitHandling wrapper detects RATELIMITED error code, backOff configured with 5 attempts, 1s-30s delay, jitter |
 | 5 | Partial failures report which deliverables succeeded/failed | ✓ VERIFIED | sync.js:279-282 computes summary by action; sync-linear.js:25-96 formatResults() groups by created/updated/skipped/conflicts/failed |
-| 6 | Users can invoke sync command to sync deliverables to Linear | ✗ FAILED | sync-linear.js exists and exports syncLinear function, BUT src/cli.js does NOT have --sync-linear option wired |
+| 6 | Users can invoke sync command to sync deliverables to Linear | ✓ VERIFIED | cli.js:11 defines --sync-linear option; lines 66-90 async IIFE routing block; line 69 imports syncLinear; line 70 calls with all sub-options; mutual exclusivity enforced (line 22) |
 
-**Score:** 5/6 truths verified
+**Score:** 6/6 truths verified
 
 ### Required Artifacts
 
@@ -53,8 +60,9 @@ gaps:
 | `/Users/.../dev-workflow-assistant/src/linear/external-id.js` | ExternalId generator | ✓ VERIFIED | 63 lines, exports generateExternalId (FEAT-YYYY-NNN-DEL-### format), parseExternalId, isValidExternalId |
 | `/Users/.../dev-workflow-assistant/src/linear/bridge-client.js` | Bridge client wrapper | ✓ VERIFIED | 159 lines, exports BridgeClient class with initialize(), createIssue(), updateIssue(), queryByExternalId(), checkCapabilities() |
 | `/Users/.../dev-workflow-assistant/src/linear/sync.js` | Sync orchestration | ✓ VERIFIED | 293 lines, exports syncDeliverable, syncAllDeliverables, determineSyncAction, SyncAction enum |
-| `/Users/.../dev-workflow-assistant/src/commands/sync-linear.js` | Sync CLI command | ⚠️ ORPHANED | 196 lines, exports syncLinear function and formatResults — BUT NOT imported or wired into src/cli.js |
+| `/Users/.../dev-workflow-assistant/src/commands/sync-linear.js` | Sync CLI command | ✓ VERIFIED | 196 lines, exports syncLinear function and formatResults — NOW imported and wired into src/cli.js (line 69) |
 | `/Users/.../dev-workflow-assistant/src/parser/registry.js` | Registry with Linear fields | ✓ VERIFIED | RUNTIME_FIELDS has 12 fields (7 original + 5 new Linear fields: linear_issue_id, linear_identifier, linear_external_id, linear_project_id, dwa_sync_hash), exports updateLinearFields function |
+| `/Users/.../dev-workflow-assistant/src/cli.js` | CLI entry point with --sync-linear | ✓ VERIFIED | 97 lines, defines --sync-linear option (line 11), --dry-run (12), --force (13), --deliverables (14), --project (15); mutual exclusivity check includes syncLinear (line 22); async IIFE routing block (lines 66-90) with require and call to syncLinear |
 
 ### Key Link Verification
 
@@ -68,11 +76,11 @@ gaps:
 | sync.js | bridge-client | API calls | ✓ WIRED | Lines 114 (queryByExternalId), 130 (createIssue), 140 (updateIssue) |
 | content-builder.js | fingerprint.js | computeSyncHash | ✓ WIRED | Line 12: `const { computeSyncHash } = require('./fingerprint')`, line 134 call |
 | sync-linear.js | sync.js | syncAllDeliverables call | ✓ WIRED | Line 21: `const { syncAllDeliverables, SyncAction } = require('../linear/sync')`, line 156 call |
-| **cli.js** | **sync-linear.js** | **Command routing** | **✗ NOT_WIRED** | sync-linear.js exists but cli.js has NO --sync-linear option or routing logic |
+| **cli.js** | **sync-linear.js** | **Command routing** | **✓ WIRED** | Line 69: `const { syncLinear } = require('./commands/sync-linear')` within async IIFE block (lines 66-90); line 70 calls syncLinear with options from opts |
 
 ### Requirements Coverage
 
-No REQUIREMENTS.md found for Phase 6. Success criteria from ROADMAP.md used instead.
+REQ-005 from REQUIREMENTS.md: "Linear Issue Sync - `/dwa:sync` creates or updates Linear issues per deliverable with full context (user story, AC, QA notes, spec link). Uses MCP bridge via dev-workflow-assistant extension. Handles rate limits with exponential backoff. Uses externalId for deduplication."
 
 | Success Criterion | Status | Blocking Issue |
 |-------------------|--------|----------------|
@@ -83,12 +91,11 @@ No REQUIREMENTS.md found for Phase 6. Success criteria from ROADMAP.md used inst
 | 5. Partial failures report which succeeded/failed | ✓ SATISFIED | — |
 | 6. Registry stores linear_issue_id and linear_url after sync | ✓ SATISFIED | — (logic exists in sync.js:156-163) |
 
+**Additional Success:** Command accessible via `dwa --sync-linear` CLI (previously failed, now satisfied)
+
 ### Anti-Patterns Found
 
-| File | Line | Pattern | Severity | Impact |
-|------|------|---------|----------|--------|
-| src/commands/sync-linear.js | — | Orphaned command | 🛑 Blocker | Users cannot run sync — command not accessible via CLI |
-| src/cli.js | — | Missing integration | 🛑 Blocker | No --sync-linear option defined; command unusable |
+**None** — previous blocker (orphaned command) resolved in Plan 06-05.
 
 **No TODO/FIXME/placeholder comments found** in sync infrastructure or Linear provider.
 
@@ -99,9 +106,71 @@ No REQUIREMENTS.md found for Phase 6. Success criteria from ROADMAP.md used inst
 - bridge-client.js: 159 lines
 - sync.js: 293 lines
 - sync-linear.js: 196 lines
+- cli.js: 97 lines
 - linearTracker.ts: 200+ lines
 
 All files well above minimum thresholds (15+ for components, 10+ for utilities).
+
+### Regression Check
+
+**All previously passing items remain verified:**
+
+1. ✓ Create logic (sync.js SyncAction.CREATE) — intact
+2. ✓ Update logic (sync.js SyncAction.UPDATE) — intact
+3. ✓ ExternalId deduplication (sync.js + linearTracker.ts queryByExternalId) — intact
+4. ✓ Rate limit handling (linearTracker.ts withRateLimitHandling) — intact
+5. ✓ Partial failure reporting (sync-linear.js formatResults) — intact
+
+**No regressions detected.**
+
+### Gap Closure Details
+
+**Previous gap (from initial verification):**
+
+> **Gap: Sync command not accessible to users**
+> 
+> The sync-linear.js command implementation is complete and correct, but the CLI entry point (src/cli.js) does not include a `--sync-linear` option. Users cannot invoke the sync functionality.
+
+**Closure evidence:**
+
+Plan 06-05 executed successfully:
+
+1. **Task 1:** Added --sync-linear option and sub-options to CLI
+   - Lines 11-15 in src/cli.js define all options
+   - Line 22 includes `opts.syncLinear` in mutual exclusivity check
+   - Verified: `node src/cli.js --help` shows all options
+
+2. **Task 2:** Added async routing for --sync-linear command
+   - Lines 66-90 implement async IIFE wrapper
+   - Line 69 requires sync-linear module
+   - Line 70 calls syncLinear with all sub-options passed through
+   - Lines 71-75 extract projectRoot, dryRun, force, deliverables, project from opts
+   - Error handling matches existing CLI patterns (MODULE_NOT_FOUND check)
+
+**Verification commands executed:**
+
+```bash
+# CLI help shows all options
+$ node src/cli.js --help
+# Output includes --sync-linear, --dry-run, --force, --deliverables, --project
+
+# Import verification
+$ grep -n "require.*sync-linear" src/cli.js
+# 69:      const { syncLinear } = require('./commands/sync-linear');
+
+# Async pattern verification
+$ grep -n "async.*=>" src/cli.js
+# 67:  (async () => {
+
+# Mutual exclusivity verification
+$ grep -n "syncLinear" src/cli.js
+# 22:const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear]...
+# 66:} else if (opts.syncLinear) {
+# 69:      const { syncLinear } = require('./commands/sync-linear');
+# 70:      const result = await syncLinear({
+```
+
+**Status:** Gap closed. Users can now invoke `dwa --sync-linear` with all sub-options.
 
 ### Human Verification Required
 
@@ -109,7 +178,7 @@ The following require human testing with a configured Linear workspace:
 
 #### 1. End-to-End Sync Flow
 
-**Test:** Configure Linear API key, create test deliverables, run sync command
+**Test:** Configure Linear API key, create test deliverables, run `dwa --sync-linear`
 **Expected:** 
 - Issues created in Linear with correct title, DWA section, externalId
 - Registry updated with linear_issue_id, linear_identifier, linear_url
@@ -139,24 +208,20 @@ The following require human testing with a configured Linear workspace:
 
 **Why human:** Requires orchestrating partial failure conditions
 
-### Gaps Summary
+---
 
-**1 critical gap blocks phase goal:**
+## Summary
 
-**Gap: Sync command not accessible to users**
+**Phase 6 goal ACHIEVED:** Users can sync deliverables to Linear as individual issues.
 
-The sync-linear.js command implementation is complete and correct, but the CLI entry point (src/cli.js) does not include a `--sync-linear` option. Users cannot invoke the sync functionality.
+**Previous gap closed:** CLI integration completed in Plan 06-05. Users can now invoke sync functionality via `dwa --sync-linear`.
 
-**Root cause:** CLI integration was not completed in 06-04 plan execution. The plan specified creating the command file but did not include wiring it into the CLI router.
+**All automated checks pass:** 6/6 must-haves verified, all key links wired, no anti-patterns, no regressions.
 
-**What's missing:**
-1. Add `--sync-linear` option to commander program in src/cli.js
-2. Add routing logic to call syncLinear when option present
-3. Pass through sub-options: --dry-run, --force, --deliverables, --project
-
-**Impact:** Phase goal "Users can sync deliverables to Linear" is NOT achieved because users cannot execute the sync command. All underlying infrastructure is complete and correct.
+**Next step:** Human verification with actual Linear workspace to confirm end-to-end flow, rate limit handling, conflict detection, and partial failure reporting.
 
 ---
 
-_Verified: 2026-01-25T19:45:00Z_
+_Verified: 2026-01-25T17:45:14Z_
 _Verifier: Claude (gsd-verifier)_
+_Re-verification: Yes (after Plan 06-05 gap closure)_

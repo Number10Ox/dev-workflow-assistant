@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 6 of 7 (Linear Integration)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-25 - Completed 06-05-PLAN.md (CLI Integration - Gap Closure)
+Plan: 5 of 5 in current phase
+Status: Complete
+Last activity: 2026-01-25 - Phase 6 verified and complete
 
-Progress: [█████████████░] 88%
+Progress: [█████████████░] 86%
 
 ## Performance Metrics
 
@@ -127,10 +127,10 @@ None yet.
 - ~~Phase 3: Feature Spec Template v2.0 exact schema (column names, YAML fields) must be defined before parser implementation.~~ **RESOLVED:** Template structure finalized in 02-01 with 7-column Deliverables Table and structured frontmatter.
 - ~~scaffoldTDD utility (src/scaffolding/scaffold-tdd.js) does not exist yet - will be created when TDD scaffolding is implemented.~~ **RESOLVED:** Created in 02-04 with bidirectional linking and comprehensive tests.
 - ~~Phase 4: Idempotency edge cases (deliverable deletion, ID renumbering, splits) need design decisions during planning.~~ **RESOLVED:** Orphan flagging pattern established in 03-02 - soft delete with orphaned: true, un-orphan on restoration.
-- Phase 5: Linear API rate limits, GraphQL mutations, externalId support, and MCP tool names need verification.
+- ~~Phase 5: Linear API rate limits, GraphQL mutations, externalId support, and MCP tool names need verification.~~ **RESOLVED:** Implemented in 06-02 with withRateLimitHandling wrapper and queryByExternalId in Linear provider.
 
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed 06-05-PLAN.md (CLI Integration - Gap Closure). Phase 6 in progress (3/4 plans complete).
+Stopped at: Completed Phase 6 (Linear Integration). All 5 plans executed and verified (6/6 must-haves).
 Resume file: None

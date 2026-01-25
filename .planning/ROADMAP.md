@@ -18,7 +18,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
 - [x] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
 - [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
-- [ ] **Phase 6: Linear Integration** - Issue sync from registry
+- [x] **Phase 6: Linear Integration** - Issue sync from registry
 - [ ] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 
 ## Phase Details
@@ -181,7 +181,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] 06-02-PLAN.md — Linear provider implementation with rate limiting (bridge)
 - [x] 06-03-PLAN.md — DWA sync infrastructure: content builder, fingerprint, external ID, bridge client
 - [x] 06-04-PLAN.md — Sync command implementation with create/update/conflict handling
-- [ ] 06-05-PLAN.md — Gap closure: Wire sync-linear command into CLI entry point
+- [x] 06-05-PLAN.md — Gap closure: Wire sync-linear command into CLI entry point
 
 ---
 
@@ -220,5 +220,5 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 3. Parsing + Idempotent Registry | ✓ Complete | 2026-01-25 |
 | 4. Execution Packets | ✓ Complete | 2026-01-25 |
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
-| 6. Linear Integration | Planned | — |
+| 6. Linear Integration | ✓ Complete | 2026-01-25 |
 | 7. Polish and Extended Features | Not started | — |
