@@ -162,7 +162,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 **Depends on**: Phase 5
 
 **Commands Delivered**:
-- `Dev Workflow: Sync Linear` — creates/updates Linear issues from registry
+- `Dev Workflow: Sync Linear` — creates/updates Linear issues from registry via devex-service-bridge
 
 **Skills Delivered**: None (API calls are deterministic)
 
@@ -176,9 +176,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. Partial failures report which deliverables succeeded/failed
 6. Registry stores `linear_issue_id` and `linear_url` after sync
 
-**Plans**: TBD
-- [ ] 06-01: Linear API integration with MCP
-- [ ] 06-02: Sync command with idempotent create/update
+**Plans**: 4 plans in 2 waves
+- [ ] 06-01-PLAN.md — Extend IssueTracker interface with externalId, container, capabilities (bridge)
+- [ ] 06-02-PLAN.md — Linear provider implementation with rate limiting (bridge)
+- [ ] 06-03-PLAN.md — DWA sync infrastructure: content builder, fingerprint, external ID, bridge client
+- [ ] 06-04-PLAN.md — Sync command implementation with create/update/conflict handling
 
 ---
 
@@ -217,5 +219,5 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 3. Parsing + Idempotent Registry | ✓ Complete | 2026-01-25 |
 | 4. Execution Packets | ✓ Complete | 2026-01-25 |
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
-| 6. Linear Integration | Not started | — |
+| 6. Linear Integration | Planned | — |
 | 7. Polish and Extended Features | Not started | — |
