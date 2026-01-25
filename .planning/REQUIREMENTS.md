@@ -88,8 +88,8 @@ Include `schemaVersion` in every `.dwa/` JSON file from day one. Track `.dwa-ver
 | REQ-001 | Phase 1: Bootstrap and Installer | Complete |
 | REQ-011 | Phase 1: Bootstrap and Installer | Complete |
 | REQ-002 | Phase 2: Templates and Scaffolding | Complete |
-| REQ-003 | Phase 3: Core Parsing | Pending |
-| REQ-010 | Phase 3: Core Parsing | Pending |
+| REQ-003 | Phase 3: Core Parsing | Complete |
+| REQ-010 | Phase 3: Core Parsing | Complete |
 | REQ-004 | Phase 4: Idempotent Registry | Pending |
 | REQ-005 | Phase 5: Linear Integration | Pending |
 | REQ-006 | Phase 6: Execution Packets | Pending |

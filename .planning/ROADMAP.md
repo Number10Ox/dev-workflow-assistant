@@ -15,7 +15,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 - [x] **Phase 1: Bootstrap and Installer** - Package installation and schema versioning
 - [x] **Phase 2: Spec + TDD Scaffolding** - Canonical spec and technical design doc templates
-- [ ] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
+- [x] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
 - [ ] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
 - [ ] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [ ] **Phase 6: Linear Integration** - Issue sync from registry
@@ -78,7 +78,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
-### Phase 3: Parsing + Idempotent Registry
+### Phase 3: Parsing + Idempotent Registry ✓
 **Goal**: Users can extract deliverables from spec and safely re-parse after edits
 **Depends on**: Phase 2
 
@@ -97,9 +97,9 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. File writes are atomic (temp + rename) — crash never leaves partial state
 6. Removed deliverables are flagged, not silently deleted
 
-**Plans**: 2 plans
-- [ ] 03-01-PLAN.md — AST parser with validation (TDD)
-- [ ] 03-02-PLAN.md — Idempotent registry merge logic (TDD)
+**Plans**: 2 plans (complete)
+- [x] 03-01-PLAN.md — AST parser with validation (TDD)
+- [x] 03-02-PLAN.md — Idempotent registry merge logic (TDD)
 
 ---
 
@@ -213,7 +213,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 |-------|--------|-----------|
 | 1. Bootstrap and Installer | ✓ Complete | 2026-01-24 |
 | 2. Spec + TDD Scaffolding | ✓ Complete | 2026-01-24 |
-| 3. Parsing + Idempotent Registry | Not started | — |
+| 3. Parsing + Idempotent Registry | ✓ Complete | 2026-01-25 |
 | 4. Execution Packets | Not started | — |
 | 5. Drift Tracking | Not started | — |
 | 6. Linear Integration | Not started | — |
