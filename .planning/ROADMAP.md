@@ -17,7 +17,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 2: Spec + TDD Scaffolding** - Canonical spec and technical design doc templates
 - [x] **Phase 3: Parsing + Idempotent Registry** - AST extraction with safe re-parse
 - [x] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
-- [ ] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
+- [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [ ] **Phase 6: Linear Integration** - Issue sync from registry
 - [ ] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 
@@ -149,11 +149,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 4. `/dwa:propose-drift-patches` generates concrete patch proposals from drift events
 5. Drift section in next packet (section 8) populated from previous deliverable's drift
 
-**Plans**: 4 plans
-- [ ] 05-01-PLAN.md — Drift event infrastructure (TDD): validate-event, append-event, structural-compare
-- [ ] 05-02-PLAN.md — Complete Deliverable command (TDD): completion flow with drift capture
-- [ ] 05-03-PLAN.md — Drift log template and rebuild command
-- [ ] 05-04-PLAN.md — Drift skills: /dwa:propose-drift-patches, /dwa:summarize-drift
+**Plans**: 4 plans (complete)
+- [x] 05-01-PLAN.md — Drift event infrastructure (TDD): validate-event, append-event, structural-compare
+- [x] 05-02-PLAN.md — Complete Deliverable command (TDD): completion flow with drift capture
+- [x] 05-03-PLAN.md — Drift log template and rebuild command
+- [x] 05-04-PLAN.md — Drift skills: /dwa:propose-drift-patches, /dwa:summarize-drift
 
 ---
 
@@ -216,6 +216,6 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 2. Spec + TDD Scaffolding | ✓ Complete | 2026-01-24 |
 | 3. Parsing + Idempotent Registry | ✓ Complete | 2026-01-25 |
 | 4. Execution Packets | ✓ Complete | 2026-01-25 |
-| 5. Drift Tracking | Not started | — |
+| 5. Drift Tracking | Complete | 2026-01-25 |
 | 6. Linear Integration | Not started | — |
 | 7. Polish and Extended Features | Not started | — |
