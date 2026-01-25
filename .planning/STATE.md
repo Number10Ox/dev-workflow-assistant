@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 ## Current Position
 
-Phase: 3 of 7 (Parsing + Idempotent Registry)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-25 - Completed Phase 3 (Parsing + Idempotent Registry)
+Phase: 4 of 7 (Execution Packets)
+Plan: 1 of 1 in current phase
+Status: Plan 04-01 complete
+Last activity: 2026-01-25 - Completed 04-01-PLAN.md (Packet Shell Generation)
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
-- Average duration: 3m 22s
-- Total execution time: 0.51 hours
+- Total plans completed: 10
+- Average duration: 3m 24s
+- Total execution time: 0.57 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [██████░░░░] 60%
 | 01 - Bootstrap | 3 | 17m 30s | 5m 50s |
 | 02 - Templates | 4 | 8m 9s | 2m 2s |
 | 03 - Parsing | 2 | 6m 19s | 3m 10s |
+| 04 - Packets | 1 | 6m 0s | 6m 0s |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (1m 6s), 02-04 (2m 27s), 03-01 (2m 50s), 03-02 (3m 29s)
-- Trend: Consistent velocity - Phase 3 averaging 3m 10s for TDD plans
+- Last 5 plans: 02-04 (2m 27s), 03-01 (2m 50s), 03-02 (3m 29s), 04-01 (6m 0s)
+- Trend: Consistent execution - 04-01 TDD plan with 3 tasks completed in 6 min
 
 *Updated after each plan completion*
 
@@ -80,6 +81,11 @@ Recent decisions affecting current work:
 - [03-02]: Runtime fields preserved on re-parse: status, linear_id, linear_url, pr_url, completed_at, created_at.
 - [03-02]: Orphan flagging adds orphaned: true and orphaned_at timestamp, does not delete files.
 - [03-02]: Un-orphan removes flags when deliverable reappears in spec.
+- [04-01]: Use remark AST parsing for guardrails extraction (same as spec parsing).
+- [04-01]: Categorize ACs by prefix: C#=Critical, F#=Functional, N#=Nice-to-have, E#=Edge.
+- [04-01]: Size limits: 1500 word soft limit (warn), 2000 word hard limit (split to appendix).
+- [04-01]: Already-started detection returns existingPath without regenerating.
+- [04-01]: Drift filtering: pending decision OR applies_to_next_work: true.
 
 ### Pending Todos
 
@@ -95,5 +101,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-25
-Stopped at: Completed Phase 3 (Parsing + Idempotent Registry). 2 plans executed, all verified (6/6 must-haves). 89 tests passing.
+Stopped at: Completed 04-01-PLAN.md (Packet Shell Generation). 3 tasks executed via TDD. 131 tests passing.
 Resume file: None
