@@ -133,26 +133,27 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 **Depends on**: Phase 4
 
 **Commands Delivered**:
-- `Dev Workflow: Drift Check` — structural comparison (missing ACs, status mismatch, outdated timestamps)
 - `Dev Workflow: Complete Deliverable` — captures outcomes, PR link, evidence; records drift decision
+- `Dev Workflow: Rebuild Drift Log` — regenerates rolling `.dwa/drift-log.md` from registry drift events
 
 **Skills Delivered**:
-- `/dwa:propose-drift-fix` — suggests spec/TDD updates based on implementation delta
-- `/dwa:normalize-spec` — cleans messy spec edits into template-compliant structure
+- `/dwa:propose-drift-patches` — suggests spec/TDD updates based on implementation delta
+- `/dwa:summarize-drift` — produces human-readable drift summary for PR or stakeholder
 
 **Demo**: Complete a deliverable with implementation changes, see drift logged, view rolling `.dwa/drift-log.md`
 
 **Success Criteria**:
-1. Per-deliverable drift stored in registry (`drift` field with observed/decision/patch)
-2. Rolling `.dwa/drift-log.md` aggregated from per-deliverable drift records
-3. `Dev Workflow: Drift Check` detects: missing ACs, status mismatch, missing links, spec vs registry divergence
-4. `/dwa:propose-drift-fix` generates concrete patch suggestions from git diff / PR description
+1. Per-deliverable drift stored in registry (`drift_events` array with append-only event log)
+2. Rolling `.dwa/drift-log.md` aggregated from per-deliverable drift records (derived, not manually edited)
+3. Structural comparison detects: missing ACs, status mismatch, missing links, spec vs registry divergence
+4. `/dwa:propose-drift-patches` generates concrete patch proposals from drift events
 5. Drift section in next packet (section 8) populated from previous deliverable's drift
 
-**Plans**: TBD
-- [ ] 05-01: Drift check command and registry schema
-- [ ] 05-02: Complete deliverable command with drift capture
-- [ ] 05-03: /dwa:propose-drift-fix and /dwa:normalize-spec skills
+**Plans**: 4 plans
+- [ ] 05-01-PLAN.md — Drift event infrastructure (TDD): validate-event, append-event, structural-compare
+- [ ] 05-02-PLAN.md — Complete Deliverable command (TDD): completion flow with drift capture
+- [ ] 05-03-PLAN.md — Drift log template and rebuild command
+- [ ] 05-04-PLAN.md — Drift skills: /dwa:propose-drift-patches, /dwa:summarize-drift
 
 ---
 
