@@ -20,6 +20,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [x] **Phase 6: Linear Integration** - Issue sync from registry
 - [ ] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
+- [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
 
 ## Phase Details
 
@@ -211,9 +212,38 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
+### Phase 8: Ralph Runner
+**Goal**: Deterministic iterate-until-done execution mode that loops Claude Code until verification passes
+**Depends on**: Phase 7
+
+**Commands Delivered**:
+- `Dev Workflow: Run Deliverable (Ralph)` — loops agent until verify commands pass + UI audit passes + completion promise emitted
+- `Dev Workflow: Verify Deliverable` — runs verification contract only (no agent), prints report
+
+**Skills Delivered**: None (deterministic execution loop)
+
+**Demo**: Run `dwa run DEL-003 --mode ralph`, watch agent iterate until all verifications pass, see run artifacts in `.dwa/runs/`
+
+**Success Criteria**:
+1. `dwa run <DEL> --mode ralph` loops until verify commands pass and completion promise is emitted, then stops
+2. Stops on `maxIterations` (default 12) and on repeated identical failure signatures (`failRepeatLimit` default 3)
+3. Writes all run artifacts under `.dwa/runs/<DEL>/<run_id>/` (PROMPT.md, verify_log.txt, diff_summary.txt, run_report.md)
+4. Web UI audit catches `<button>` without onClick/disabled, empty onClick handlers, role="button" without interaction
+5. `dwa verify <DEL>` runs verification contract and reports pass/fail without agent loop
+6. Runner never overwrites human-owned content outside DWA-owned regions/contracts
+7. No automatic dangerous permission escalation
+
+**Plans**: TBD
+- [ ] 08-01: TBD — Runner infrastructure and loop logic
+- [ ] 08-02: TBD — Web UI wiring audit (React)
+- [ ] 08-03: TBD — Run artifacts and reporting
+- [ ] 08-04: TBD — CLI integration and verify command
+
+---
+
 ## Progress
 
-**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
+**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
@@ -224,3 +254,4 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
 | 6. Linear Integration | ✓ Complete | 2026-01-25 |
 | 7. Polish and Extended Features | Not started | — |
+| 8. Ralph Runner | Not started | — |
