@@ -29,14 +29,19 @@ Extract deliverables from feature spec markdown into JSON registry files (`.dwa/
 
 ### Re-parse behavior
 - Registry updates are per-deliverable atomic (each DEL-###.json written independently)
-- Orphaned deliverables (in registry but removed from spec) are soft-deleted by default
-  - Moved to `.dwa/deliverables/_orphaned/` or flagged with `orphaned: true`
+- Orphaned deliverables use in-place flagging (not separate folder):
+  - `orphaned: true` and `orphaned_at: <timestamp>` added to JSON
+  - Automatic un-orphan: if deliverable reappears in spec, flags are removed
 - Runtime fields preserved on re-parse: status, linear_id, pr_url, etc.
+
+### Idempotency guarantee
+- Re-parsing an unchanged spec produces no registry diffs and no orphan churn
+- Only actual changes trigger file writes
+- Timestamps only updated when content changes
 
 ### Claude's Discretion
 - Exact diagnostic code scheme (DWA-E### for errors, DWA-W### for warnings)
 - Exact wording and formatting of messages
-- Soft-delete implementation (separate folder vs flag)
 - Warning thresholds and edge case handling
 
 </decisions>
