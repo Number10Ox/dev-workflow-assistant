@@ -20,7 +20,9 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [x] **Phase 6: Linear Integration** - Issue sync from registry
 - [x] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
+- [ ] **Phase 7.1: Installation Simplification** - Setup wizard, graceful degradation (INSERTED)
 - [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
+- [ ] **Phase 9: JIRA Provider Demo** - Prove extensibility with second issue tracker
 
 ## Phase Details
 
@@ -214,6 +216,33 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
+### Phase 7.1: Installation Simplification (INSERTED)
+**Goal**: Reduce installation from 5+ manual steps to a single command with optional setup wizard
+**Depends on**: Phase 7
+
+**Commands Delivered**:
+- `dwa setup` — Interactive wizard for optional features (Linear, Google Docs)
+- `dwa setup --linear` — Set up Linear integration only
+- `dwa setup --google-docs` — Set up Google Docs integration only
+- `dwa status` — Show what's installed and configured
+
+**Skills Delivered**: None (CLI infrastructure)
+
+**Demo**: `npx dwa --install && dwa scaffold "My Feature"` in under 60 seconds
+
+**Success Criteria**:
+1. `npx dwa --install` completes with zero prompts in < 10 seconds
+2. Core workflow (scaffold, parse, packet) works without any extensions
+3. `dwa setup` provides guided configuration for optional features
+4. Commands requiring missing features show setup instructions (not stack traces)
+5. `dwa status` shows clear configuration overview
+6. No breaking changes to existing installations
+
+**Plans**: 1 plan
+- [ ] 07.1-01-PLAN.md — Setup wizard, status command, feature detection
+
+---
+
 ### Phase 8: Ralph Runner
 **Goal**: Deterministic iterate-until-done execution mode that loops Claude Code until verification passes
 **Depends on**: Phase 7
@@ -243,9 +272,31 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
+### Phase 9: JIRA Provider Demo
+**Goal**: Prove provider-agnostic architecture by implementing JIRA support
+**Depends on**: Phase 7.1
+
+**Commands Delivered**: None (provider extension in devex-service-bridge)
+
+**Skills Delivered**: None
+
+**Demo**: Sync deliverables to JIRA Cloud, show same DWA command works with different backends
+
+**Success Criteria**:
+1. `JiraTracker` implements `IssueTracker` interface completely
+2. DWA `sync-linear` command works with JIRA provider when configured
+3. External ID deduplication works (no duplicate issues on re-sync)
+4. Documentation explains how to add new providers
+5. No changes required to DWA sync logic (proves abstraction works)
+
+**Plans**: 1 plan
+- [ ] 09-01-PLAN.md — JIRA provider implementation and extensibility docs
+
+---
+
 ## Progress
 
-**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8
+**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 7.1 → 8 → 9
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
@@ -256,4 +307,6 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
 | 6. Linear Integration | ✓ Complete | 2026-01-25 |
 | 7. Polish and Extended Features | ✓ Complete | 2026-01-26 |
+| 7.1. Installation Simplification | Not started | — |
 | 8. Ralph Runner | Not started | — |
+| 9. JIRA Provider Demo | Not started | — |
