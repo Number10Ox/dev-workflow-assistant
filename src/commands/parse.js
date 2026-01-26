@@ -12,6 +12,8 @@ const path = require('path');
 const fs = require('fs-extra');
 const { parseSpec } = require('../parser/parse-spec');
 const { updateRegistry } = require('../parser/registry');
+const { hashContent } = require('../utils/hash-content');
+const { writeJsonWithSchema } = require('../utils/schema');
 
 /**
  * Run the parse command.
@@ -45,7 +47,21 @@ async function runParse(specPath, projectDir) {
 
   const registryResult = await updateRegistry(parseResult.deliverables, registryDir);
 
-  // Step 4: Build success result
+  // Step 4: Store spec content hash in feature.json for freshness detection
+  const featureJsonPath = path.join(projectDir, '.dwa', 'feature.json');
+  if (await fs.pathExists(featureJsonPath)) {
+    try {
+      const specContent = await fs.readFile(specPath, 'utf8');
+      const featureJson = await fs.readJson(featureJsonPath);
+      featureJson.spec_content_hash = hashContent(specContent);
+      featureJson.parsed_at = new Date().toISOString();
+      await writeJsonWithSchema(featureJsonPath, featureJson);
+    } catch {
+      // Non-fatal: freshness detection will fall back to mtime
+    }
+  }
+
+  // Step 5: Build success result
   result.success = true;
   result.summary = {
     parsed: parseResult.deliverables.length,

@@ -1,13 +1,29 @@
-#!/usr/bin/env node
-
 /**
  * DWA Maintenance Utilities
- * Handles .dwa/ directory management and cleanup
+ *
+ * Handles .dwa/ directory management, cleanup, validation, and freshness detection.
+ * All methods return structured data for testability and CLI consumption.
  */
 
 const fs = require('fs-extra');
 const path = require('path');
-const { glob } = require('glob');
+const { execSync } = require('child_process');
+const { hashContent } = require('./utils/hash-content');
+
+/**
+ * List files in a directory matching a pattern.
+ * @param {string} dir - Directory path
+ * @param {string} extension - File extension to filter (e.g., '.json')
+ * @returns {Promise<string[]>} Array of filenames (not full paths)
+ */
+async function listFiles(dir, extension) {
+  try {
+    const entries = await fs.readdir(dir);
+    return entries.filter(f => f.endsWith(extension));
+  } catch {
+    return [];
+  }
+}
 
 class DWAMaintenance {
   constructor(projectRoot = process.cwd()) {
@@ -15,227 +31,416 @@ class DWAMaintenance {
     this.dwaDir = path.join(projectRoot, '.dwa');
   }
 
-  async cleanupOrphaned() {
-    console.log('🧹 Cleaning up orphaned deliverables...');
+  /**
+   * Remove orphaned deliverables older than threshold days.
+   * Safety: Only deletes if orphaned AND no runtime links (linear_issue_id, pr_url, drift_events).
+   *
+   * @param {number} thresholdDays - Days before cleanup (default 30)
+   * @returns {Promise<{
+   *   cleaned: Array<{id: string, reason: string}>,
+   *   skipped: Array<{id: string, reason: string}>,
+   *   errors: Array<{code: string, message: string, path?: string}>,
+   *   thresholdDays: number
+   * }>}
+   */
+  async cleanupOrphaned(thresholdDays = 30) {
+    const result = { cleaned: [], skipped: [], errors: [], thresholdDays };
 
     if (!await fs.pathExists(this.dwaDir)) {
-      console.log('No .dwa directory found');
-      return;
+      return result;
     }
 
     const deliverablesDir = path.join(this.dwaDir, 'deliverables');
     if (!await fs.pathExists(deliverablesDir)) {
-      console.log('No deliverables directory found');
-      return;
+      return result;
     }
 
-    // Get all deliverable files
-    const deliverableFiles = await glob('*.json', { cwd: deliverablesDir });
-    const deliverableIds = deliverableFiles.map(f => path.basename(f, '.json'));
+    const deliverableFiles = await listFiles(deliverablesDir, '.json');
+    const thresholdDate = new Date();
+    thresholdDate.setDate(thresholdDate.getDate() - thresholdDays);
 
-    // Check which ones are marked as orphaned
-    let cleaned = 0;
-    for (const id of deliverableIds) {
-      const filePath = path.join(deliverablesDir, `${id}.json`);
-      const data = await fs.readJson(filePath);
+    for (const file of deliverableFiles) {
+      const id = path.basename(file, '.json');
+      const filePath = path.join(deliverablesDir, file);
 
-      if (data.orphaned) {
-        // Check if orphaned more than 30 days ago
-        const orphanedAt = new Date(data.orphaned_at);
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      try {
+        const data = await fs.readJson(filePath);
 
-        if (orphanedAt < thirtyDaysAgo) {
-          await fs.remove(filePath);
-          cleaned++;
-          console.log(`  Removed orphaned deliverable: ${id}`);
+        if (!data.orphaned) {
+          continue; // Not orphaned, skip
         }
+
+        // Safety checks: preserve deliverables with runtime links
+        if (data.linear_issue_id) {
+          result.skipped.push({ id, reason: 'has-linear-link' });
+          continue;
+        }
+
+        if (data.pr_url) {
+          result.skipped.push({ id, reason: 'has-pr-link' });
+          continue;
+        }
+
+        if (data.drift_events && data.drift_events.length > 0) {
+          result.skipped.push({ id, reason: 'has-drift-events' });
+          continue;
+        }
+
+        // Check age threshold
+        const orphanedAt = new Date(data.orphaned_at);
+        if (orphanedAt >= thresholdDate) {
+          result.skipped.push({ id, reason: 'too-recent' });
+          continue;
+        }
+
+        // Safe to delete
+        await fs.remove(filePath);
+        result.cleaned.push({ id, reason: 'orphaned-safe' });
+      } catch (error) {
+        result.errors.push({
+          code: 'DWA-M001',
+          message: `Failed to process ${id}: ${error.message}`,
+          path: filePath
+        });
       }
     }
 
-    console.log(`✅ Cleaned up ${cleaned} orphaned deliverables`);
+    return result;
   }
 
+  /**
+   * Validate DWA state integrity.
+   *
+   * @returns {Promise<{valid: boolean, issues: Array<{code: string, message: string, path?: string}>}>}
+   */
   async validateState() {
-    console.log('🔍 Validating DWA state...');
-
     const issues = [];
 
-    // Check required files
-    const requiredFiles = [
-      'feature.json',
-      '.dwa-version'
-    ];
+    if (!await fs.pathExists(this.dwaDir)) {
+      issues.push({
+        code: 'DWA-V001',
+        message: 'Missing .dwa directory',
+        path: this.dwaDir
+      });
+      return { valid: false, issues };
+    }
 
+    // Check required files
+    const requiredFiles = ['feature.json'];
     for (const file of requiredFiles) {
       const filePath = path.join(this.dwaDir, file);
       if (!await fs.pathExists(filePath)) {
-        issues.push(`Missing required file: ${file}`);
+        issues.push({
+          code: 'DWA-V001',
+          message: `Missing required file: ${file}`,
+          path: filePath
+        });
       }
     }
 
-    // Check schema versions
+    // Check deliverables
     const deliverablesDir = path.join(this.dwaDir, 'deliverables');
     if (await fs.pathExists(deliverablesDir)) {
-      const deliverableFiles = await glob('*.json', { cwd: deliverablesDir });
+      const deliverableFiles = await listFiles(deliverablesDir, '.json');
 
       for (const file of deliverableFiles) {
         const filePath = path.join(deliverablesDir, file);
         try {
           const data = await fs.readJson(filePath);
           if (!data.schemaVersion) {
-            issues.push(`Missing schemaVersion in: ${file}`);
-          } else if (data.schemaVersion !== '1.0.0') {
-            issues.push(`Unexpected schemaVersion in ${file}: ${data.schemaVersion}`);
+            issues.push({
+              code: 'DWA-V003',
+              message: `Missing schemaVersion in deliverable`,
+              path: filePath
+            });
           }
         } catch (error) {
-          issues.push(`Invalid JSON in: ${file} (${error.message})`);
+          issues.push({
+            code: 'DWA-V002',
+            message: `Invalid JSON: ${error.message}`,
+            path: filePath
+          });
         }
       }
     }
 
-    if (issues.length === 0) {
-      console.log('✅ DWA state is valid');
-    } else {
-      console.log('❌ Found issues:');
-      issues.forEach(issue => console.log(`  - ${issue}`));
-    }
-
-    return issues;
-  }
-
-  async repairState() {
-    console.log('🔧 Repairing DWA state...');
-
-    // Ensure directories exist
-    await fs.ensureDir(path.join(this.dwaDir, 'deliverables'));
-    await fs.ensureDir(path.join(this.dwaDir, 'packets'));
-    await fs.ensureDir(path.join(this.dwaDir, 'import-reports'));
-
-    // Re-parse spec if it exists
-    const specPath = path.join(this.projectRoot, 'feature-spec.md');
-    if (await fs.pathExists(specPath)) {
-      console.log('  Re-parsing spec to regenerate state...');
+    // Check feature.json structure
+    const featureJsonPath = path.join(this.dwaDir, 'feature.json');
+    if (await fs.pathExists(featureJsonPath)) {
       try {
-        execSync('npx dwa --parse', { stdio: 'pipe', cwd: this.projectRoot });
-        console.log('  ✅ State repaired');
+        const featureJson = await fs.readJson(featureJsonPath);
+        if (!featureJson.schemaVersion) {
+          issues.push({
+            code: 'DWA-V003',
+            message: 'Missing schemaVersion in feature.json',
+            path: featureJsonPath
+          });
+        }
       } catch (error) {
-        console.log('  ⚠️  Could not re-parse spec:', error.message);
+        issues.push({
+          code: 'DWA-V002',
+          message: `Invalid JSON in feature.json: ${error.message}`,
+          path: featureJsonPath
+        });
       }
-    } else {
-      console.log('  No spec file found to re-parse');
     }
+
+    return { valid: issues.length === 0, issues };
   }
 
-  async backupState() {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupFile = `.dwa-backup-${timestamp}.tar.gz`;
+  /**
+   * Get DWA statistics.
+   *
+   * @returns {Promise<{
+   *   deliverables: number,
+   *   orphaned: number,
+   *   packets: number,
+   *   driftEvents: number,
+   *   diskUsage: string,
+   *   diskUsageBytes: number
+   * }|null>}
+   */
+  async getStats() {
+    if (!await fs.pathExists(this.dwaDir)) {
+      return null;
+    }
 
-    console.log(`💾 Creating backup: ${backupFile}`);
+    let deliverables = 0;
+    let orphaned = 0;
+    let driftEvents = 0;
+
+    const deliverablesDir = path.join(this.dwaDir, 'deliverables');
+    if (await fs.pathExists(deliverablesDir)) {
+      const files = await listFiles(deliverablesDir, '.json');
+      deliverables = files.length;
+
+      for (const file of files) {
+        try {
+          const data = await fs.readJson(path.join(deliverablesDir, file));
+          if (data.orphaned) orphaned++;
+          if (data.drift_events) driftEvents += data.drift_events.length;
+        } catch {
+          // Skip invalid files for stats
+        }
+      }
+    }
+
+    let packets = 0;
+    const packetsDir = path.join(this.dwaDir, 'packets');
+    if (await fs.pathExists(packetsDir)) {
+      const files = await listFiles(packetsDir, '.md');
+      packets = files.length;
+    }
+
+    const { diskUsage, diskUsageBytes } = await this.getDirSize(this.dwaDir);
+
+    return {
+      deliverables,
+      orphaned,
+      packets,
+      driftEvents,
+      diskUsage,
+      diskUsageBytes
+    };
+  }
+
+  /**
+   * Check if spec is newer than registry using content hash (preferred) or mtime (fallback).
+   * Sources spec path from feature.json, not hardcoded.
+   *
+   * @returns {Promise<{
+   *   stale: boolean,
+   *   reason: 'hash-changed'|'mtime-newer'|'no-provenance'|'no-spec'|'no-registry'|null,
+   *   specPath: string|null,
+   *   currentHash: string|null,
+   *   storedHash: string|null,
+   *   specModified: Date|null,
+   *   registryModified: Date|null
+   * }>}
+   */
+  async checkFreshness() {
+    const featureJsonPath = path.join(this.dwaDir, 'feature.json');
+
+    // 1. Check if registry exists
+    if (!await fs.pathExists(featureJsonPath)) {
+      return {
+        stale: true,
+        reason: 'no-registry',
+        specPath: null,
+        currentHash: null,
+        storedHash: null,
+        specModified: null,
+        registryModified: null
+      };
+    }
+
+    // 2. Load feature.json to get spec_path
+    const featureJson = await fs.readJson(featureJsonPath);
+    const specRelPath = featureJson.spec_path || 'feature-spec.md';
+    const specPath = path.join(this.projectRoot, specRelPath);
+
+    // 3. Check if spec exists
+    if (!await fs.pathExists(specPath)) {
+      return {
+        stale: false,
+        reason: 'no-spec',
+        specPath: specRelPath,
+        currentHash: null,
+        storedHash: null,
+        specModified: null,
+        registryModified: null
+      };
+    }
+
+    // 4. Get file stats
+    const specStat = await fs.stat(specPath);
+    const featureStat = await fs.stat(featureJsonPath);
+
+    // 5. Check content hash first (if stored)
+    const storedHash = featureJson.spec_content_hash;
+    const specContent = await fs.readFile(specPath, 'utf8');
+    const currentHash = hashContent(specContent);
+
+    if (storedHash) {
+      const hashChanged = currentHash !== storedHash;
+      return {
+        stale: hashChanged,
+        reason: hashChanged ? 'hash-changed' : null,
+        specPath: specRelPath,
+        currentHash,
+        storedHash,
+        specModified: specStat.mtime,
+        registryModified: featureStat.mtime
+      };
+    }
+
+    // 6. Fall back to mtime comparison (no stored hash)
+    const mtimeNewer = specStat.mtime > featureStat.mtime;
+
+    return {
+      stale: mtimeNewer,
+      reason: mtimeNewer ? 'mtime-newer' : 'no-provenance',
+      specPath: specRelPath,
+      currentHash,
+      storedHash: null,
+      specModified: specStat.mtime,
+      registryModified: featureStat.mtime
+    };
+  }
+
+  /**
+   * Remove all DWA state (for --all flag).
+   *
+   * @param {Object} options
+   * @param {boolean} options.backup - Create backup first (default true)
+   * @returns {Promise<{removed: boolean, path: string, backupPath?: string}>}
+   */
+  async removeAllState(options = { backup: true }) {
+    if (!await fs.pathExists(this.dwaDir)) {
+      return { removed: false, path: this.dwaDir };
+    }
+
+    let backupPath;
+    if (options.backup) {
+      backupPath = await this.backupState();
+    }
+
+    await fs.remove(this.dwaDir);
+    return { removed: true, path: this.dwaDir, backupPath };
+  }
+
+  /**
+   * Create timestamped backup of .dwa/ directory.
+   *
+   * @returns {Promise<string|null>} Backup file path or null on failure
+   */
+  async backupState() {
+    if (!await fs.pathExists(this.dwaDir)) {
+      return null;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFile = path.join(this.projectRoot, `.dwa-backup-${timestamp}.tar.gz`);
 
     try {
-      execSync(`tar -czf ${backupFile} .dwa/`, { cwd: this.projectRoot });
-      console.log(`✅ Backup created: ${backupFile}`);
+      execSync(`tar -czf "${backupFile}" .dwa/`, {
+        cwd: this.projectRoot,
+        stdio: 'pipe'
+      });
       return backupFile;
-    } catch (error) {
-      console.error('❌ Backup failed:', error.message);
+    } catch {
       return null;
     }
   }
 
-  async showStats() {
-    console.log('📊 DWA Statistics:');
+  /**
+   * Repair DWA state by ensuring directories exist and re-parsing spec.
+   *
+   * @returns {Promise<{repaired: boolean, actions: string[]}>}
+   */
+  async repairState() {
+    const actions = [];
 
-    if (!await fs.pathExists(this.dwaDir)) {
-      console.log('  No .dwa directory found');
-      return;
-    }
-
-    // Count deliverables
-    const deliverablesDir = path.join(this.dwaDir, 'deliverables');
-    let deliverableCount = 0;
-    let orphanedCount = 0;
-
-    if (await fs.pathExists(deliverablesDir)) {
-      const files = await glob('*.json', { cwd: deliverablesDir });
-      deliverableCount = files.length;
-
-      for (const file of files) {
-        const data = await fs.readJson(path.join(deliverablesDir, file));
-        if (data.orphaned) orphanedCount++;
+    // Ensure directories exist
+    const dirs = ['deliverables', 'packets', 'import-reports'];
+    for (const dir of dirs) {
+      const dirPath = path.join(this.dwaDir, dir);
+      if (!await fs.pathExists(dirPath)) {
+        await fs.ensureDir(dirPath);
+        actions.push(`Created ${dir}/`);
       }
     }
 
-    // Count packets
-    const packetsDir = path.join(this.dwaDir, 'packets');
-    let packetCount = 0;
-    if (await fs.pathExists(packetsDir)) {
-      const files = await glob('*.md', { cwd: packetsDir });
-      packetCount = files.length;
+    // Re-parse spec if it exists
+    const featureJsonPath = path.join(this.dwaDir, 'feature.json');
+    if (await fs.pathExists(featureJsonPath)) {
+      try {
+        const featureJson = await fs.readJson(featureJsonPath);
+        const specRelPath = featureJson.spec_path || 'feature-spec.md';
+        const specPath = path.join(this.projectRoot, specRelPath);
+
+        if (await fs.pathExists(specPath)) {
+          execSync('npx dwa --parse', {
+            cwd: this.projectRoot,
+            stdio: 'pipe'
+          });
+          actions.push('Re-parsed spec');
+        }
+      } catch (error) {
+        actions.push(`Parse failed: ${error.message}`);
+      }
     }
 
-    console.log(`  Deliverables: ${deliverableCount} (${orphanedCount} orphaned)`);
-    console.log(`  Packets: ${packetCount}`);
-    console.log(`  Disk usage: ${await this.getDirSize(this.dwaDir)}`);
+    return { repaired: actions.length > 0, actions };
   }
 
+  /**
+   * Get directory size.
+   *
+   * @param {string} dirPath - Directory path
+   * @returns {Promise<{diskUsage: string, diskUsageBytes: number}>}
+   */
   async getDirSize(dirPath) {
     try {
-      const output = execSync(`du -sh "${dirPath}" | cut -f1`, { encoding: 'utf8' });
-      return output.trim();
-    } catch (error) {
-      return 'unknown';
+      // Get human-readable size
+      const output = execSync(`du -sh "${dirPath}" | cut -f1`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      const diskUsage = output.trim();
+
+      // Get bytes for programmatic use
+      const bytesOutput = execSync(`du -sb "${dirPath}" | cut -f1`, {
+        encoding: 'utf8',
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+      const diskUsageBytes = parseInt(bytesOutput.trim(), 10) || 0;
+
+      return { diskUsage, diskUsageBytes };
+    } catch {
+      return { diskUsage: 'unknown', diskUsageBytes: 0 };
     }
   }
-}
-
-// CLI interface
-const { execSync } = require('child_process');
-
-async function main() {
-  const args = process.argv.slice(2);
-  const command = args[0];
-
-  const maintenance = new DWAMaintenance();
-
-  switch (command) {
-    case 'cleanup':
-      await maintenance.cleanupOrphaned();
-      break;
-
-    case 'validate':
-      await maintenance.validateState();
-      break;
-
-    case 'repair':
-      await maintenance.repairState();
-      break;
-
-    case 'backup':
-      await maintenance.backupState();
-      break;
-
-    case 'stats':
-      await maintenance.showStats();
-      break;
-
-    default:
-      console.log('DWA Maintenance Utilities');
-      console.log('========================');
-      console.log('Usage: node maintenance.js <command>');
-      console.log('');
-      console.log('Commands:');
-      console.log('  cleanup  - Remove old orphaned deliverables');
-      console.log('  validate - Check state integrity');
-      console.log('  repair   - Fix corrupted state');
-      console.log('  backup   - Create state backup');
-      console.log('  stats    - Show statistics');
-      break;
-  }
-}
-
-if (require.main === module) {
-  main().catch(console.error);
 }
 
 module.exports = DWAMaintenance;

@@ -4,6 +4,55 @@ const path = require('node:path');
 const { execSync } = require('node:child_process');
 const { writeJsonWithSchema } = require('../utils/schema');
 
+/**
+ * Check if .gitignore already contains a .dwa entry.
+ * Handles variations: .dwa, .dwa/, .dwa/*, .dwa/**, with optional leading ./
+ * Ignores whitespace and inline comments.
+ *
+ * @param {string} content - gitignore file content
+ * @returns {boolean} true if .dwa entry exists
+ */
+function hasDwaEntry(content) {
+  const lines = content.split('\n');
+  for (const line of lines) {
+    // Remove inline comments and trim whitespace
+    const trimmed = line.split('#')[0].trim();
+    // Match .dwa with optional leading ./ and trailing / or globs
+    if (/^\.?\/?\.dwa(\/\*{0,2})?$/.test(trimmed)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Ensure .gitignore contains .dwa/ entry.
+ *
+ * @param {string} projectRoot - Project root directory
+ * @returns {Promise<{action: 'exists'|'appended'|'created', path: string}>}
+ */
+async function ensureGitignore(projectRoot) {
+  const gitignorePath = path.join(projectRoot, '.gitignore');
+  const dwaEntry = '.dwa/';
+
+  if (await fs.pathExists(gitignorePath)) {
+    const content = await fs.readFile(gitignorePath, 'utf8');
+
+    if (hasDwaEntry(content)) {
+      return { action: 'exists', path: gitignorePath };
+    }
+
+    // Append with comment and newline handling
+    const prefix = content.endsWith('\n') ? '' : '\n';
+    await fs.appendFile(gitignorePath, `${prefix}\n# DWA state (regenerated from source files)\n${dwaEntry}\n`);
+    return { action: 'appended', path: gitignorePath };
+  } else {
+    // Create minimal .gitignore
+    await fs.writeFile(gitignorePath, `# DWA state (regenerated from source files)\n${dwaEntry}\n`);
+    return { action: 'created', path: gitignorePath };
+  }
+}
+
 function getGitUser() {
   try {
     return execSync('git config user.name', { encoding: 'utf8' }).trim();
@@ -57,7 +106,10 @@ async function scaffoldFromTemplate(featureTitle, targetDir) {
     created_at: new Date().toISOString()
   });
 
-  return { specPath, featureJsonPath };
+  // 7. Ensure .gitignore contains .dwa/ entry
+  const gitignoreResult = await ensureGitignore(targetDir);
+
+  return { specPath, featureJsonPath, gitignoreResult };
 }
 
-module.exports = { scaffoldFromTemplate };
+module.exports = { scaffoldFromTemplate, hasDwaEntry, ensureGitignore };

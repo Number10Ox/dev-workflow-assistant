@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs-extra');
 const path = require('node:path');
 const os = require('node:os');
-const { scaffoldFromTemplate } = require('../src/scaffolding/scaffold');
+const { scaffoldFromTemplate, hasDwaEntry, ensureGitignore } = require('../src/scaffolding/scaffold');
 const { checkExisting } = require('../src/scaffolding/check-existing');
 
 let testDir;
@@ -107,5 +107,167 @@ describe('checkExisting', () => {
 
     assert.strictEqual(result.alreadyInitialized, true, 'alreadyInitialized should be true');
     assert.strictEqual(result.files.featureJson, true, 'featureJson should be true');
+  });
+});
+
+describe('hasDwaEntry', () => {
+  test('detects .dwa/ entry', () => {
+    assert.strictEqual(hasDwaEntry('.dwa/'), true);
+  });
+
+  test('detects .dwa entry (no slash)', () => {
+    assert.strictEqual(hasDwaEntry('.dwa'), true);
+  });
+
+  test('detects .dwa/** glob pattern', () => {
+    assert.strictEqual(hasDwaEntry('.dwa/**'), true);
+  });
+
+  test('detects .dwa/* glob pattern', () => {
+    assert.strictEqual(hasDwaEntry('.dwa/*'), true);
+  });
+
+  test('detects ./.dwa/ with leading ./', () => {
+    assert.strictEqual(hasDwaEntry('./.dwa/'), true);
+  });
+
+  test('detects /.dwa entry with leading /', () => {
+    assert.strictEqual(hasDwaEntry('/.dwa'), true);
+  });
+
+  test('ignores .dwa in comments', () => {
+    assert.strictEqual(hasDwaEntry('# .dwa/'), false);
+  });
+
+  test('ignores inline comment after entry', () => {
+    assert.strictEqual(hasDwaEntry('.dwa/ # some comment'), true);
+  });
+
+  test('returns false for unrelated content', () => {
+    assert.strictEqual(hasDwaEntry('node_modules/\nbuild/\n'), false);
+  });
+
+  test('returns false for empty content', () => {
+    assert.strictEqual(hasDwaEntry(''), false);
+  });
+});
+
+describe('ensureGitignore', () => {
+  test('creates .gitignore if missing', async () => {
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'created');
+    const content = await fs.readFile(path.join(testDir, '.gitignore'), 'utf8');
+    assert.ok(content.includes('.dwa/'));
+    assert.ok(content.includes('# DWA state'));
+  });
+
+  test('appends to existing .gitignore without entry', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), 'node_modules/\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'appended');
+    const content = await fs.readFile(path.join(testDir, '.gitignore'), 'utf8');
+    assert.ok(content.includes('node_modules/'), 'Should preserve existing content');
+    assert.ok(content.includes('.dwa/'), 'Should include .dwa/');
+  });
+
+  test('preserves existing .gitignore content', async () => {
+    const originalContent = 'node_modules/\nbuild/\ndist/\n';
+    await fs.writeFile(path.join(testDir, '.gitignore'), originalContent);
+
+    await ensureGitignore(testDir);
+
+    const content = await fs.readFile(path.join(testDir, '.gitignore'), 'utf8');
+    assert.ok(content.startsWith(originalContent), 'Should preserve original content');
+  });
+
+  test('is idempotent: detects .dwa/ entry', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), '.dwa/\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'exists');
+  });
+
+  test('is idempotent: detects .dwa entry (no slash)', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), '.dwa\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'exists');
+  });
+
+  test('is idempotent: detects .dwa/** glob pattern', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), '.dwa/**\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'exists');
+  });
+
+  test('is idempotent: detects ./.dwa/ with leading ./', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), './.dwa/\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'exists');
+  });
+
+  test('handles .gitignore without trailing newline', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), 'node_modules/');
+
+    await ensureGitignore(testDir);
+
+    const content = await fs.readFile(path.join(testDir, '.gitignore'), 'utf8');
+    assert.ok(content.includes('.dwa/'));
+    // Should not have double newlines before comment
+    assert.ok(!content.includes('\n\n\n'), 'Should not have triple newlines');
+  });
+
+  test('ignores .dwa in comments (does not detect as existing)', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), '# .dwa/\nnode_modules/\n');
+
+    const result = await ensureGitignore(testDir);
+
+    assert.strictEqual(result.action, 'appended');
+  });
+});
+
+describe('scaffoldFromTemplate gitignore integration', () => {
+  test('scaffold returns gitignoreResult', async () => {
+    const result = await scaffoldFromTemplate('Test Feature', testDir);
+
+    assert.ok(result.gitignoreResult, 'gitignoreResult should be present');
+    assert.strictEqual(result.gitignoreResult.action, 'created');
+  });
+
+  test('scaffold creates .gitignore with .dwa/ entry', async () => {
+    await scaffoldFromTemplate('Test Feature', testDir);
+
+    const gitignorePath = path.join(testDir, '.gitignore');
+    assert.ok(await fs.pathExists(gitignorePath), '.gitignore should exist');
+    const content = await fs.readFile(gitignorePath, 'utf8');
+    assert.ok(content.includes('.dwa/'));
+  });
+
+  test('scaffold appends to existing .gitignore', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), 'node_modules/\n');
+
+    const result = await scaffoldFromTemplate('Test Feature', testDir);
+
+    assert.strictEqual(result.gitignoreResult.action, 'appended');
+    const content = await fs.readFile(path.join(testDir, '.gitignore'), 'utf8');
+    assert.ok(content.includes('node_modules/'));
+    assert.ok(content.includes('.dwa/'));
+  });
+
+  test('scaffold is idempotent with existing .dwa entry', async () => {
+    await fs.writeFile(path.join(testDir, '.gitignore'), '.dwa/**\n');
+
+    const result = await scaffoldFromTemplate('Test Feature', testDir);
+
+    assert.strictEqual(result.gitignoreResult.action, 'exists');
   });
 });

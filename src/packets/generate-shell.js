@@ -33,6 +33,8 @@ Handlebars.registerHelper('add', function(a, b) {
  *
  * @param {string} deliverableId - Deliverable ID (e.g., DEL-001)
  * @param {string} projectRoot - Project root directory
+ * @param {Object} options - Generation options
+ * @param {string} options.stalenessWarning - Warning to include when forced generation on stale registry
  * @returns {Promise<{
  *   packetPath: string,
  *   appendixPath: string|null,
@@ -40,7 +42,7 @@ Handlebars.registerHelper('add', function(a, b) {
  *   error?: {code: string, message: string}
  * }>}
  */
-async function generatePacketShell(deliverableId, projectRoot) {
+async function generatePacketShell(deliverableId, projectRoot, options = {}) {
   // 1. Load deliverable from registry
   const registryPath = path.join(projectRoot, '.dwa', 'deliverables', `${deliverableId}.json`);
 
@@ -93,12 +95,18 @@ async function generatePacketShell(deliverableId, projectRoot) {
   const dependencies = parseDependencies(registry.dependencies);
 
   // 8. Build template data
+  // Combine drift-based staleness with explicit staleness warning from --force
+  const driftWarning = buildStalenessWarning(drift);
+  const combinedWarning = [options.stalenessWarning, driftWarning]
+    .filter(Boolean)
+    .join(' ');
+
   const templateData = {
     deliverable_id: deliverableId,
     short_name: extractShortName(registry.description || registry.user_story),
     generated_at: new Date().toISOString(),
     word_count: 0, // Will be updated after rendering
-    staleness_warning: buildStalenessWarning(drift),
+    staleness_warning: combinedWarning || null,
     constraints,
     goal: registry.description || 'No description provided.',
     user_story: registry.user_story || 'No user story provided.',

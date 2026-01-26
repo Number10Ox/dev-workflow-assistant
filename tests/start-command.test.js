@@ -6,6 +6,7 @@ const os = require('os');
 
 const { runStart } = require('../src/commands/start');
 const { SCHEMA_VERSION } = require('../src/utils/schema');
+const { hashContent } = require('../src/utils/hash-content');
 
 /**
  * Test fixture - valid feature.json
@@ -67,16 +68,21 @@ describe('runStart', () => {
     const dwaDir = path.join(tempDir, '.dwa');
     await fs.ensureDir(path.join(dwaDir, 'deliverables'));
 
-    // Create feature.json
-    await fs.writeJSON(path.join(dwaDir, 'feature.json'), FEATURE_JSON, { spaces: 2 });
+    // Create spec file first
+    const specContent = '# Feature Spec';
+    await fs.writeFile(path.join(tempDir, 'feature-spec.md'), specContent);
+
+    // Create feature.json with matching spec_content_hash
+    const featureJsonWithHash = {
+      ...FEATURE_JSON,
+      spec_content_hash: hashContent(specContent)
+    };
+    await fs.writeJSON(path.join(dwaDir, 'feature.json'), featureJsonWithHash, { spaces: 2 });
 
     // Create TDD file
     const tddDir = path.join(tempDir, 'docs', 'tdds');
     await fs.ensureDir(tddDir);
     await fs.writeFile(path.join(tddDir, 'test-feature.md'), TDD_CONTENT);
-
-    // Create spec file
-    await fs.writeFile(path.join(tempDir, 'feature-spec.md'), '# Feature Spec');
 
     // Create deliverable registry file
     await fs.writeJSON(
@@ -249,6 +255,111 @@ describe('runStart', () => {
       // Check for registry info
       assert.ok(content.includes('DEL-001'));
       assert.ok(content.includes('Implement user authentication'));
+    });
+  });
+
+  describe('staleness detection', () => {
+    it('returns stale=false when spec hash matches', async () => {
+      // Store matching spec hash in feature.json
+      const specContent = await fs.readFile(path.join(tempDir, 'feature-spec.md'), 'utf8');
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      featureJson.spec_content_hash = hashContent(specContent);
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      const result = await runStart('DEL-001', tempDir);
+
+      assert.strictEqual(result.stale, false);
+      assert.strictEqual(result.success, true);
+    });
+
+    it('returns error DWA-E045 when spec changed without --force', async () => {
+      // Store old hash in feature.json
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      featureJson.spec_content_hash = hashContent('old content');
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      const result = await runStart('DEL-001', tempDir);
+
+      assert.strictEqual(result.success, false);
+      assert.strictEqual(result.stale, true);
+      assert.ok(result.errors.length > 0);
+      assert.strictEqual(result.errors[0].code, 'DWA-E045');
+      assert.ok(result.errors[0].message.includes('hash-changed'));
+    });
+
+    it('--force bypasses staleness check and generates packet', async () => {
+      // Store old hash in feature.json
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      featureJson.spec_content_hash = hashContent('old content');
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      const result = await runStart('DEL-001', tempDir, { force: true });
+
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(result.stale, true);
+      assert.ok(result.packetPath);
+    });
+
+    it('generated packet includes staleness warning when forced', async () => {
+      // Store old hash in feature.json
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      featureJson.spec_content_hash = hashContent('old content');
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      const result = await runStart('DEL-001', tempDir, { force: true });
+      const content = await fs.readFile(result.packetPath, 'utf8');
+
+      assert.ok(content.includes('STALENESS WARNING'));
+      assert.ok(content.includes('changed since last parse'));
+    });
+
+    it('falls back to mtime when no stored hash', async () => {
+      // Remove spec_content_hash from feature.json (mtime fallback)
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      delete featureJson.spec_content_hash;
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      // Touch spec to make it newer than feature.json
+      await new Promise(resolve => setTimeout(resolve, 10));
+      const specPath = path.join(tempDir, 'feature-spec.md');
+      const specContent = await fs.readFile(specPath, 'utf8');
+      await fs.writeFile(specPath, specContent + '\n');
+
+      const result = await runStart('DEL-001', tempDir);
+
+      // Should detect stale via mtime
+      assert.strictEqual(result.stale, true);
+      assert.strictEqual(result.errors[0].code, 'DWA-E045');
+      assert.ok(result.errors[0].message.includes('mtime-newer'));
+    });
+
+    it('handles missing spec gracefully', async () => {
+      // Delete spec file
+      await fs.remove(path.join(tempDir, 'feature-spec.md'));
+
+      const result = await runStart('DEL-001', tempDir);
+
+      // Should not report as stale when spec doesn't exist
+      assert.strictEqual(result.stale, false);
+    });
+
+    it('returns stalenessReason in result', async () => {
+      // Store old hash in feature.json
+      const featureJsonPath = path.join(tempDir, '.dwa', 'feature.json');
+      const featureJson = await fs.readJSON(featureJsonPath);
+      featureJson.spec_content_hash = hashContent('old content');
+      await fs.writeJSON(featureJsonPath, featureJson, { spaces: 2 });
+
+      const result = await runStart('DEL-001', tempDir, { force: true });
+
+      assert.strictEqual(result.stale, true);
+      assert.ok(result.stalenessReason);
+      assert.ok(result.stalenessReason.includes('content has changed'));
     });
   });
 });
