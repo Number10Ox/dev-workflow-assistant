@@ -227,7 +227,7 @@ async function importGoogleDoc(options) {
 
   // Convert: gdocToMdast -> mdastToMarkdown
   const conversionResult = gdocToMdast(gdocDocument);
-  const markdown = mdastToMarkdown(conversionResult.mdast);
+  const markdown = mdastToMarkdown(conversionResult.mdast).trim();
 
   // Determine output path
   let outputPath;
