@@ -117,12 +117,14 @@ Each task was committed atomically:
 ## Decisions Made
 
 1. **Registry field extension strategy**: Extended existing RUNTIME_FIELDS array rather than creating separate Linear-specific array to maintain single source of truth for runtime field preservation during re-parse.
+   - **Note on field naming**: Original fields (`linear_id`, `linear_url`) from Phase 3 are preserved for backward compatibility; new fields (`linear_issue_id`, `linear_identifier`, etc.) are the canonical fields used by sync. If migrating old registries, `linear_id` → `linear_issue_id` mapping should be handled on load.
 
 2. **Dual-lookup pattern**: Registry linear_issue_id provides fast path, externalId query provides safety net if issue deleted/registry corrupted. Ensures robustness.
 
 3. **Hash-based conflict detection**: Compare dwa_sync_hash from registry against Linear's stored hash to detect manual edits. Requires --force to overwrite, preventing accidental data loss.
 
 4. **Concurrency control**: Batch size of 3 concurrent syncs balances performance with API rate limit avoidance. Prevents 429 errors during bulk operations.
+   - **Layered defense**: DWA controls concurrency (batch size 3), provider handles retries (exponential backoff). Both layers cooperate - DWA limits parallel requests, provider handles transient failures per-request.
 
 5. **Checkpoint verification scope**: Module-level verification (imports, exports, logic) approved. Full E2E sync testing deferred until VS Code extension context available with configured Linear API key.
 

@@ -83,7 +83,7 @@ Each task was committed atomically:
 - `packages/core/src/issues/providerRegistry.ts` - Added queryByExternalId validation; added getCapabilities() method; re-exported capabilities types
 - `packages/core/src/index.ts` - Created package entry point with all exports for consumer imports
 - `packages/core/src/extension.ts` - Updated createIssue call to use new IssueCreateInput signature
-- `packages/linear-provider/src/linearTracker.ts` - Implemented extended interface with placeholder queryByExternalId (returns null until custom fields implemented)
+- `packages/linear-provider/src/linearTracker.ts` - Implemented extended interface (queryByExternalId was later implemented in 06-02 using Linear SDK filter)
 - `packages/linear-provider/src/extension.ts` - Updated API export to include new method signatures and queryByExternalId
 
 ## Decisions Made
@@ -94,7 +94,9 @@ Each task was committed atomically:
 
 3. **Capability versioning:** Set BRIDGE_API_VERSION to 2.0.0 to signal breaking changes, enabling consumers to detect incompatibility before attempting to use new methods.
 
-4. **Placeholder implementation:** LinearTracker.queryByExternalId returns null as placeholder - actual implementation will require Linear custom fields support in a future plan.
+4. **Placeholder implementation (now implemented):** LinearTracker.queryByExternalId was a placeholder in 06-01, but was fully implemented in 06-02 using Linear SDK filter with `as any` type assertion to work around incomplete SDK types.
+
+**Note on type assertions:** The `as any` workaround is safe for now (Linear GraphQL API supports externalId), but if Linear SDK changes schema or rejects the field, dedupe may fail. Consider adding runtime error handling in the future.
 
 ## Deviations from Plan
 
@@ -139,9 +141,10 @@ None - no external service configuration required.
 - All types exported from @devex/core entry point
 
 **Note for future plans:**
-- LinearTracker.queryByExternalId currently returns null - will need Linear custom fields support to store/query externalId
+- ~~LinearTracker.queryByExternalId currently returns null~~ → **Implemented in 06-02** using Linear SDK filter with `as any` type assertion
 - The identifier field is populated from Linear's native identifier (e.g., "ENG-123")
-- Container field not yet populated in LinearTracker - will be added when project mapping is implemented
+- Container field populated from Linear's project.id (implemented in 06-02)
+- **Risk:** The `as any` type assertions for externalId/projectId work because Linear's GraphQL API supports them, but if SDK changes, dedupe may fail. Consider adding explicit error mapping.
 
 ---
 *Phase: 06-linear-integration*

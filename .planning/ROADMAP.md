@@ -177,12 +177,13 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. Partial failures report which deliverables succeeded/failed
 6. Registry stores `linear_issue_id` and `linear_url` after sync
 
-**Plans**: 5 plans in 2 waves
+**Plans**: 5 plans in 2 waves + 1 robustness patch
 - [x] 06-01-PLAN.md — Extend IssueTracker interface with externalId, container, capabilities (bridge)
 - [x] 06-02-PLAN.md — Linear provider implementation with rate limiting (bridge)
 - [x] 06-03-PLAN.md — DWA sync infrastructure: content builder, fingerprint, external ID, bridge client
 - [x] 06-04-PLAN.md — Sync command implementation with create/update/conflict handling
 - [x] 06-05-PLAN.md — Gap closure: Wire sync-linear command into CLI entry point
+- [ ] 06.1-ROBUSTNESS-PLAN.md — Feature flags, belt+suspenders dedupe fallback, conflict signatures, E2E verification
 
 ---
 
@@ -191,7 +192,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 **Depends on**: Phase 6
 
 **Commands Delivered**:
-- `Dev Workflow: Import Google Doc` — read-only import → canonical spec (via MCP)
+- `Dev Workflow: Import Google Doc` — read-only import → canonical spec (via devex-service-bridge gworkspace-provider)
 
 **Skills Delivered**:
 - `/dwa:generate-pr-description` — narrative PR text from deliverable metadata
@@ -202,10 +203,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 1. Google Docs import converts to local markdown preserving table structure
 2. Lossy conversions (images, complex formatting) produce warnings listing what was lost
 3. PR description generated from user story, ACs, QA notes, deliverable ID
-4. Skills that depend on MCP check availability before invoking; fail fast with setup instructions
+4. Commands that depend on bridge providers check availability before invoking; fail fast with setup instructions
 
-**Plans**: 4 plans in 3 waves
-- [ ] 07-01-PLAN.md — Google Docs import infrastructure (MCP client, diagnostics, hashing, reports)
+**Plans**: 5 plans in 4 waves
+- [ ] 07-BRIDGE-01-PLAN.md — devex-service-bridge gworkspace-provider (googleapis, auth, capabilities)
+- [ ] 07-01-PLAN.md — Google Docs import infrastructure (bridge client, diagnostics, hashing, reports)
 - [ ] 07-02-PLAN.md — Google Docs JSON to markdown converter (gdoc-to-mdast, mdast-to-markdown)
 - [ ] 07-03-PLAN.md — Import command with markers, hash verification, CLI integration
 - [ ] 07-04-PLAN.md — PR description generation skill with template and metadata extraction
