@@ -189,7 +189,17 @@ async function importGoogleDoc(options) {
   }
 
   // Check provider availability
-  const availability = await bridgeClient.checkAvailability();
+  let availability;
+  try {
+    availability = await bridgeClient.checkAvailability();
+  } catch (error) {
+    const diagnostic = createDiagnostic('MCP_UNAVAILABLE', { reason: error.message });
+    return {
+      success: false,
+      message: `Google Docs provider not available. Run DevEx Service Bridge setup wizard to configure Google Docs access.\nError: ${error.message}`,
+      diagnostics: [diagnostic]
+    };
+  }
   if (!availability.available) {
     const diagnostic = createDiagnostic('MCP_UNAVAILABLE', { reason: availability.error });
     return {
@@ -247,6 +257,14 @@ async function importGoogleDoc(options) {
   // Check existing file for hash mismatch
   let existingContent = null;
   if (await fs.pathExists(outputPath)) {
+    // Check if output path is a directory (not a file)
+    const stat = await fs.stat(outputPath);
+    if (stat.isDirectory()) {
+      return {
+        success: false,
+        message: `Output path is a directory, not a file: ${outputPath}`
+      };
+    }
     existingContent = await fs.readFile(outputPath, 'utf8');
     const existingRegion = extractImportRegion(existingContent);
 

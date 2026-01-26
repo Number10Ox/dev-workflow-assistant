@@ -387,5 +387,101 @@ describe('updateRegistry', () => {
       assert.ok(await fs.pathExists(newRegistryDir));
       assert.ok(await fs.pathExists(path.join(newRegistryDir, 'DEL-001.json')));
     });
+
+    // === HARDENING TESTS: Error handling edge cases ===
+
+    it('throws descriptive error when directory creation fails (EACCES)', async function() {
+      // Skip on Windows - chmod doesn't work the same way
+      if (process.platform === 'win32') {
+        this.skip();
+        return;
+      }
+
+      // Create a parent directory with no write permission
+      const noWriteDir = path.join(tempDir, 'no-write');
+      await fs.ensureDir(noWriteDir);
+      await fs.chmod(noWriteDir, 0o555); // Read + execute only
+
+      const restrictedRegistry = path.join(noWriteDir, 'nested', 'deliverables');
+
+      try {
+        // This should throw because we can't create subdirectories
+        await assert.rejects(
+          async () => updateRegistry(DELIVERABLES_3, restrictedRegistry),
+          (err) => {
+            // Error should be thrown (currently no try-catch in source)
+            assert.ok(err.code === 'EACCES' || err.message.includes('permission'),
+              `Expected EACCES error, got: ${err.message}`);
+            return true;
+          }
+        );
+      } finally {
+        // Restore permissions for cleanup
+        await fs.chmod(noWriteDir, 0o755);
+      }
+    });
+
+    it('handles deliverable with undefined id gracefully', async () => {
+      const badDeliverables = [
+        {
+          'Deliverable ID': undefined,
+          'User Story': 'As a user, I want something',
+          'Description': 'Do something'
+        },
+        ...DELIVERABLES_3.slice(0, 1) // Include one valid deliverable
+      ];
+
+      // Should not throw, should skip the undefined ID
+      const result = await updateRegistry(badDeliverables, registryDir);
+
+      // Only the valid deliverable should be created
+      assert.strictEqual(result.created, 1);
+    });
+
+    it('handles deliverable with null id gracefully', async () => {
+      const badDeliverables = [
+        {
+          'Deliverable ID': null,
+          'User Story': 'As a user, I want something',
+          'Description': 'Do something'
+        },
+        ...DELIVERABLES_3.slice(0, 1)
+      ];
+
+      const result = await updateRegistry(badDeliverables, registryDir);
+      assert.strictEqual(result.created, 1);
+    });
+
+    it('handles deliverable with empty string id gracefully', async () => {
+      const badDeliverables = [
+        {
+          'Deliverable ID': '',
+          'User Story': 'As a user, I want something',
+          'Description': 'Do something'
+        },
+        ...DELIVERABLES_3.slice(0, 1)
+      ];
+
+      const result = await updateRegistry(badDeliverables, registryDir);
+      // Empty string is falsy, so should be skipped
+      assert.strictEqual(result.created, 1);
+    });
+
+    it('handles corrupted JSON in existing registry file', async () => {
+      // Create a corrupted file
+      const corruptPath = path.join(registryDir, 'DEL-001.json');
+      await fs.writeFile(corruptPath, '{ invalid json here');
+
+      // This should throw when trying to read the corrupted file
+      await assert.rejects(
+        async () => updateRegistry(DELIVERABLES_3, registryDir),
+        (err) => {
+          // fs.readJSON throws on invalid JSON
+          assert.ok(err.message.includes('JSON') || err.message.includes('Unexpected token'),
+            `Expected JSON parse error, got: ${err.message}`);
+          return true;
+        }
+      );
+    });
   });
 });

@@ -478,5 +478,128 @@ describe('google-docs/import', () => {
       assert.ok(result.diagnostics);
       assert.strictEqual(result.diagnostics[0].code, 'DWA-GDOC-402');
     });
+
+    // === HARDENING TESTS: Error handling edge cases ===
+
+    it('should reject when output path is a directory', async () => {
+      const dwaDir = path.join(tempDir, '.dwa');
+      const outputDir = path.join(tempDir, 'output-dir');
+      await fs.ensureDir(dwaDir);
+      await fs.ensureDir(outputDir);
+
+      const mockBridgeClient = {
+        initialize: async () => {},
+        checkAvailability: async () => ({ available: true }),
+        readDocument: async () => ({ title: 'Test', body: { content: [] } }),
+        getDocumentInfo: async () => ({ id: '1abc', title: 'Test', revisionId: 'rev1' })
+      };
+
+      const result = await importGoogleDoc({
+        docIdOrUrl: '1abc123XYZ_-456',
+        projectRoot: tempDir,
+        out: 'output-dir', // This is a directory, not a file
+        bridgeClient: mockBridgeClient
+      });
+
+      // Should fail because output is a directory
+      assert.strictEqual(result.success, false);
+      assert.ok(
+        result.message.includes('directory') || result.message.includes('EISDIR') || result.message.includes('not a file'),
+        `Expected directory error, got: ${result.message}`
+      );
+    });
+
+    it('should error when no .dwa/ and no --out provided', async () => {
+      // Don't create .dwa directory
+
+      const mockBridgeClient = {
+        initialize: async () => {},
+        checkAvailability: async () => ({ available: true }),
+        readDocument: async () => ({ title: 'Test', body: { content: [] } }),
+        getDocumentInfo: async () => ({ id: '1abc', title: 'Test', revisionId: 'rev1' })
+      };
+
+      const result = await importGoogleDoc({
+        docIdOrUrl: '1abc123XYZ_-456',
+        projectRoot: tempDir,
+        // No 'out' specified
+        bridgeClient: mockBridgeClient
+      });
+
+      assert.strictEqual(result.success, false);
+      assert.ok(
+        result.message.includes('Cannot determine output') || result.message.includes('--out'),
+        `Expected output path error, got: ${result.message}`
+      );
+    });
+
+    it('should handle bridge client initialization failure', async () => {
+      const mockBridgeClient = {
+        initialize: async () => {
+          throw new Error('Extension not installed');
+        },
+        checkAvailability: async () => ({ available: false })
+      };
+
+      const result = await importGoogleDoc({
+        docIdOrUrl: '1abc123XYZ_-456',
+        projectRoot: tempDir,
+        out: 'test.md',
+        bridgeClient: mockBridgeClient
+      });
+
+      assert.strictEqual(result.success, false);
+      // Should handle gracefully
+      assert.ok(result.message);
+    });
+
+    it('should handle checkAvailability throwing exception', async () => {
+      const mockBridgeClient = {
+        initialize: async () => {},
+        checkAvailability: async () => {
+          throw new Error('Network error');
+        }
+      };
+
+      const result = await importGoogleDoc({
+        docIdOrUrl: '1abc123XYZ_-456',
+        projectRoot: tempDir,
+        out: 'test.md',
+        bridgeClient: mockBridgeClient
+      });
+
+      assert.strictEqual(result.success, false);
+      assert.ok(result.message.includes('Network error') || result.diagnostics);
+    });
+  });
+
+  describe('findFeatureRoot edge cases', () => {
+    let tempDir;
+
+    beforeEach(async () => {
+      tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'dwa-feature-root-edge-'));
+    });
+
+    it('should handle deeply nested paths without hanging', () => {
+      // Create a deeply nested path (but not infinite)
+      const deepPath = path.join(tempDir, ...Array(50).fill('nested'));
+      fs.ensureDirSync(deepPath);
+
+      // Should complete quickly without finding .dwa
+      const startTime = Date.now();
+      const root = findFeatureRoot(deepPath);
+      const elapsed = Date.now() - startTime;
+
+      assert.strictEqual(root, null);
+      // Should complete in under 1 second (no infinite loop)
+      assert.ok(elapsed < 1000, `Should complete quickly, took ${elapsed}ms`);
+    });
+
+    it('should stop at filesystem root', () => {
+      // Start from a path that definitely has no .dwa anywhere
+      const root = findFeatureRoot('/tmp');
+      // Should return null, not hang or crash
+      assert.strictEqual(root, null);
+    });
   });
 });

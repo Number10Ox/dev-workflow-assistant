@@ -538,4 +538,102 @@ spec_schema_version: v2.0
 
     assert.ok(Array.isArray(result.warnings));
   });
+
+  // === HARDENING TESTS: Edge cases for error handling ===
+
+  it('returns friendly error for malformed YAML frontmatter', async () => {
+    const malformedYaml = `---
+title: Test Feature
+status: [unclosed bracket
+nested:
+  bad: { also unclosed
+---
+
+# Feature Spec: Test Feature
+
+### 3.1 Deliverables Table (required)
+
+| Deliverable ID | User Story | Description | Acceptance Criteria (testable) | QA Plan Notes | Dependencies (DEL-###) | Linear Issue URL (auto) |
+|---|---|---|---|---|---|---|
+| DEL-001 | As a user, I want login | Implement login form | Given valid creds, when submit, then redirect | Manual test | | |
+`;
+    const specPath = path.join(tempDir, 'feature-spec.md');
+    await fs.writeFile(specPath, malformedYaml);
+
+    const result = await parseSpec(specPath);
+
+    assert.ok(result.errors.length > 0, 'Should have at least one error');
+    // Should return DWA-E002 for frontmatter parse error
+    assert.strictEqual(result.errors[0].code, 'DWA-E002');
+    assert.ok(result.errors[0].message.includes('frontmatter'), 'Error message should mention frontmatter');
+  });
+
+  it('returns actionable error when file does not exist', async () => {
+    const nonexistentPath = path.join(tempDir, 'does-not-exist.md');
+
+    const result = await parseSpec(nonexistentPath);
+
+    assert.ok(result.errors.length > 0, 'Should have at least one error');
+    assert.strictEqual(result.errors[0].code, 'DWA-E001');
+    assert.ok(result.errors[0].message.includes('ENOENT') || result.errors[0].message.includes('no such file'),
+      'Error message should indicate file not found');
+  });
+
+  it('handles file permission denied gracefully', async function() {
+    // Skip on Windows - chmod doesn't work the same way
+    if (process.platform === 'win32') {
+      this.skip();
+      return;
+    }
+
+    const specPath = path.join(tempDir, 'feature-spec.md');
+    await fs.writeFile(specPath, VALID_SPEC);
+    await fs.chmod(specPath, 0o000); // Remove all permissions
+
+    try {
+      const result = await parseSpec(specPath);
+
+      assert.ok(result.errors.length > 0, 'Should have at least one error');
+      assert.strictEqual(result.errors[0].code, 'DWA-E001');
+      assert.ok(
+        result.errors[0].message.includes('EACCES') || result.errors[0].message.includes('permission'),
+        'Error message should indicate permission denied'
+      );
+    } finally {
+      // Restore permissions for cleanup
+      await fs.chmod(specPath, 0o644);
+    }
+  });
+
+  it('handles empty file gracefully', async () => {
+    const specPath = path.join(tempDir, 'feature-spec.md');
+    await fs.writeFile(specPath, '');
+
+    const result = await parseSpec(specPath);
+
+    // Should have errors for missing frontmatter fields
+    assert.ok(result.errors.length > 0, 'Should have validation errors');
+    const codes = result.errors.map(e => e.code);
+    // Empty file has no frontmatter, so missing required fields
+    assert.ok(codes.includes('DWA-E010') || codes.includes('DWA-E012'),
+      'Should have errors for missing frontmatter fields');
+  });
+
+  it('handles file with only frontmatter (no markdown body)', async () => {
+    const frontmatterOnly = `---
+feature_id: FEAT-2026-001
+title: Test Feature
+spec_schema_version: v2.0
+---
+`;
+    const specPath = path.join(tempDir, 'feature-spec.md');
+    await fs.writeFile(specPath, frontmatterOnly);
+
+    const result = await parseSpec(specPath);
+
+    // Should have error for missing table
+    assert.ok(result.errors.length > 0, 'Should have error for missing table');
+    const codes = result.errors.map(e => e.code);
+    assert.ok(codes.includes('DWA-E020'), 'Should have DWA-E020 for missing table');
+  });
 });
