@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 6: Linear Integration
+**Current focus:** Phase 7: Polish and Extended Features (cross-repo bridge provider)
 
 ## Current Position
 
 Phase: 7 of 7 (Polish and Extended Features)
-Plan: 4 of 4 in current phase
-Status: Complete
-Last activity: 2026-01-25 - Completed 07-04-PLAN.md (PR Description Generation)
+Plan: BRIDGE-01 (cross-repo)
+Status: In progress
+Last activity: 2026-01-26 - Completed 07-BRIDGE-01-PLAN.md (Google Workspace Provider)
 
-Progress: [██████████████] 100%
+Progress: [██████████████] 100% (core) + BRIDGE-01 (extended)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
-- Average duration: 3m 4s
-- Total execution time: 1.12 hours
+- Total plans completed: 23
+- Average duration: 3m 9s
+- Total execution time: 1.24 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [██████████████] 100%
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
 | 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
-| 07 - Polish & Extended | 4 | 12m 7s | 3m 2s |
+| 07 - Polish & Extended | 5 | 19m 13s | 3m 51s |
 
 **Recent Trend:**
-- Last 5 plans: 06-05 (1m 30s), 07-01 (2m 18s), 07-02 (2m 9s), 07-03 (2m 44s), 07-04 (4m 56s)
-- Phase 7 complete: All polish and extended features delivered
+- Last 5 plans: 07-01 (2m 18s), 07-02 (2m 9s), 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s)
+- Phase 7: Extended features (BRIDGE-01 cross-repo provider delivered)
 
 *Updated after each plan completion*
 
@@ -121,6 +121,11 @@ Recent decisions affecting current work:
 - [06-05]: Use async IIFE pattern to isolate async handling to sync-linear block only (no need to restructure entire CLI).
 - [06-05]: Include syncLinear in mutual exclusivity check (not sub-options like --dry-run, --force).
 - [06-05]: Commander.js camelCase conversion: --sync-linear becomes opts.syncLinear.
+- [BRIDGE-01]: Use VS Code SecretStorage for Google Workspace credentials (not MCP path dependency).
+- [BRIDGE-01]: Expose auth/docs/drive namespaces on provider API for clear separation of concerns.
+- [BRIDGE-01]: Return etag, modifiedTime, revisionId from Docs API for robust change detection.
+- [BRIDGE-01]: Name package gworkspace-provider (not gdocs-provider) for future Sheets/Calendar support.
+- [BRIDGE-01]: Rename private field to authManager to avoid shadowing public auth namespace (bug fix).
 
 ### Pending Todos
 
@@ -135,6 +140,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-25
-Stopped at: Completed Phase 7 (Polish and Extended Features). All 4 plans executed and verified. All 7 core phases complete (100% roadmap coverage).
+Last session: 2026-01-26
+Stopped at: Completed 07-BRIDGE-01 (Google Workspace Provider). Cross-repo provider for DWA Google Docs import capability.
 Resume file: None
