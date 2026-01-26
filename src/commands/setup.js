@@ -150,9 +150,22 @@ async function setupLinear() {
   const result = installExtension(extensionId);
 
   if (result.success) {
-    console.log('✓ Linear extension installed');
-    console.log('\nNext step: Configure your Linear API key in VS Code settings:');
-    console.log('  Settings → Extensions → Linear Tracker → API Key\n');
+    console.log('✓ Linear extension installed\n');
+    console.log('┌─────────────────────────────────────────────────┐');
+    console.log('│  NEXT STEPS - Linear Configuration              │');
+    console.log('└─────────────────────────────────────────────────┘\n');
+    console.log('1. Get your Linear API key:');
+    console.log('   → Go to: https://linear.app/settings/api');
+    console.log('   → Click "Create key" and copy it\n');
+    console.log('2. Configure the extension in VS Code:');
+    console.log('   → Open Settings (Cmd/Ctrl + ,)');
+    console.log('   → Search for "Linear Tracker"');
+    console.log('   → Paste your API key in the "Api Key" field\n');
+    console.log('3. Get your Linear project ID:');
+    console.log('   → Open your project in Linear');
+    console.log('   → Copy the ID from URL: linear.app/team/project/<project-id>\n');
+    console.log('4. Sync deliverables:');
+    console.log('   → npx dwa --sync-linear --project <project-id>\n');
   }
 
   return result;
@@ -176,9 +189,18 @@ async function setupGoogleDocs() {
   const result = installExtension(extensionId);
 
   if (result.success) {
-    console.log('✓ Google Workspace extension installed');
-    console.log('\nNext step: Authenticate via the extension:');
-    console.log('  Command Palette → "Google Workspace: Sign In"\n');
+    console.log('✓ Google Workspace extension installed\n');
+    console.log('┌─────────────────────────────────────────────────┐');
+    console.log('│  NEXT STEPS - Google Docs Configuration         │');
+    console.log('└─────────────────────────────────────────────────┘\n');
+    console.log('1. Authenticate with Google in VS Code:');
+    console.log('   → Open Command Palette (Cmd/Ctrl + Shift + P)');
+    console.log('   → Type "Google Workspace: Sign In"');
+    console.log('   → Complete OAuth flow in your browser\n');
+    console.log('2. Import a Google Doc as your feature spec:');
+    console.log('   → npx dwa --import-gdoc "https://docs.google.com/document/d/..."\n');
+    console.log('Note: The imported spec will include DWA markers for');
+    console.log('      change detection on future re-imports.\n');
   }
 
   return result;

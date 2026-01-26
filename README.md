@@ -15,6 +15,65 @@ npx dwa --install
 npx dwa --status
 ```
 
+## Setup
+
+### Core Setup
+
+After installation, DWA's core workflow is ready to use. Run `npx dwa --status` to verify.
+
+### Optional Integrations
+
+DWA supports optional integrations for project management and document import. Run the setup wizard to configure them:
+
+```bash
+npx dwa --setup
+```
+
+Or set up specific integrations directly:
+
+```bash
+npx dwa --setup linear       # Linear issue tracking
+npx dwa --setup google-docs  # Google Docs import
+```
+
+#### Linear Integration
+
+Sync deliverables as Linear issues for project tracking.
+
+**Setup:**
+
+1. Run: `npx dwa --setup linear`
+2. Configure your Linear API key in VS Code:
+   - Open Settings (Cmd/Ctrl+,)
+   - Search "Linear Tracker"
+   - Enter your API key (get one from [Linear Settings → API](https://linear.app/settings/api))
+3. Get your project ID from the Linear URL: `https://linear.app/team/project/<project-id>`
+
+**Usage:**
+
+```bash
+npx dwa --sync-linear --project <project-id>
+npx dwa --sync-linear --project <project-id> --dry-run  # Preview only
+```
+
+#### Google Docs Integration
+
+Import feature specs from Google Docs as the canonical source.
+
+**Setup:**
+
+1. Run: `npx dwa --setup google-docs`
+2. Authenticate in VS Code:
+   - Open Command Palette (Cmd/Ctrl+Shift+P)
+   - Run "Google Workspace: Sign In"
+   - Complete OAuth flow in browser
+
+**Usage:**
+
+```bash
+npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..."
+```
+
 ## Core Workflow
 
 DWA follows a **spec → parse → start → complete** workflow:
@@ -108,15 +167,17 @@ This records completion evidence in the registry.
 | `dwa --upgrade` | Upgrade existing installation |
 | `dwa --uninstall` | Remove DWA completely |
 | `dwa --status` | Show configuration status |
+| `dwa --setup` | Run interactive setup wizard |
+| `dwa --setup linear` | Configure Linear integration |
+| `dwa --setup google-docs` | Configure Google Docs import |
 
 ### Feature Management
 
 | Command | Description |
 |---------|-------------|
-| `dwa --parse` | Parse spec and update registry (coming soon) |
-| `dwa --setup` | Run interactive setup wizard |
-| `dwa --setup linear` | Configure Linear integration |
-| `dwa --setup google-docs` | Configure Google Docs import |
+| `dwa --parse` | Parse spec and update registry |
+| `dwa --sync-linear` | Sync deliverables to Linear issues |
+| `dwa --import-gdoc <url>` | Import Google Doc as canonical spec |
 
 ### Maintenance
 
@@ -127,13 +188,6 @@ This records completion evidence in the registry.
 | `dwa --clean` | Remove orphaned deliverables (30+ days old) |
 | `dwa --clean-all` | Remove all `.dwa/` state (auto-backups first) |
 | `dwa --clean-all --no-backup` | Remove without backup |
-
-### Integrations
-
-| Command | Description |
-|---------|-------------|
-| `dwa --sync-linear` | Sync deliverables to Linear issues |
-| `dwa --import-gdoc <url>` | Import Google Doc as canonical spec |
 
 ## Claude Code Skills
 
@@ -165,86 +219,6 @@ your-project/
         ├── DEL-001.md
         └── DEL-002.md
 ```
-
-## Optional Integrations
-
-### Setup Wizard
-
-Run the interactive setup wizard to configure optional features:
-
-```bash
-npx dwa --setup
-```
-
-This presents a menu to select which integrations to enable. You can also set up specific features directly:
-
-```bash
-npx dwa --setup linear       # Linear only
-npx dwa --setup google-docs  # Google Docs only
-```
-
-### Linear Integration
-
-Sync deliverables as Linear issues for project tracking.
-
-**Setup:**
-
-1. Run the setup wizard:
-   ```bash
-   npx dwa --setup linear
-   ```
-   This installs the `jedwards.linear-tracker-provider` VS Code extension.
-
-2. Configure your Linear API key:
-   - Open VS Code Settings
-   - Search for "Linear Tracker"
-   - Enter your Linear API key (get one from Linear → Settings → API)
-
-3. Get your Linear project ID:
-   - Open your Linear project
-   - Copy the project ID from the URL: `https://linear.app/team/project/<project-id>`
-
-**Usage:**
-
-```bash
-# Sync all deliverables to Linear
-npx dwa --sync-linear --project <project-id>
-
-# Preview without making changes
-npx dwa --sync-linear --project <project-id> --dry-run
-
-# Sync specific deliverables only
-npx dwa --sync-linear --project <project-id> --deliverables DEL-001,DEL-002
-```
-
-### Google Docs Integration
-
-Import feature specs from Google Docs as the canonical source.
-
-**Setup:**
-
-1. Run the setup wizard:
-   ```bash
-   npx dwa --setup google-docs
-   ```
-   This installs the `jedwards.gworkspace-provider` VS Code extension.
-
-2. Authenticate with Google:
-   - Open VS Code Command Palette (Cmd/Ctrl+Shift+P)
-   - Run "Google Workspace: Sign In"
-   - Complete OAuth flow in browser
-
-**Usage:**
-
-```bash
-# Import a Google Doc as feature-spec.md
-npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..."
-
-# Import to a specific path
-npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..." --out specs/my-feature.md
-```
-
-The imported spec includes DWA markers for change detection on re-import.
 
 ## Staleness Detection
 
