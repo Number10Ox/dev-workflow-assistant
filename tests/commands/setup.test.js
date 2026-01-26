@@ -42,11 +42,16 @@ describe('setup', () => {
   });
 
   describe('installExtension', () => {
-    it('handles extension installation', () => {
+    it('handles extension installation', async () => {
       const { installExtension } = require('../../src/commands/setup');
 
-      // Test with a non-existent extension (will fail gracefully)
-      const result = installExtension('test.nonexistent-extension');
+      // Test with a non-existent extension config (will fail gracefully - no GitHub release)
+      const testConfig = {
+        id: 'test.nonexistent-extension',
+        vsixPattern: /nonexistent.*\.vsix$/i,
+        name: 'Test Extension'
+      };
+      const result = await installExtension(testConfig);
       assert.ok(result);
       assert.strictEqual(typeof result.success, 'boolean');
       assert.ok(result.message);

@@ -8,7 +8,25 @@
  */
 
 const { execSync } = require('child_process');
+const https = require('https');
 const { FEATURES } = require('../utils/feature-detection');
+
+// GitHub repo for VS Code extensions
+const GITHUB_REPO = 'Number10Ox/devex-service-bridge';
+
+// Extension configurations
+const EXTENSIONS = {
+  linear: {
+    id: 'jedwards.linear-tracker-provider',
+    vsixPattern: /linear-tracker.*\.vsix$/i,
+    name: 'Linear Tracker'
+  },
+  googleDocs: {
+    id: 'jedwards.gworkspace-provider',
+    vsixPattern: /gworkspace.*\.vsix$/i,
+    name: 'Google Workspace'
+  }
+};
 
 /**
  * Check if VS Code CLI is available.
@@ -38,27 +56,117 @@ function isExtensionInstalled(extensionId) {
 }
 
 /**
- * Install a VS Code extension.
+ * Fetch JSON from a URL.
  *
- * @param {string} extensionId - Extension ID
- * @returns {{ success: boolean, alreadyInstalled: boolean, message: string }}
+ * @param {string} url - URL to fetch
+ * @returns {Promise<object>}
  */
-function installExtension(extensionId) {
-  // Check if already installed first
-  if (isExtensionInstalled(extensionId)) {
-    return { success: true, alreadyInstalled: true, message: `${extensionId} already installed` };
-  }
+function fetchJson(url) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      headers: { 'User-Agent': 'dwa-setup' }
+    };
 
+    https.get(url, options, (res) => {
+      // Handle redirects
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchJson(res.headers.location).then(resolve).catch(reject);
+      }
+
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(new Error('Invalid JSON response'));
+        }
+      });
+    }).on('error', reject);
+  });
+}
+
+/**
+ * Get the latest release from GitHub and find VSIX asset.
+ *
+ * @param {RegExp} vsixPattern - Pattern to match VSIX filename
+ * @returns {Promise<{version: string, downloadUrl: string}|null>}
+ */
+async function getLatestVsixRelease(vsixPattern) {
   try {
-    execSync(`code --install-extension ${extensionId}`, { stdio: 'inherit' });
-    return { success: true, alreadyInstalled: false, message: `Installed ${extensionId}` };
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
+    const release = await fetchJson(url);
+
+    // Find VSIX asset matching pattern
+    const asset = release.assets?.find(a => vsixPattern.test(a.name));
+    if (!asset) {
+      return null;
+    }
+
+    return {
+      version: release.tag_name,
+      downloadUrl: asset.browser_download_url
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
+/**
+ * Install a VS Code extension from a URL.
+ *
+ * @param {string} url - URL to VSIX file
+ * @returns {{ success: boolean, message: string }}
+ */
+function installExtensionFromUrl(url) {
+  try {
+    execSync(`code --install-extension "${url}"`, { stdio: 'inherit' });
+    return { success: true, message: `Installed from ${url}` };
   } catch (error) {
     return {
       success: false,
-      alreadyInstalled: false,
-      message: `Failed to install ${extensionId}: ${error.message}`
+      message: `Failed to install: ${error.message}`
     };
   }
+}
+
+/**
+ * Install extension - tries GitHub release first, falls back to marketplace.
+ *
+ * @param {object} extConfig - Extension configuration
+ * @returns {Promise<{ success: boolean, alreadyInstalled: boolean, message: string, version?: string }>}
+ */
+async function installExtension(extConfig) {
+  // Check if already installed
+  if (isExtensionInstalled(extConfig.id)) {
+    return { success: true, alreadyInstalled: true, message: `${extConfig.name} already installed` };
+  }
+
+  // Try to get latest release from GitHub
+  console.log(`  Checking for ${extConfig.name} release...`);
+  const release = await getLatestVsixRelease(extConfig.vsixPattern);
+
+  if (release) {
+    console.log(`  Found ${release.version}, downloading...`);
+    const result = installExtensionFromUrl(release.downloadUrl);
+    return {
+      ...result,
+      alreadyInstalled: false,
+      version: release.version
+    };
+  }
+
+  // No GitHub release found
+  return {
+    success: false,
+    alreadyInstalled: false,
+    message: `No release found at github.com/${GITHUB_REPO}. Publish a release with VSIX assets.`
+  };
 }
 
 /**
@@ -167,17 +275,16 @@ async function setupLinear() {
     };
   }
 
-  const extensionId = 'jedwards.linear-tracker-provider';
-  const result = installExtension(extensionId);
+  const result = await installExtension(EXTENSIONS.linear);
 
   if (result.success) {
     if (result.alreadyInstalled) {
       console.log('✓ Linear extension already installed\n');
     } else {
-      console.log('✓ Linear extension installed\n');
+      console.log(`✓ Linear extension installed (${result.version})\n`);
     }
   } else {
-    console.log('✗ Failed to install Linear extension\n');
+    console.log(`✗ ${result.message}\n`);
     return result;
   }
 
@@ -215,17 +322,16 @@ async function setupGoogleDocs() {
     };
   }
 
-  const extensionId = 'jedwards.gworkspace-provider';
-  const result = installExtension(extensionId);
+  const result = await installExtension(EXTENSIONS.googleDocs);
 
   if (result.success) {
     if (result.alreadyInstalled) {
       console.log('✓ Google Workspace extension already installed\n');
     } else {
-      console.log('✓ Google Workspace extension installed\n');
+      console.log(`✓ Google Workspace extension installed (${result.version})\n`);
     }
   } else {
-    console.log('✗ Failed to install Google Workspace extension\n');
+    console.log(`✗ ${result.message}\n`);
     return result;
   }
 
@@ -251,5 +357,8 @@ module.exports = {
   setupGoogleDocs,
   isVSCodeAvailable,
   isExtensionInstalled,
-  installExtension
+  installExtension,
+  getLatestVsixRelease,
+  EXTENSIONS,
+  GITHUB_REPO
 };
