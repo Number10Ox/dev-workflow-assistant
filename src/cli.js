@@ -12,14 +12,16 @@ program
   .option('--dry-run', 'Preview sync without making changes (requires --sync-linear)')
   .option('--force', 'Overwrite DWA sections even if manually edited (requires --sync-linear)')
   .option('--deliverables <ids>', 'Comma-separated deliverable IDs to sync (requires --sync-linear)')
-  .option('--project <id>', 'Linear project ID or URL (requires --sync-linear)');
+  .option('--project <id>', 'Linear project ID or URL (requires --sync-linear)')
+  .option('--import-gdoc <doc>', 'Import Google Doc as canonical spec')
+  .option('--out <path>', 'Output path for import (requires --import-gdoc)');
 
 program.parse(process.argv);
 
 const opts = program.opts();
 
 // Check for mutual exclusivity
-const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear].filter(Boolean).length;
+const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear, opts.importGdoc].filter(Boolean).length;
 
 if (operationCount > 1) {
   console.error('Error: Only one operation allowed at a time');
@@ -82,6 +84,31 @@ if (opts.install) {
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
         console.error('Error: sync-linear command not available');
+        process.exit(1);
+      }
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
+} else if (opts.importGdoc) {
+  (async () => {
+    try {
+      const { importGdoc } = require('./commands/import-gdoc');
+      const result = await importGdoc({
+        docIdOrUrl: opts.importGdoc,
+        projectRoot: process.cwd(),
+        out: opts.out,
+        force: opts.force,
+        dryRun: opts.dryRun
+      });
+      if (!result.success) {
+        console.error(result.message);
+        process.exit(1);
+      }
+      console.log(result.message);
+    } catch (err) {
+      if (err.code === 'MODULE_NOT_FOUND') {
+        console.error('Error: import-gdoc command not available');
         process.exit(1);
       }
       console.error('Error:', err.message);
