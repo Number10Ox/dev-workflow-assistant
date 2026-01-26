@@ -4,6 +4,9 @@ node_modules/
 # Claude Code local settings
 .claude/
 
+# DWA state (regenerated from source files)
+.dwa/
+
 # Test coverage
 coverage/
 
