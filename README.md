@@ -168,23 +168,83 @@ your-project/
 
 ## Optional Integrations
 
-### Linear
+### Setup Wizard
 
-Sync deliverables as Linear issues:
-
-```bash
-dwa --setup linear
-dwa --sync-linear --project <project-id>
-```
-
-### Google Docs
-
-Import specs from Google Docs:
+Run the interactive setup wizard to configure optional features:
 
 ```bash
-dwa --setup google-docs
-dwa --import-gdoc "https://docs.google.com/document/d/..."
+npx dwa --setup
 ```
+
+This presents a menu to select which integrations to enable. You can also set up specific features directly:
+
+```bash
+npx dwa --setup linear       # Linear only
+npx dwa --setup google-docs  # Google Docs only
+```
+
+### Linear Integration
+
+Sync deliverables as Linear issues for project tracking.
+
+**Setup:**
+
+1. Run the setup wizard:
+   ```bash
+   npx dwa --setup linear
+   ```
+   This installs the `jedwards.linear-tracker-provider` VS Code extension.
+
+2. Configure your Linear API key:
+   - Open VS Code Settings
+   - Search for "Linear Tracker"
+   - Enter your Linear API key (get one from Linear → Settings → API)
+
+3. Get your Linear project ID:
+   - Open your Linear project
+   - Copy the project ID from the URL: `https://linear.app/team/project/<project-id>`
+
+**Usage:**
+
+```bash
+# Sync all deliverables to Linear
+npx dwa --sync-linear --project <project-id>
+
+# Preview without making changes
+npx dwa --sync-linear --project <project-id> --dry-run
+
+# Sync specific deliverables only
+npx dwa --sync-linear --project <project-id> --deliverables DEL-001,DEL-002
+```
+
+### Google Docs Integration
+
+Import feature specs from Google Docs as the canonical source.
+
+**Setup:**
+
+1. Run the setup wizard:
+   ```bash
+   npx dwa --setup google-docs
+   ```
+   This installs the `jedwards.gworkspace-provider` VS Code extension.
+
+2. Authenticate with Google:
+   - Open VS Code Command Palette (Cmd/Ctrl+Shift+P)
+   - Run "Google Workspace: Sign In"
+   - Complete OAuth flow in browser
+
+**Usage:**
+
+```bash
+# Import a Google Doc as feature-spec.md
+npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..."
+
+# Import to a specific path
+npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..." --out specs/my-feature.md
+```
+
+The imported spec includes DWA markers for change detection on re-import.
 
 ## Staleness Detection
 
