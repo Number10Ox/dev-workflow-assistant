@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 7 complete, Phase 8 pending
+**Current focus:** Phase 7.1 complete, Phase 7.2 pending
 
 ## Current Position
 
-Phase: 7.1 of 8 (Installation Simplification)
-Plan: 1 of 1 complete (07.1-01)
-Status: Phase complete
-Last activity: 2026-01-26 - Completed 07.1-01-PLAN.md (installation simplification)
+Phase: 7.1 of 9 (Installation Simplification) ✓ COMPLETE
+Plan: 1/1 complete (07.1-01)
+Status: Phase verified (5/5 must-haves)
+Last activity: 2026-01-25 - Phase 7.1 verified and complete
 
 Progress: [███████████████████] 90.0% (27 of 30 plans complete)
 

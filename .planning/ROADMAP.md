@@ -20,7 +20,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [x] **Phase 6: Linear Integration** - Issue sync from registry
 - [x] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
-- [ ] **Phase 7.1: Installation Simplification** - Setup wizard, graceful degradation (INSERTED)
+- [x] **Phase 7.1: Installation Simplification** - Setup wizard, graceful degradation (INSERTED)
 - [ ] **Phase 7.2: Workflow Friction Reduction** - Maintenance commands, staleness detection (INSERTED)
 - [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
 - [ ] **Phase 9: JIRA Provider Demo** - Prove extensibility with second issue tracker
@@ -239,8 +239,8 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 5. `dwa status` shows clear configuration overview
 6. No breaking changes to existing installations
 
-**Plans**: 1 plan
-- [ ] 07.1-01-PLAN.md — Setup wizard, status command, feature detection
+**Plans**: 1 plan (complete)
+- [x] 07.1-01-PLAN.md — Setup wizard, status command, feature detection
 
 ---
 
@@ -335,7 +335,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
 | 6. Linear Integration | ✓ Complete | 2026-01-25 |
 | 7. Polish and Extended Features | ✓ Complete | 2026-01-26 |
-| 7.1. Installation Simplification | Not started | — |
+| 7.1. Installation Simplification | ✓ Complete | 2026-01-25 |
 | 7.2. Workflow Friction Reduction | Not started | — |
 | 8. Ralph Runner | Not started | — |
 | 9. JIRA Provider Demo | Not started | — |
