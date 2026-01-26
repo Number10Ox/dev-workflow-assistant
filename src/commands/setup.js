@@ -23,18 +23,39 @@ function isVSCodeAvailable() {
 }
 
 /**
+ * Check if a VS Code extension is installed.
+ *
+ * @param {string} extensionId - Extension ID
+ * @returns {boolean}
+ */
+function isExtensionInstalled(extensionId) {
+  try {
+    const output = execSync('code --list-extensions', { encoding: 'utf8' });
+    return output.toLowerCase().includes(extensionId.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Install a VS Code extension.
  *
  * @param {string} extensionId - Extension ID
- * @returns {{ success: boolean, message: string }}
+ * @returns {{ success: boolean, alreadyInstalled: boolean, message: string }}
  */
 function installExtension(extensionId) {
+  // Check if already installed first
+  if (isExtensionInstalled(extensionId)) {
+    return { success: true, alreadyInstalled: true, message: `${extensionId} already installed` };
+  }
+
   try {
     execSync(`code --install-extension ${extensionId}`, { stdio: 'inherit' });
-    return { success: true, message: `Installed ${extensionId}` };
+    return { success: true, alreadyInstalled: false, message: `Installed ${extensionId}` };
   } catch (error) {
     return {
       success: false,
+      alreadyInstalled: false,
       message: `Failed to install ${extensionId}: ${error.message}`
     };
   }
@@ -150,23 +171,32 @@ async function setupLinear() {
   const result = installExtension(extensionId);
 
   if (result.success) {
-    console.log('✓ Linear extension installed\n');
-    console.log('┌─────────────────────────────────────────────────┐');
-    console.log('│  NEXT STEPS - Linear Configuration              │');
-    console.log('└─────────────────────────────────────────────────┘\n');
-    console.log('1. Get your Linear API key:');
-    console.log('   → Go to: https://linear.app/settings/api');
-    console.log('   → Click "Create key" and copy it\n');
-    console.log('2. Configure the extension in VS Code:');
-    console.log('   → Open Settings (Cmd/Ctrl + ,)');
-    console.log('   → Search for "Linear Tracker"');
-    console.log('   → Paste your API key in the "Api Key" field\n');
-    console.log('3. Get your Linear project ID:');
-    console.log('   → Open your project in Linear');
-    console.log('   → Copy the ID from URL: linear.app/team/project/<project-id>\n');
-    console.log('4. Sync deliverables:');
-    console.log('   → npx dwa --sync-linear --project <project-id>\n');
+    if (result.alreadyInstalled) {
+      console.log('✓ Linear extension already installed\n');
+    } else {
+      console.log('✓ Linear extension installed\n');
+    }
+  } else {
+    console.log('✗ Failed to install Linear extension\n');
+    return result;
   }
+
+  // Always show next steps
+  console.log('┌─────────────────────────────────────────────────┐');
+  console.log('│  NEXT STEPS - Linear Configuration              │');
+  console.log('└─────────────────────────────────────────────────┘\n');
+  console.log('1. Get your Linear API key:');
+  console.log('   → Go to: https://linear.app/settings/api');
+  console.log('   → Click "Create key" and copy it\n');
+  console.log('2. Configure the extension in VS Code:');
+  console.log('   → Open Settings (Cmd/Ctrl + ,)');
+  console.log('   → Search for "Linear Tracker"');
+  console.log('   → Paste your API key in the "Api Key" field\n');
+  console.log('3. Get your Linear project ID:');
+  console.log('   → Open your project in Linear');
+  console.log('   → Copy the ID from URL: linear.app/team/project/<project-id>\n');
+  console.log('4. Sync deliverables:');
+  console.log('   → npx dwa --sync-linear --project <project-id>\n');
 
   return result;
 }
@@ -189,19 +219,28 @@ async function setupGoogleDocs() {
   const result = installExtension(extensionId);
 
   if (result.success) {
-    console.log('✓ Google Workspace extension installed\n');
-    console.log('┌─────────────────────────────────────────────────┐');
-    console.log('│  NEXT STEPS - Google Docs Configuration         │');
-    console.log('└─────────────────────────────────────────────────┘\n');
-    console.log('1. Authenticate with Google in VS Code:');
-    console.log('   → Open Command Palette (Cmd/Ctrl + Shift + P)');
-    console.log('   → Type "Google Workspace: Sign In"');
-    console.log('   → Complete OAuth flow in your browser\n');
-    console.log('2. Import a Google Doc as your feature spec:');
-    console.log('   → npx dwa --import-gdoc "https://docs.google.com/document/d/..."\n');
-    console.log('Note: The imported spec will include DWA markers for');
-    console.log('      change detection on future re-imports.\n');
+    if (result.alreadyInstalled) {
+      console.log('✓ Google Workspace extension already installed\n');
+    } else {
+      console.log('✓ Google Workspace extension installed\n');
+    }
+  } else {
+    console.log('✗ Failed to install Google Workspace extension\n');
+    return result;
   }
+
+  // Always show next steps
+  console.log('┌─────────────────────────────────────────────────┐');
+  console.log('│  NEXT STEPS - Google Docs Configuration         │');
+  console.log('└─────────────────────────────────────────────────┘\n');
+  console.log('1. Authenticate with Google in VS Code:');
+  console.log('   → Open Command Palette (Cmd/Ctrl + Shift + P)');
+  console.log('   → Type "Google Workspace: Sign In"');
+  console.log('   → Complete OAuth flow in your browser\n');
+  console.log('2. Import a Google Doc as your feature spec:');
+  console.log('   → npx dwa --import-gdoc "https://docs.google.com/document/d/..."\n');
+  console.log('Note: The imported spec will include DWA markers for');
+  console.log('      change detection on future re-imports.\n');
 
   return result;
 }
@@ -211,5 +250,6 @@ module.exports = {
   setupLinear,
   setupGoogleDocs,
   isVSCodeAvailable,
+  isExtensionInstalled,
   installExtension
 };
