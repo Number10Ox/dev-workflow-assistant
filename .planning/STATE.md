@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 7 of 7 (Polish and Extended Features)
-Plan: BRIDGE-01 (cross-repo)
+Plan: 07-01 (Google Docs Bridge Client Infrastructure)
 Status: In progress
-Last activity: 2026-01-26 - Completed 07-BRIDGE-01-PLAN.md (Google Workspace Provider)
+Last activity: 2026-01-26 - Completed 07-01-PLAN.md (Bridge client, diagnostics, hashing, import reports)
 
-Progress: [██████████████] 100% (core) + BRIDGE-01 (extended)
+Progress: [██████████████] 100% (core) + BRIDGE-01, 07-01 (extended)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
-- Average duration: 3m 9s
-- Total execution time: 1.24 hours
+- Total plans completed: 24
+- Average duration: 3m 12s
+- Total execution time: 1.35 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [██████████████] 100% (core) + BRIDGE-01 (
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
 | 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
-| 07 - Polish & Extended | 5 | 19m 13s | 3m 51s |
+| 07 - Polish & Extended | 6 | 26m 6s | 4m 21s |
 
 **Recent Trend:**
-- Last 5 plans: 07-01 (2m 18s), 07-02 (2m 9s), 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s)
-- Phase 7: Extended features (BRIDGE-01 cross-repo provider delivered)
+- Last 5 plans: 07-02 (2m 9s), 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s)
+- Phase 7: Extended features (BRIDGE-01 cross-repo provider + 07-01 bridge client infrastructure delivered)
 
 *Updated after each plan completion*
 
@@ -126,6 +126,11 @@ Recent decisions affecting current work:
 - [BRIDGE-01]: Return etag, modifiedTime, revisionId from Docs API for robust change detection.
 - [BRIDGE-01]: Name package gworkspace-provider (not gdocs-provider) for future Sheets/Calendar support.
 - [BRIDGE-01]: Rename private field to authManager to avoid shadowing public auth namespace (bug fix).
+- [07-01]: Use capability handshake (not method checks) for provider compatibility validation.
+- [07-01]: Inject vscode module in constructor for testability in Node.js without extension host.
+- [07-01]: SHA-256 for content hashing (deterministic, collision-resistant, industry standard).
+- [07-01]: Four diagnostic severity levels: info (100), warning (200), error (300), fatal (400).
+- [07-01]: Import reports written to .dwa/import-reports/ with docId and timestamp in filename.
 
 ### Pending Todos
 
@@ -141,5 +146,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 07-BRIDGE-01 (Google Workspace Provider). Cross-repo provider for DWA Google Docs import capability.
+Stopped at: Completed 07-01 (Google Docs Bridge Client Infrastructure). Bridge client, diagnostics, hashing, import reports ready for conversion layer.
 Resume file: None
