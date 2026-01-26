@@ -19,7 +19,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 4: Execution Packets** - Rich bounded-context generation for GSD
 - [x] **Phase 5: Drift Tracking** - Per-deliverable drift with rolling log
 - [x] **Phase 6: Linear Integration** - Issue sync from registry
-- [ ] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
+- [x] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 - [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
 
 ## Phase Details
@@ -206,11 +206,11 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 4. Commands that depend on bridge providers check availability before invoking; fail fast with setup instructions
 
 **Plans**: 5 plans in 4 waves
-- [ ] 07-BRIDGE-01-PLAN.md — devex-service-bridge gworkspace-provider (googleapis, auth, capabilities)
-- [ ] 07-01-PLAN.md — Google Docs import infrastructure (bridge client, diagnostics, hashing, reports)
-- [ ] 07-02-PLAN.md — Google Docs JSON to markdown converter (gdoc-to-mdast, mdast-to-markdown)
-- [ ] 07-03-PLAN.md — Import command with markers, hash verification, CLI integration
-- [ ] 07-04-PLAN.md — PR description generation skill with template and metadata extraction
+- [x] 07-BRIDGE-01-PLAN.md — devex-service-bridge gworkspace-provider (googleapis, auth, capabilities)
+- [x] 07-01-PLAN.md — Google Docs import infrastructure (bridge client, diagnostics, hashing, reports)
+- [x] 07-02-PLAN.md — Google Docs JSON to markdown converter (gdoc-to-mdast, mdast-to-markdown)
+- [x] 07-03-PLAN.md — Import command with markers, hash verification, CLI integration
+- [x] 07-04-PLAN.md — PR description generation skill with template and metadata extraction
 
 ---
 
@@ -255,5 +255,5 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 4. Execution Packets | ✓ Complete | 2026-01-25 |
 | 5. Drift Tracking | ✓ Complete | 2026-01-25 |
 | 6. Linear Integration | ✓ Complete | 2026-01-25 |
-| 7. Polish and Extended Features | Not started | — |
+| 7. Polish and Extended Features | ✓ Complete | 2026-01-26 |
 | 8. Ralph Runner | Not started | — |
