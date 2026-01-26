@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 
 ## Current Position
 
-Phase: 7 of 8 (Polish and Extended Features) ✓ COMPLETE
-Plan: All 5 plans complete (BRIDGE-01 + 01-04)
-Status: Phase verified (24/24 must-haves)
-Last activity: 2026-01-26 - Phase 7 verified and complete
+Phase: 7.1 of 8 (Installation Simplification)
+Plan: 1 of 1 complete (07.1-01)
+Status: Phase complete
+Last activity: 2026-01-26 - Completed 07.1-01-PLAN.md (installation simplification)
 
-Progress: [██████████████████] 87.5% (7 of 8 phases complete)
+Progress: [███████████████████] 90.0% (27 of 30 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26
-- Average duration: 3m 43s
-- Total execution time: 1.66 hours
+- Total plans completed: 27
+- Average duration: 3m 42s
+- Total execution time: 1.67 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [██████████████████] 87.5% (7 of 8
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
 | 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
 | 07 - Polish & Extended | 8 | 48m 50s | 6m 6s |
+| 07.1 - Installation Simplification | 1 | 5m 6s | 5m 6s |
 
 **Recent Trend:**
-- Last 5 plans: 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s), 07-02 (11m 48s), 07-03 (10m 56s)
-- Phase 7: Extended features complete (BRIDGE-01 + 07-01 + 07-02 + 07-03 = Google Docs import feature fully operational)
+- Last 5 plans: BRIDGE-01 (7m 6s), 07-01 (6m 53s), 07-02 (11m 48s), 07-03 (10m 56s), 07.1-01 (5m 6s)
+- Phase 07.1: Installation simplification complete (setup wizard + graceful degradation)
 
 *Updated after each plan completion*
 
@@ -140,6 +141,10 @@ Recent decisions affecting current work:
 - [07-03]: Explicit output path resolution: error when no .dwa/ and no --out (prevents ambiguity).
 - [07-03]: Trim markdown output before hashing for consistent hash verification.
 - [07-03]: Document change detection: prefer revisionId, fall back to etag, then modifiedTime.
+- [07.1-01]: Use enquirer for interactive prompts (established pattern for wizard UIs).
+- [07.1-01]: Feature detection via VS Code extension checks (graceful in CLI context).
+- [07.1-01]: Separate --setup and --status from core operations (clear separation of concerns).
+- [07.1-01]: Automatic extension installation via code CLI when available.
 
 ### Pending Todos
 
@@ -155,6 +160,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Phase 7 complete and verified. Google Docs import + PR description features operational. 368 total tests passing.
+Stopped at: Completed 07.1-01-PLAN.md. Interactive setup wizard + graceful feature detection. 399 total tests passing.
 Resume file: None
-Next: Phase 8 (Ralph Runner) - Deterministic iterate-until-done execution mode
+Next: Phase 07.2 (Workflow Friction Reduction) or Phase 8 (Ralph Runner)
