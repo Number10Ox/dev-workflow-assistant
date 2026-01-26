@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 7 of 7 (Polish and Extended Features)
-Plan: 07-01 (Google Docs Bridge Client Infrastructure)
+Plan: 07-02 (Google Docs to Markdown Converter)
 Status: In progress
-Last activity: 2026-01-26 - Completed 07-01-PLAN.md (Bridge client, diagnostics, hashing, import reports)
+Last activity: 2026-01-26 - Completed 07-02-PLAN.md (Google Docs JSON to mdast converter, markdown stringifier)
 
-Progress: [██████████████] 100% (core) + BRIDGE-01, 07-01 (extended)
+Progress: [██████████████] 100% (core) + BRIDGE-01, 07-01, 07-02 (extended)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
-- Average duration: 3m 12s
-- Total execution time: 1.35 hours
+- Total plans completed: 25
+- Average duration: 3m 31s
+- Total execution time: 1.48 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [██████████████] 100% (core) + BRIDGE-01, 
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
 | 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
-| 07 - Polish & Extended | 6 | 26m 6s | 4m 21s |
+| 07 - Polish & Extended | 7 | 37m 54s | 5m 25s |
 
 **Recent Trend:**
-- Last 5 plans: 07-02 (2m 9s), 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s)
-- Phase 7: Extended features (BRIDGE-01 cross-repo provider + 07-01 bridge client infrastructure delivered)
+- Last 5 plans: 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s), 07-02 (11m 48s)
+- Phase 7: Extended features (BRIDGE-01 cross-repo + 07-01 bridge client + 07-02 converter delivered)
 
 *Updated after each plan completion*
 
@@ -131,6 +131,11 @@ Recent decisions affecting current work:
 - [07-01]: SHA-256 for content hashing (deterministic, collision-resistant, industry standard).
 - [07-01]: Four diagnostic severity levels: info (100), warning (200), error (300), fatal (400).
 - [07-01]: Import reports written to .dwa/import-reports/ with docId and timestamp in filename.
+- [07-02]: List detection via paragraph.bullet field (not namedStyleType) per Google Docs API v1 structure.
+- [07-02]: Table complexity: simple (no spans) -> GFM, complex (merged cells) -> HTML with DWA-GDOC-202.
+- [07-02]: Nested formatting order: strikethrough -> italic -> bold (innermost to outermost).
+- [07-02]: Empty paragraphs (only whitespace/newline) skipped to prevent excessive blank lines.
+- [07-02]: Footnotes collected during conversion and appended at document end (markdown reference-style).
 
 ### Pending Todos
 
@@ -146,5 +151,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 07-01 (Google Docs Bridge Client Infrastructure). Bridge client, diagnostics, hashing, import reports ready for conversion layer.
+Stopped at: Completed 07-02 (Google Docs to Markdown Converter). Full conversion pipeline ready: gdocToMdast -> mdastToMarkdown with GFM/HTML table support.
 Resume file: None
