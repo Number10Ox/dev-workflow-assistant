@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-24)
 ## Current Position
 
 Phase: 7 of 7 (Polish and Extended Features)
-Plan: 07-02 (Google Docs to Markdown Converter)
+Plan: 07-03 (Google Docs Import Command)
 Status: In progress
-Last activity: 2026-01-26 - Completed 07-02-PLAN.md (Google Docs JSON to mdast converter, markdown stringifier)
+Last activity: 2026-01-26 - Completed 07-03-PLAN.md (CLI import command with idempotent reimport)
 
-Progress: [██████████████] 100% (core) + BRIDGE-01, 07-01, 07-02 (extended)
+Progress: [██████████████] 100% (core) + BRIDGE-01, 07-01, 07-02, 07-03 (extended)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 25
-- Average duration: 3m 31s
-- Total execution time: 1.48 hours
+- Total plans completed: 26
+- Average duration: 3m 43s
+- Total execution time: 1.66 hours
 
 **By Phase:**
 
@@ -33,11 +33,11 @@ Progress: [██████████████] 100% (core) + BRIDGE-01, 
 | 04 - Packets | 2 | 8m 0s | 4m 0s |
 | 05 - Drift | 4 | 15m 14s | 3m 49s |
 | 06 - Linear Integration | 3 | 10m 1s | 3m 20s |
-| 07 - Polish & Extended | 7 | 37m 54s | 5m 25s |
+| 07 - Polish & Extended | 8 | 48m 50s | 6m 6s |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (2m 44s), 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s), 07-02 (11m 48s)
-- Phase 7: Extended features (BRIDGE-01 cross-repo + 07-01 bridge client + 07-02 converter delivered)
+- Last 5 plans: 07-04 (4m 56s), BRIDGE-01 (7m 6s), 07-01 (6m 53s), 07-02 (11m 48s), 07-03 (10m 56s)
+- Phase 7: Extended features complete (BRIDGE-01 + 07-01 + 07-02 + 07-03 = Google Docs import feature fully operational)
 
 *Updated after each plan completion*
 
@@ -136,6 +136,10 @@ Recent decisions affecting current work:
 - [07-02]: Nested formatting order: strikethrough -> italic -> bold (innermost to outermost).
 - [07-02]: Empty paragraphs (only whitespace/newline) skipped to prevent excessive blank lines.
 - [07-02]: Footnotes collected during conversion and appended at document end (markdown reference-style).
+- [07-03]: CLI hash mismatch behavior: write diff artifact + exit with instructions (vs VS Code modal).
+- [07-03]: Explicit output path resolution: error when no .dwa/ and no --out (prevents ambiguity).
+- [07-03]: Trim markdown output before hashing for consistent hash verification.
+- [07-03]: Document change detection: prefer revisionId, fall back to etag, then modifiedTime.
 
 ### Pending Todos
 
@@ -151,5 +155,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 07-02 (Google Docs to Markdown Converter). Full conversion pipeline ready: gdocToMdast -> mdastToMarkdown with GFM/HTML table support.
+Stopped at: Completed 07-03 (Google Docs Import Command). Full import feature operational: CLI command, idempotent reimport, diff artifacts, 28 tests passing.
 Resume file: None
