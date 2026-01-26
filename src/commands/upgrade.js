@@ -22,8 +22,14 @@ async function upgrade() {
       process.exit(1);
     }
 
-    // Read current version
-    const current = await readVersion();
+    // Read current version (fallback to 0.0.0 for pre-versioning installs)
+    let current;
+    try {
+      current = await readVersion();
+    } catch {
+      // Version file missing - this is a pre-versioning install, treat as 0.0.0
+      current = { dwaVersion: '0.0.0', schemaVersion: '1.0.0' };
+    }
     const packageVersion = require('../../package.json').version;
 
     // Compare versions
