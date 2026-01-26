@@ -14,14 +14,16 @@ program
   .option('--deliverables <ids>', 'Comma-separated deliverable IDs to sync (requires --sync-linear)')
   .option('--project <id>', 'Linear project ID or URL (requires --sync-linear)')
   .option('--import-gdoc <doc>', 'Import Google Doc as canonical spec')
-  .option('--out <path>', 'Output path for import (requires --import-gdoc)');
+  .option('--out <path>', 'Output path for import (requires --import-gdoc)')
+  .option('--setup [feature]', 'Run setup wizard (or setup specific: --setup linear, --setup google-docs)')
+  .option('--status', 'Show DWA configuration status');
 
 program.parse(process.argv);
 
 const opts = program.opts();
 
 // Check for mutual exclusivity
-const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear, opts.importGdoc].filter(Boolean).length;
+const operationCount = [opts.install, opts.upgrade, opts.uninstall, opts.syncLinear, opts.importGdoc, opts.setup !== undefined, opts.status].filter(Boolean).length;
 
 if (operationCount > 1) {
   console.error('Error: Only one operation allowed at a time');
@@ -111,6 +113,41 @@ if (opts.install) {
         console.error('Error: import-gdoc command not available');
         process.exit(1);
       }
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
+} else if (opts.setup !== undefined) {
+  (async () => {
+    try {
+      const { setup } = require('./commands/setup');
+      const setupOpts = {};
+
+      // Handle specific feature setup
+      if (opts.setup === 'linear') {
+        setupOpts.linear = true;
+      } else if (opts.setup === 'google-docs') {
+        setupOpts.googleDocs = true;
+      }
+      // If opts.setup === true, no specific feature (interactive mode)
+
+      const result = await setup(setupOpts);
+      if (!result.success) {
+        console.error(result.message);
+        process.exit(1);
+      }
+      console.log(result.message);
+    } catch (err) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
+} else if (opts.status) {
+  (async () => {
+    try {
+      const { status } = require('./commands/status');
+      await status();
+    } catch (err) {
       console.error('Error:', err.message);
       process.exit(1);
     }

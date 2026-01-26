@@ -12,6 +12,7 @@
 
 const path = require('path');
 const { importGoogleDoc } = require('../google-docs/import');
+const { checkFeature, getSetupInstructions } = require('../utils/feature-detection');
 
 /**
  * Format diagnostics for console output.
@@ -81,6 +82,15 @@ function formatDiagnostics(diagnostics) {
  */
 async function importGdoc(options) {
   const { docIdOrUrl, projectRoot, out, force, dryRun } = options;
+
+  // Check if Google Docs integration is available
+  const googleDocsCheck = checkFeature('googleDocs');
+  if (!googleDocsCheck.available) {
+    return {
+      success: false,
+      message: `Google Docs import not configured.\n\n${getSetupInstructions('googleDocs')}`
+    };
+  }
 
   console.log('');
   console.log('=== Google Docs Import ===');

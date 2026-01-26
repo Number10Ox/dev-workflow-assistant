@@ -14,6 +14,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const { syncAllDeliverables, SyncAction } = require('../linear/sync');
+const { checkFeature, getSetupInstructions } = require('../utils/feature-detection');
 
 /**
  * Format sync results for display.
@@ -96,6 +97,15 @@ function formatResults(results, summary) {
  */
 async function syncLinear(options) {
   const { projectRoot, dryRun, force, deliverables, project } = options;
+
+  // Check if Linear integration is available
+  const linearCheck = checkFeature('linear');
+  if (!linearCheck.available) {
+    return {
+      success: false,
+      message: `Linear integration not configured.\n\n${getSetupInstructions('linear')}`
+    };
+  }
 
   const dwaDir = path.join(projectRoot, '.dwa');
   const registryDir = path.join(dwaDir, 'deliverables');
