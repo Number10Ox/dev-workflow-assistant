@@ -21,6 +21,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 6: Linear Integration** - Issue sync from registry
 - [x] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 - [ ] **Phase 7.1: Installation Simplification** - Setup wizard, graceful degradation (INSERTED)
+- [ ] **Phase 7.2: Workflow Friction Reduction** - Maintenance commands, staleness detection (INSERTED)
 - [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
 - [ ] **Phase 9: JIRA Provider Demo** - Prove extensibility with second issue tracker
 
@@ -243,6 +244,33 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ---
 
+### Phase 7.2: Workflow Friction Reduction (INSERTED)
+**Goal**: Reduce manual workflow steps through maintenance commands and staleness detection
+**Depends on**: Phase 7.1
+
+**Commands Delivered**:
+- `dwa clean` — Remove orphaned deliverables (30+ days old)
+- `dwa clean --all` — Remove all `.dwa/` state
+- `dwa validate` — Check state integrity
+- `dwa stats` — Show statistics and health
+
+**Skills Delivered**: None (CLI utilities)
+
+**Demo**: Show `dwa stats`, then `dwa clean` removing orphaned items, packet generation warning about stale registry
+
+**Success Criteria**:
+1. `dwa clean` removes orphaned deliverables older than threshold
+2. `dwa validate` checks state integrity with actionable output
+3. `dwa stats` shows deliverable counts, drift stats, disk usage
+4. Packet generation warns when registry is stale vs. spec
+5. `dwa --install` ensures `.dwa/` is gitignored
+6. No breaking changes to existing workflows
+
+**Plans**: 1 plan
+- [ ] 07.2-01-PLAN.md — Maintenance commands and lazy evaluation
+
+---
+
 ### Phase 8: Ralph Runner
 **Goal**: Deterministic iterate-until-done execution mode that loops Claude Code until verification passes
 **Depends on**: Phase 7
@@ -296,7 +324,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 
 ## Progress
 
-**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 7.1 → 8 → 9
+**Execution Order:** Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 7.1 → 7.2 → 8 → 9
 
 | Phase | Status | Completed |
 |-------|--------|-----------|
@@ -308,5 +336,6 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 | 6. Linear Integration | ✓ Complete | 2026-01-25 |
 | 7. Polish and Extended Features | ✓ Complete | 2026-01-26 |
 | 7.1. Installation Simplification | Not started | — |
+| 7.2. Workflow Friction Reduction | Not started | — |
 | 8. Ralph Runner | Not started | — |
 | 9. JIRA Provider Demo | Not started | — |
