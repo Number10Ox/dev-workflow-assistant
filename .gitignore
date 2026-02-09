@@ -1,8 +1,11 @@
 # Dependencies
 node_modules/
 
-# Claude Code local settings
-.claude/
+# Claude Code local settings (keep CLAUDE.md and commands/ tracked)
+.claude/*
+!.claude/CLAUDE.md
+!.claude/commands/
+!.claude/commands/**
 
 # DWA state (regenerated from source files)
 .dwa/
@@ -11,7 +14,8 @@ node_modules/
 coverage/
 
 # Logs
-*.log
+*.log:q
+:q!:q
 npm-debug.log*
 
 # OS files
@@ -22,7 +26,8 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-*.swo
+*.swo:q
+
 
 # Build output
 dist/
