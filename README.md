@@ -1,165 +1,122 @@
 # DWA - Dev Workflow Assistant
 
-A deliverable-driven development framework for Claude Code. DWA helps you break features into trackable deliverables, generate execution packets for AI-assisted implementation, and maintain traceability from spec to code.
+AI coding assistants are powerful but unconstrained. Give one a feature spec and it builds something. It also drifts from the spec, makes undocumented decisions, and loses context between sessions. The bigger the feature, the worse this gets.
 
-## Quick Start
+DWA constrains AI-assisted development to bounded, traceable units of work. Define deliverables in a markdown spec. DWA parses them into a registry, generates scoped execution packets, and tracks drift between what was specified and what was built.
+
+## How It Works
+
+```
+Feature Spec (markdown)
+    │
+    ▼
+AST Parse (remark + unified)
+    │
+    ▼
+Deliverable Registry (.dwa/deliverables/*.json)
+    │
+    ▼
+Execution Packets (bounded context for AI implementation)
+    │
+    ▼
+Drift Tracking (spec vs. implementation divergence)
+```
+
+The CLI handles deterministic work: parsing, validation, registry management, issue sync, staleness detection.
+
+Claude Code skills handle LLM judgment: drafting technical designs, enriching packets with context, proposing drift fixes, generating PR descriptions.
+
+This separation is intentional. Deterministic operations shouldn't burn tokens. LLM judgment shouldn't be faked with templates.
+
+## Design Decisions
+
+**AST-based parsing, not regex.** Feature specs are structured markdown with YAML frontmatter and deliverable tables. DWA uses remark and unified to extract deliverables reliably regardless of formatting variation.
+
+**Idempotent operations.** Re-parsing is safe. Registry updates preserve runtime fields (completion status, PR links, drift logs). Schema versioning handles upgrades across DWA versions.
+
+**Bounded AI execution.** Execution packets give an AI assistant exactly the context it needs for one deliverable: goal, acceptance criteria categorized by priority, guardrails from the technical design, and provenance (git SHAs, spec versions). No more, no less.
+
+**Drift detection.** Structural comparison between spec and implementation surfaces divergence early. Drift logs are per-deliverable and append-only. An audit trail of how implementation evolved against the contract.
+
+**Pluggable integrations.** Issue tracker sync (Linear implemented, JIRA interface designed), Google Docs import, and a setup wizard with graceful degradation for optional features.
+
+## What's Here
+
+- 49 source files across CLI commands, parser, packet generator, drift tracker, and integrations
+- 458 tests using node:test. Zero external test dependencies. Fixture-based, temp directory isolation.
+- Atomic file writes (write-file-atomic) to prevent corruption during registry updates
+- Actionable error codes (DWA-E041, DWA-E045) with line numbers for validation failures
+- 6 Claude Code skills for the LLM-assisted parts of the workflow
+- Schema versioning with migration support across releases
+
+## Status
+
+Phases 1 through 7 are complete and tested. Two phases remain designed but unbuilt.
+
+| Phase | Status | What It Does |
+|-------|--------|-------------|
+| 1. Bootstrap & Installer | Done | `npx dwa --install`, upgrade, uninstall with schema versioning |
+| 2. Spec & TDD Scaffolding | Done | Template-based spec and technical design creation |
+| 3. Parsing & Registry | Done | AST extraction, validation, safe re-parse, frontmatter handling |
+| 4. Execution Packets | Done | Bounded-context generation with provenance and constraint fetching |
+| 5. Drift Tracking | Done | Per-deliverable drift logs, structural comparison, rebuild logic |
+| 6. Linear Integration | Done | Bi-directional sync, deduplication, external ID tracking, dry-run mode |
+| 7. Polish & Extensions | Done | Google Docs import, PR descriptions, setup wizard, maintenance commands |
+| 8. Ralph Runner | Designed | Autonomous agent loop: iterate until tests pass and acceptance criteria met |
+| 9. JIRA Provider | Designed | Prove extensibility via second issue tracker backend |
+
+## What I Learned
+
+I built DWA to structure AI-assisted feature development. Then I spent two months building AI agent systems where LLM agents are first-class actors, with 1,300+ tests across the ecosystem. Working on the other side of the problem taught me things about AI collaboration that tooling alone can't solve.
+
+The failure modes are different than I expected. AI assistants don't just drift from specs. They accumulate rules in response to feedback until the output is lifeless. They apply point fixes instead of pattern fixes. They lose lessons between sessions even when you document them. Some of these are tooling problems. DWA addresses drift and scope. Some are workflow problems. Some are fundamental to how LLMs process context.
+
+## Usage
+
+### Quick Start
 
 ```bash
-# Install DWA in your project
 npm install dwa
-
-# Install skills and templates globally
-npx dwa --install
-
-# Check installation status
-npx dwa --status
+npx dwa --install    # Install skills and templates
+npx dwa --status     # Verify installation
 ```
 
-## Setup
-
-### Core Setup
-
-After installation, DWA's core workflow is ready to use. Run `npx dwa --status` to verify.
-
-### Optional Integrations
-
-DWA supports optional integrations for project management and document import. Run the setup wizard to configure them:
+### Core Workflow
 
 ```bash
-npx dwa --setup
-```
-
-Or set up specific integrations directly:
-
-```bash
-npx dwa --setup linear       # Linear issue tracking
-npx dwa --setup google-docs  # Google Docs import
-```
-
-#### Linear Integration
-
-Sync deliverables as Linear issues for project tracking.
-
-**Setup:**
-
-1. Run: `npx dwa --setup linear`
-2. Configure your Linear API key in VS Code:
-   - Open Settings (Cmd/Ctrl+,)
-   - Search "Linear Tracker"
-   - Enter your API key (get one from [Linear Settings → API](https://linear.app/settings/api))
-3. Get your project ID from the Linear URL: `https://linear.app/team/project/<project-id>`
-
-**Usage:**
-
-```bash
-npx dwa --sync-linear --project <project-id>
-npx dwa --sync-linear --project <project-id> --dry-run  # Preview only
-```
-
-#### Google Docs Integration
-
-Import feature specs from Google Docs as the canonical source.
-
-**Setup:**
-
-1. Run: `npx dwa --setup google-docs`
-2. Authenticate in VS Code:
-   - Open Command Palette (Cmd/Ctrl+Shift+P)
-   - Run "Google Workspace: Sign In"
-   - Complete OAuth flow in browser
-
-**Usage:**
-
-```bash
-npx dwa --import-gdoc "https://docs.google.com/document/d/1abc123..."
-```
-
-## Core Workflow
-
-DWA follows a **spec → parse → start → complete** workflow:
-
-### 1. Create a Feature Spec
-
-Use the `/dwa-create-spec` skill in Claude Code:
-
-```
+# 1. Create a feature spec
 /dwa-create-spec "User Authentication"
-```
 
-This creates:
-- `feature-spec.md` - Your feature specification with a deliverables table
-- `.dwa/feature.json` - Feature metadata
-- `.gitignore` entry for `.dwa/`
+# 2. Define deliverables in the generated feature-spec.md table
 
-### 2. Define Deliverables
-
-Edit `feature-spec.md` to add deliverables to the table:
-
-```markdown
-## Deliverables
-
-| Deliverable ID | User Story | Description | Acceptance Criteria | QA Notes | Dependencies |
-|----------------|------------|-------------|---------------------|----------|--------------|
-| DEL-001 | As a user, I want to login... | Implement login form | C1: Valid creds redirect. F1: Invalid shows error. | Test rate limiting | - |
-| DEL-002 | As a user, I want to logout... | Add logout button | C1: Clears session. C2: Redirects to home. | Verify token cleared | DEL-001 |
-```
-
-**Acceptance Criteria Prefixes:**
-- `C#` - Critical (must have)
-- `F#` - Functional (should have)
-- `N#` - Nice-to-have (could have)
-- `E#` - Edge cases
-
-### 3. Parse the Spec
-
-```bash
+# 3. Parse spec into registry
 npx dwa --parse
-```
 
-This extracts deliverables into `.dwa/deliverables/DEL-###.json` registry files.
-
-### 4. Start a Deliverable
-
-Use the `/dwa-start` skill or generate a packet manually:
-
-```bash
-# In Claude Code
+# 4. Generate execution packet and start work
 /dwa-start DEL-001
 
-# Or via CLI (coming soon)
-npx dwa start DEL-001
-```
-
-This generates an **execution packet** at `.dwa/packets/DEL-001.md` containing:
-- Guardrails (MUST/MUST NOT from TDD)
-- Goal and user story
-- Categorized acceptance criteria
-- QA notes
-- Provenance (git SHAs, versions)
-
-### 5. Implement with the Packet
-
-Give the packet to Claude Code:
-
-```
-@.dwa/packets/DEL-001.md implement this deliverable
-```
-
-The packet constrains Claude to the specific deliverable scope.
-
-### 6. Complete the Deliverable
-
-After implementation and PR merge:
-
-```
+# 5. Complete with evidence
 /dwa-complete DEL-001 --pr https://github.com/org/repo/pull/123
 ```
 
-This records completion evidence in the registry.
+### Optional Integrations
 
-## CLI Commands
+```bash
+npx dwa --setup                              # Interactive setup wizard
+npx dwa --setup linear                       # Linear (auto-detects mode)
+npx dwa --setup linear --mode=direct         # Linear without VS Code (API key in ~/.dwa/config.json)
+npx dwa --setup linear --mode=vscode-bridge  # Linear via the VS Code extension
+npx dwa --setup google-docs                  # Google Docs import (VS Code only)
+```
 
-### Installation & Status
+**Linear without VS Code.** `--mode=direct` prompts for an API key, validates it
+against Linear, and writes it to `~/.dwa/config.json` (mode `0600` on POSIX).
+Subsequent `npx dwa --sync-linear` calls run from any terminal — no extension
+host required. Resolution priority: `LINEAR_API_KEY` env var → file →
+actionable error. Force the path explicitly with `DWA_LINEAR_MODE=direct`
+or `DWA_LINEAR_MODE=bridge` if both are configured.
+
+### Commands
 
 | Command | Description |
 |---------|-------------|
@@ -167,73 +124,23 @@ This records completion evidence in the registry.
 | `dwa --upgrade` | Upgrade existing installation |
 | `dwa --uninstall` | Remove DWA completely |
 | `dwa --status` | Show configuration status |
-| `dwa --setup` | Run interactive setup wizard |
-| `dwa --setup linear` | Configure Linear integration |
-| `dwa --setup google-docs` | Configure Google Docs import |
-
-### Feature Management
-
-| Command | Description |
-|---------|-------------|
 | `dwa --parse` | Parse spec and update registry |
 | `dwa --sync-linear` | Sync deliverables to Linear issues |
 | `dwa --import-gdoc <url>` | Import Google Doc as canonical spec |
-
-### Maintenance
-
-| Command | Description |
-|---------|-------------|
 | `dwa --validate` | Check DWA state integrity |
-| `dwa --stats` | Show statistics (deliverables, packets, drift) |
-| `dwa --clean` | Remove orphaned deliverables (30+ days old) |
-| `dwa --clean-all` | Remove all `.dwa/` state (auto-backups first) |
-| `dwa --clean-all --no-backup` | Remove without backup |
+| `dwa --stats` | Show deliverable and drift statistics |
+| `dwa --clean` | Remove orphaned deliverables |
 
-## Claude Code Skills
-
-After `dwa --install`, these skills are available:
+### Claude Code Skills
 
 | Skill | Description |
 |-------|-------------|
 | `/dwa-create-spec` | Scaffold a new feature spec |
 | `/dwa-draft-tdd` | Generate technical design document |
-| `/dwa-enrich-packet` | Add context to execution packet |
+| `/dwa-enrich-packet` | Add implementation context to execution packet |
 | `/dwa-generate-pr-description` | Create PR description from deliverable |
-| `/dwa-propose-drift-patches` | Suggest spec updates from code changes |
-| `/dwa-summarize-drift` | Summarize drift between spec and implementation |
-
-## Project Structure
-
-```
-your-project/
-├── feature-spec.md          # Feature specification (source of truth)
-├── docs/
-│   └── tdds/
-│       └── feature-name.md  # Technical design document (optional)
-└── .dwa/                    # DWA state (gitignored)
-    ├── feature.json         # Feature metadata
-    ├── deliverables/        # Registry files
-    │   ├── DEL-001.json
-    │   └── DEL-002.json
-    └── packets/             # Execution packets
-        ├── DEL-001.md
-        └── DEL-002.md
-```
-
-## Staleness Detection
-
-DWA tracks when your spec changes after parsing. If you modify `feature-spec.md`:
-
-```bash
-# This will error with DWA-E045
-npx dwa start DEL-001
-
-# Re-parse to update registry
-npx dwa --parse
-
-# Or force generation (packet includes warning)
-npx dwa start DEL-001 --force
-```
+| `/dwa-propose-drift-patches` | Suggest spec updates from code drift |
+| `/dwa-summarize-drift` | Summarize divergence for PR comments or stakeholders |
 
 ## Requirements
 

@@ -14,8 +14,7 @@ node_modules/
 coverage/
 
 # Logs
-*.log:q
-:q!:q
+*.log
 npm-debug.log*
 
 # OS files
@@ -26,7 +25,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-*.swo:q
+*.swo
 
 
 # Build output

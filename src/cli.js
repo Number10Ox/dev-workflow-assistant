@@ -16,6 +16,7 @@ program
   .option('--import-gdoc <doc>', 'Import Google Doc as canonical spec')
   .option('--out <path>', 'Output path for import (requires --import-gdoc)')
   .option('--setup [feature]', 'Run setup wizard (or setup specific: --setup linear, --setup google-docs)')
+  .option('--mode <mode>', 'Setup mode: "direct" (no VS Code) or "vscode-bridge" (requires --setup linear)')
   .option('--status', 'Show DWA configuration status')
   .option('--clean', 'Remove orphaned deliverables (30+ days old)')
   .option('--clean-all', 'Remove all .dwa/ state (auto-backups unless --no-backup)')
@@ -148,6 +149,11 @@ if (opts.install) {
         setupOpts.googleDocs = true;
       }
       // If opts.setup === true, no specific feature (interactive mode)
+
+      // --mode applies only to --setup linear
+      if (opts.mode) {
+        setupOpts.mode = opts.mode;
+      }
 
       const result = await setup(setupOpts);
       if (!result.success) {

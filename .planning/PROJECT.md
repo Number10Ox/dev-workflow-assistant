@@ -170,6 +170,8 @@ Human checkpoints (after plan, after core logic, after tests, etc.)
 | Framework-agnostic packets | Bounded context consumable by GSD, BMAD, or manual execution | — Decided |
 | File-based `.dwa/` registry | No server dependencies; works offline; git-trackable | — Decided |
 | Skills in repo (`.llms/skills/`) | Repo self-contained; installer copies to Claude directory | — Decided |
+| Dual-mode Linear backend (direct + bridge) | Jon's workflow shifted to Claude Code terminal; VSCode bridge alone blocked dogfooding. Direct mode reads API key from `~/.dwa/config.json` or `LINEAR_API_KEY` env. Bridge mode preserved for VSCode users. `IssueTrackerFactory` auto-selects; `DWA_LINEAR_MODE` overrides. | — Decided 2026-04-29 (Phase 7.3) |
+| Linear externalId via Attachments, not `IssueCreateInput` | Linear's `Issue` has no `externalId` field. Original Phase 6 design assumed it did (bridge `linearTracker.ts` even has the same bug). Correct pattern: create issue, then `attachmentLinkURL(issueId, "dwa://deliverable/<externalId>")`. Linear de-dupes attachments by URL. Discovered when first running sync against real Linear. | — Decided 2026-04-29 (Phase 7.3); bridge fix tracked separately |
 
 ---
-*Last updated: 2026-01-24 — revised architecture (commands vs skills, two-tier spec, TDD, drift)*
+*Last updated: 2026-04-29 — Phase 7.3: VSCode-decoupling, attachment-based Linear dedup*

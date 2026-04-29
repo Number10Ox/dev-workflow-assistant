@@ -5,14 +5,24 @@
 See: .planning/PROJECT.md (updated 2026-01-24)
 
 **Core value:** Deliverables parsed from a canonical feature spec drive all downstream work -- Linear tickets, GSD execution packets, PR descriptions, and drift checks flow from the registry, not from manual coordination.
-**Current focus:** Phase 7.1 complete, Phase 7.2 pending
+**Current focus:** Phase 7.3 (VSCode-decoupling) in flight; first DWA dogfooding on Primordial Ascension
 
 ## Current Position
 
-Phase: 7.1 of 9 (Installation Simplification) ✓ COMPLETE
-Plan: 1/1 complete (07.1-01)
-Status: Phase verified (5/5 must-haves)
-Last activity: 2026-01-25 - Phase 7.1 verified and complete
+Phase: 7.3 of 9 (Deployment-Context Decoupling) — IN PROGRESS
+Plan: process/plan-decouple-linear-from-vscode.md
+Status: Steps 1-5 + 7 complete; smoke test passed end-to-end against real Linear; Step 6 (Primordial Ascension manual verification) pending
+Last activity: 2026-04-29 - Linear sync now works from terminal (no VSCode)
+
+**Phase 7.3 origin (friction-driven, not roadmap-driven):**
+- Jon's workflow shifted to Claude Code terminal/desktop; original VSCode-bridge architecture blocked dogfooding DWA on the Primordial Ascension contract project.
+- Discovered while attempting to use DWA on PA: Linear bridge required `vscode` module at top of `src/linear/bridge-client.js`. Rebuilt as `IssueTrackerFactory` with auto-selecting bridge OR direct backend.
+- Smoke test against real Linear surfaced a deeper bug: Phase 6's externalId design was wrong (Linear `Issue` has no externalId field). Fixed in DirectLinearTracker via Attachments. Bridge has same bug; cross-repo follow-up.
+
+**Last sync activity (2026-04-29):**
+- 509/509 tests passing
+- Smoke test created Linear issue HER-6 in "Agentic Feature Development Workflow" project; round-trip dedup via attachments confirmed
+- HER-6 is test detritus; safe for Jon to delete
 
 Progress: [███████████████████] 90.0% (27 of 30 plans complete)
 
@@ -148,7 +158,10 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- **Step 6: PA verification** — `npx dwa --sync-linear --project primordial-ascension-ba94fe04fb4e` against a real spec in `~/workspace/ContractProjects/PrimordialAscension`. Jon completed setup steps 1-4 (npm install, dwa --install, dwa --setup linear --mode=direct) on 2026-04-29. Remaining: create canonical spec, parse, sync, confirm issue + attachment.
+- **Bridge LinearTracker fix** — `~/workspace/JobPrep/DevEx/devex-service-bridge/packages/linear-provider/src/linearTracker.ts` has the same `externalId on IssueCreateInput` bug. DWA's direct-tracker is the reference implementation. Cross-repo deliverable, not in DWA scope. See memory note `bridge_linear_tracker_bug.md`.
+- **HER-6 cleanup** — smoke test detritus in heroiclogic Linear workspace (Agentic Feature Development Workflow project). Safe to delete from UI.
+- **Possible Phase 7.4** — same VSCode-decoupling treatment for Google Docs import (`src/google-docs/bridge-client.js`) and PR description generation (`src/pr-description/generate.js`). Not pressing until those features actually block PA work.
 
 ### Blockers/Concerns
 
@@ -159,7 +172,7 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-26
-Stopped at: Completed 07.1-01-PLAN.md. Interactive setup wizard + graceful feature detection. 399 total tests passing.
-Resume file: None
-Next: Phase 07.2 (Workflow Friction Reduction) or Phase 8 (Ralph Runner)
+Last session: 2026-04-29
+Stopped at: Phase 7.3 implementation complete (steps 1-5 + 7 of 7 done). Smoke test passed end-to-end against real Linear (HER-6 created with attachment-based dedup, round-trip confirmed). 509 total tests passing. Jon ran setup steps 1-4 in `~/workspace/ContractProjects/PrimordialAscension`.
+Resume file: `process/plan-decouple-linear-from-vscode.md`
+Next: Step 6 — Primordial Ascension end-to-end verification (will continue in a fresh Claude Code session in the PA directory). After that: commit Phase 7.3, decide on Phase 7.4 (Google Docs + PR description decoupling) vs other priorities.

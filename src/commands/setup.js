@@ -2,14 +2,19 @@
  * Interactive setup wizard for optional DWA features.
  *
  * Usage:
- *   dwa setup              # Interactive wizard
- *   dwa setup --linear     # Set up Linear only
- *   dwa setup --google-docs # Set up Google Docs only
+ *   dwa --setup              # Interactive wizard
+ *   dwa --setup linear       # Set up Linear only
+ *   dwa --setup google-docs  # Set up Google Docs only
  */
 
 const { execSync } = require('child_process');
 const https = require('https');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const { FEATURES } = require('../utils/feature-detection');
+const { saveApiKey, getConfigPath } = require('../linear/config');
+const { validateApiKey } = require('../linear/direct-tracker');
 
 // GitHub repo for VS Code extensions
 const GITHUB_REPO = 'Number10Ox/devex-service-bridge';
@@ -118,20 +123,78 @@ async function getLatestVsixRelease(vsixPattern) {
 }
 
 /**
+ * Download a file from a URL to a local path.
+ *
+ * @param {string} url - URL to download
+ * @param {string} destPath - Local destination path
+ * @returns {Promise<void>}
+ */
+function downloadFile(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      headers: { 'User-Agent': 'dwa-setup' }
+    };
+
+    https.get(url, options, (res) => {
+      // Handle redirects
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return downloadFile(res.headers.location, destPath).then(resolve).catch(reject);
+      }
+
+      if (res.statusCode !== 200) {
+        reject(new Error(`HTTP ${res.statusCode}`));
+        return;
+      }
+
+      const fileStream = fs.createWriteStream(destPath);
+      res.pipe(fileStream);
+
+      fileStream.on('finish', () => {
+        fileStream.close();
+        resolve();
+      });
+
+      fileStream.on('error', (err) => {
+        fs.unlink(destPath, () => {}); // Clean up partial file
+        reject(err);
+      });
+    }).on('error', reject);
+  });
+}
+
+/**
  * Install a VS Code extension from a URL.
+ * Downloads the VSIX to a temp file first since VS Code CLI doesn't support URLs.
  *
  * @param {string} url - URL to VSIX file
- * @returns {{ success: boolean, message: string }}
+ * @returns {Promise<{ success: boolean, message: string }>}
  */
-function installExtensionFromUrl(url) {
+async function installExtensionFromUrl(url) {
+  // Extract filename from URL
+  const filename = path.basename(new URL(url).pathname);
+  const tempDir = os.tmpdir();
+  const tempPath = path.join(tempDir, filename);
+
   try {
-    execSync(`code --install-extension "${url}"`, { stdio: 'inherit' });
+    // Download VSIX to temp file
+    await downloadFile(url, tempPath);
+
+    // Install from local file
+    execSync(`code --install-extension "${tempPath}"`, { stdio: 'inherit' });
+
     return { success: true, message: `Installed from ${url}` };
   } catch (error) {
     return {
       success: false,
       message: `Failed to install: ${error.message}`
     };
+  } finally {
+    // Clean up temp file
+    try {
+      fs.unlinkSync(tempPath);
+    } catch {
+      // Ignore cleanup errors
+    }
   }
 }
 
@@ -153,7 +216,7 @@ async function installExtension(extConfig) {
 
   if (release) {
     console.log(`  Found ${release.version}, downloading...`);
-    const result = installExtensionFromUrl(release.downloadUrl);
+    const result = await installExtensionFromUrl(release.downloadUrl);
     return {
       ...result,
       alreadyInstalled: false,
@@ -180,7 +243,7 @@ async function installExtension(extConfig) {
 async function setup(options = {}) {
   // Check if specific feature requested
   if (options.linear) {
-    return setupLinear();
+    return setupLinear({ mode: options.mode });
   }
   if (options.googleDocs) {
     return setupGoogleDocs();
@@ -263,15 +326,99 @@ async function setup(options = {}) {
 
 /**
  * Set up Linear integration.
+ *
+ * Two modes, auto-selected (override with options.mode):
+ *   - 'direct'         — prompts for API key, validates it, writes to ~/.dwa/config.json.
+ *                        No VS Code needed. Default when --mode=direct or VS Code is missing.
+ *   - 'vscode-bridge'  — installs the linear-tracker-provider extension; user configures
+ *                        the key in VS Code settings. Default when VS Code is present and
+ *                        no explicit mode is requested.
+ *
+ * @param {object} [options]
+ * @param {'direct'|'vscode-bridge'} [options.mode] - explicit mode override
  */
-async function setupLinear() {
+async function setupLinear(options = {}) {
   console.log('Setting up Linear integration...\n');
 
+  const explicitMode = options.mode;
+  if (explicitMode && explicitMode !== 'direct' && explicitMode !== 'vscode-bridge') {
+    return {
+      success: false,
+      message: `Invalid mode '${explicitMode}'. Expected 'direct' or 'vscode-bridge'.`
+    };
+  }
+
+  // Mode resolution. If explicit, honor it; else auto-detect.
+  const useDirect = explicitMode === 'direct'
+    || (explicitMode !== 'vscode-bridge' && !isVSCodeAvailable());
+
+  if (useDirect) {
+    return setupLinearDirect();
+  }
+  return setupLinearVscode();
+}
+
+/**
+ * Direct mode: prompt for API key, validate, persist to ~/.dwa/config.json.
+ */
+async function setupLinearDirect() {
+  const { Password } = require('enquirer');
+
+  console.log('Mode: direct (no VS Code extension required)\n');
+  console.log('Get a Linear API key at https://linear.app/settings/api → Create key.\n');
+
+  const prompt = new Password({
+    name: 'apiKey',
+    message: 'Paste your Linear API key:'
+  });
+
+  let apiKey;
+  try {
+    apiKey = (await prompt.run() || '').trim();
+  } catch {
+    return { success: false, message: 'Setup cancelled.' };
+  }
+
+  if (!apiKey) {
+    return { success: false, message: 'No API key provided.' };
+  }
+
+  process.stdout.write('Validating key against Linear...');
+  const validation = await validateApiKey(apiKey);
+  if (!validation.valid) {
+    process.stdout.write(' FAILED\n');
+    return {
+      success: false,
+      message: `API key validation failed: ${validation.error}`
+    };
+  }
+  process.stdout.write(` OK (authenticated as ${validation.viewer.name} <${validation.viewer.email}>)\n`);
+
+  await saveApiKey(apiKey);
+  console.log(`✓ Saved to ${getConfigPath()}\n`);
+
+  console.log('┌─────────────────────────────────────────────────┐');
+  console.log('│  NEXT STEPS                                     │');
+  console.log('└─────────────────────────────────────────────────┘\n');
+  console.log('1. Find your Linear project ID:');
+  console.log('   → In Linear, open your project → "..." menu → "Copy ID"');
+  console.log('   → Or pass the URL slug; DWA will resolve it.\n');
+  console.log('2. Sync deliverables:');
+  console.log('   → npx dwa --sync-linear --project <project-id-or-url-slug>\n');
+
+  return { success: true, message: 'Linear (direct) configured.' };
+}
+
+/**
+ * VS Code bridge mode: install the linear-tracker-provider extension; user
+ * configures the API key in VS Code settings.
+ */
+async function setupLinearVscode() {
   if (!isVSCodeAvailable()) {
     console.log(FEATURES.linear.setupInstructions);
     return {
       success: false,
-      message: 'VS Code CLI not available. Install extension manually.'
+      message: 'VS Code CLI not available. Re-run with --mode=direct or install VS Code.'
     };
   }
 
@@ -288,7 +435,6 @@ async function setupLinear() {
     return result;
   }
 
-  // Always show next steps
   console.log('┌─────────────────────────────────────────────────┐');
   console.log('│  NEXT STEPS - Linear Configuration              │');
   console.log('└─────────────────────────────────────────────────┘\n');
@@ -304,6 +450,7 @@ async function setupLinear() {
   console.log('   → Copy the ID from URL: linear.app/team/project/<project-id>\n');
   console.log('4. Sync deliverables:');
   console.log('   → npx dwa --sync-linear --project <project-id>\n');
+  console.log('Tip: prefer non-VS Code setup? Re-run with `--mode=direct`.\n');
 
   return result;
 }

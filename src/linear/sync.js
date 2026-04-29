@@ -9,7 +9,7 @@
 
 const fs = require('fs-extra');
 const path = require('path');
-const { BridgeClient } = require('./bridge-client');
+const { IssueTrackerFactory } = require('./factory');
 const { buildDwaSection, extractDwaSection, updateDwaSection } = require('./content-builder');
 const { computeSyncHash, extractSyncHash, checkForManualEdits } = require('./fingerprint');
 const { generateExternalId } = require('./external-id');
@@ -74,7 +74,7 @@ function determineSyncAction(deliverable, existingIssue, newDwaContent, options 
 /**
  * Sync a single deliverable to Linear.
  *
- * @param {object} client - Initialized BridgeClient
+ * @param {object} client - Initialized IssueTrackerFactory
  * @param {object} deliverable - Deliverable from registry
  * @param {object} feature - Feature metadata (for externalId generation)
  * @param {object} options - Sync options
@@ -213,8 +213,8 @@ async function syncAllDeliverables(options) {
     concurrency = 3
   } = options;
 
-  // Initialize bridge client
-  const client = new BridgeClient();
+  // Initialize issue tracker (auto-selects bridge or direct mode)
+  const client = new IssueTrackerFactory();
   await client.initialize();
 
   // Check capabilities

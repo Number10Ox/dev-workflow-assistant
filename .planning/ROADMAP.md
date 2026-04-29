@@ -22,6 +22,7 @@ DWA delivers a deliverable-driven development workflow combining VS Code extensi
 - [x] **Phase 7: Polish and Extended Features** - Google Docs import, PR descriptions
 - [x] **Phase 7.1: Installation Simplification** - Setup wizard, graceful degradation (INSERTED)
 - [ ] **Phase 7.2: Workflow Friction Reduction** - Maintenance commands, staleness detection (INSERTED)
+- [~] **Phase 7.3: Deployment-Context Decoupling** - Linear sync without VS Code; attachment-based dedup (INSERTED 2026-04-29, friction-driven). Plan: `process/plan-decouple-linear-from-vscode.md`. Steps 1-5 + 7 done; Step 6 (PA verification) pending.
 - [ ] **Phase 8: Ralph Runner** - Deterministic iterate-until-done execution mode
 - [ ] **Phase 9: JIRA Provider Demo** - Prove extensibility with second issue tracker
 
