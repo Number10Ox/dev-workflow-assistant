@@ -1,5 +1,7 @@
 const { program } = require('commander');
 const packageJson = require('../package.json');
+const path = require('node:path');
+const fs = require('fs-extra');
 
 program
   .name('dwa')
@@ -8,9 +10,13 @@ program
   .option('--install', 'Install DWA skills, templates, and references')
   .option('--upgrade', 'Upgrade existing DWA installation')
   .option('--uninstall', 'Remove DWA installation completely')
+  // --parse [spec-path]: opts.parse is undefined when absent, true when bare flag, string when value provided.
+  .option('--parse [spec-path]', 'Parse feature-spec.md and update .dwa/deliverables/ registry')
+  // --scaffold <title>: opts.scaffold is undefined when absent, string when value provided. Required value form so commander rejects bare flag.
+  .option('--scaffold <title>', 'Scaffold a new feature-spec.md and .dwa/ in the current directory')
   .option('--sync-linear', 'Sync deliverables to Linear')
   .option('--dry-run', 'Preview sync without making changes (requires --sync-linear)')
-  .option('--force', 'Overwrite DWA sections even if manually edited (requires --sync-linear)')
+  .option('--force', 'Overwrite existing artifacts (scope depends on operation)')
   .option('--deliverables <ids>', 'Comma-separated deliverable IDs to sync (requires --sync-linear)')
   .option('--project <id>', 'Linear project ID or URL (requires --sync-linear)')
   .option('--import-gdoc <doc>', 'Import Google Doc as canonical spec')
@@ -33,6 +39,8 @@ const operations = [
   { key: 'install', enabled: opts.install },
   { key: 'upgrade', enabled: opts.upgrade },
   { key: 'uninstall', enabled: opts.uninstall },
+  { key: 'parse', enabled: opts.parse !== undefined },
+  { key: 'scaffold', enabled: opts.scaffold !== undefined },
   { key: 'syncLinear', enabled: opts.syncLinear },
   { key: 'importGdoc', enabled: opts.importGdoc },
   { key: 'setup', enabled: opts.setup !== undefined },
@@ -86,6 +94,79 @@ if (opts.install) {
     }
     throw err;
   }
+} else if (opts.parse !== undefined) {
+  (async () => {
+    try {
+      const { runParse } = require('./commands/parse');
+
+      const specPath = (typeof opts.parse === 'string' && opts.parse.length > 0)
+        ? path.resolve(process.cwd(), opts.parse)
+        : path.join(process.cwd(), 'feature-spec.md');
+
+      if (!await fs.pathExists(specPath)) {
+        const rel = path.relative(process.cwd(), specPath) || specPath;
+        console.error(`Error: ${rel} not found`);
+        console.error('Hint: create a feature-spec.md from templates/feature-spec-v2.hbs in the DWA package.');
+        process.exit(1);
+      }
+
+      const result = await runParse(specPath, process.cwd());
+
+      for (const w of result.warnings) {
+        console.error(`Warning: ${w}`);
+      }
+
+      if (!result.success) {
+        console.error('Parse failed:');
+        for (const err of result.errors) {
+          const linePart = err.line ? ` Line ${err.line}:` : '';
+          console.error(`  [${err.code}]${linePart} ${err.message}`);
+        }
+        process.exit(1);
+      }
+
+      const s = result.summary;
+      console.log(
+        `Parsed ${s.parsed} deliverable(s): ${s.created} created, ${s.updated} updated, ${s.unchanged} unchanged, ${s.orphaned} orphaned`
+      );
+    } catch (err) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
+} else if (opts.scaffold !== undefined) {
+  (async () => {
+    try {
+      // Defensive local re-require: cached, free, insulates from any future refactor of top-of-file requires.
+      const localPath = require('node:path');
+      const { scaffoldFromTemplate } = require('./scaffolding/scaffold');
+      const { checkExisting } = require('./scaffolding/check-existing');
+
+      const title = opts.scaffold;
+      const targetDir = process.cwd();
+
+      if (!opts.force) {
+        const existing = await checkExisting(targetDir);
+        if (existing.alreadyInitialized) {
+          console.error('Error: scaffold target already initialized.');
+          if (existing.files.spec) console.error('  - feature-spec.md exists');
+          if (existing.files.featureJson) console.error('  - .dwa/feature.json exists');
+          console.error('Hint: pass --force to overwrite, or remove existing files first.');
+          process.exit(1);
+        }
+      }
+
+      const result = await scaffoldFromTemplate(title, targetDir);
+
+      console.log(`Scaffolded feature '${title}':`);
+      console.log(`  ${localPath.relative(targetDir, result.specPath)}`);
+      console.log(`  ${localPath.relative(targetDir, result.featureJsonPath)}`);
+      console.log(`  .gitignore (${result.gitignoreResult.action})`);
+    } catch (err) {
+      console.error('Error:', err.message);
+      process.exit(1);
+    }
+  })();
 } else if (opts.syncLinear) {
   (async () => {
     try {
