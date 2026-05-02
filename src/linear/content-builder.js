@@ -128,15 +128,21 @@ function buildDwaSection(deliverable, options = {}) {
     parts.push('');
   }
 
-  // Compute sync hash (on content before adding hash line)
-  const contentForHash = parts.join('\n').trim();
+  // Build the wrapped content with a placeholder hash line, then compute the
+  // hash over the same shape that `sync.js` and `checkForManualEdits` will see
+  // (with markers, with hash line stripped). All three hash computations must
+  // agree to keep idempotent re-sync working — see fingerprint.js.
+  const placeholder = `**Sync Hash:** \`${'0'.repeat(64)}\``;
+  parts.push(placeholder);
+
+  let dwaContent = `${DWA_BEGIN_MARKER}\n${parts.join('\n').trim()}\n${DWA_END_MARKER}`;
+
+  const contentForHash = dwaContent
+    .replace(/\*\*Sync Hash:\*\*\s*`[a-f0-9]{64}`/i, '')
+    .trim();
   const syncHash = computeSyncHash(contentForHash);
 
-  // Add sync hash at end
-  parts.push(`**Sync Hash:** \`${syncHash}\``);
-
-  // Wrap with markers
-  const dwaContent = `${DWA_BEGIN_MARKER}\n${parts.join('\n').trim()}\n${DWA_END_MARKER}`;
+  dwaContent = dwaContent.replace(placeholder, `**Sync Hash:** \`${syncHash}\``);
 
   return dwaContent;
 }

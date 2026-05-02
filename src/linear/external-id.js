@@ -10,13 +10,18 @@
 /**
  * Generate a globally unique external ID for a deliverable.
  *
- * @param {object} feature - Feature metadata
- * @param {string} feature.id - Feature ID (e.g., "FEAT-2026-001")
+ * Accepts either `feature.id` or `feature.feature_id`. The codebase has both
+ * conventions: scaffold.js writes `feature.feature_id` to feature.json; some
+ * synthetic test inputs use `feature.id`. This function bridges both so callers
+ * don't need to alias at the boundary.
+ *
+ * @param {object} feature - Feature metadata (must have `id` or `feature_id`)
  * @param {string} deliverableId - Deliverable ID (e.g., "DEL-003")
  * @returns {string} External ID (e.g., "FEAT-2026-001-DEL-003")
  */
 function generateExternalId(feature, deliverableId) {
-  if (!feature || !feature.id) {
+  const featureId = feature && (feature.id || feature.feature_id);
+  if (!featureId) {
     throw new Error('Feature ID is required to generate external ID');
   }
   if (!deliverableId) {
@@ -24,7 +29,7 @@ function generateExternalId(feature, deliverableId) {
   }
 
   // Format: FEAT-YYYY-NNN-DEL-###
-  return `${feature.id}-${deliverableId}`;
+  return `${featureId}-${deliverableId}`;
 }
 
 /**

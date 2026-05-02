@@ -100,6 +100,9 @@ function extractCellText(cellNode) {
   function traverse(node) {
     if (node.type === 'text') {
       text += node.value;
+    } else if (node.type === 'inlineCode') {
+      // Preserve backticks so Linear (and other markdown renderers) format the code reference.
+      text += '`' + node.value + '`';
     }
     if (node.children) {
       for (const child of node.children) {
